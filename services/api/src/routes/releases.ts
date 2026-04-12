@@ -73,11 +73,11 @@ releasesRouter.post("/releases/:id/upload-url", requireAuth, async (c) => {
   }
 
   const release = await db.query.releases.findFirst({
-    where: eq(releases.id, releaseId),
+    where: eq(releases.id, releaseId as string),
     with: {
       app: true,
     },
-  });
+  }) as any;
 
   if (!release) {
     throw new HTTPException(404, { message: "Release not found" });
@@ -124,11 +124,11 @@ releasesRouter.post(
     }
 
     const release = await db.query.releases.findFirst({
-      where: eq(releases.id, releaseId),
+      where: eq(releases.id, releaseId as string),
       with: {
         app: true,
       },
-    });
+    }) as any;
 
     if (!release) {
       throw new HTTPException(404, { message: "Release not found" });
@@ -175,11 +175,11 @@ releasesRouter.get("/releases/:id", async (c) => {
   const releaseId = c.req.param("id");
 
   const release = await db.query.releases.findFirst({
-    where: eq(releases.id, releaseId),
+    where: eq(releases.id, releaseId as string),
     with: {
       artifacts: true,
     },
-  });
+  }) as any;
 
   if (!release) {
     throw new HTTPException(404, { message: "Release not found" });

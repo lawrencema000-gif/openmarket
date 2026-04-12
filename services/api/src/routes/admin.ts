@@ -48,7 +48,7 @@ adminRouter.get("/admin/risk-queue", requireAuth, async (c) => {
   // For each release, get its latest artifact's scan result
   const queue = await Promise.all(
     reviewReleases.map(async (release) => {
-      const artifact = release.artifacts?.[0];
+      const artifact = release.artifacts?.[0] as any;
       let latestScan = null;
 
       if (artifact) {

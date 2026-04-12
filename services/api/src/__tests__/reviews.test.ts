@@ -92,7 +92,7 @@ describe("POST /api/apps/:appId/reviews", () => {
     });
 
     expect(res.status).toBe(201);
-    const body = await res.json();
+    const body = await res.json() as any;
     expect(body.rating).toBe(4);
     expect(body.title).toBe("Great app");
   });
@@ -174,7 +174,7 @@ describe("GET /api/apps/:appId/reviews", () => {
     const res = await app.request(`/api/apps/${mockApp.id}/reviews`);
     expect(res.status).toBe(200);
 
-    const body = await res.json();
+    const body = await res.json() as any;
     expect(Array.isArray(body)).toBe(true);
     expect(body).toHaveLength(1);
     expect(body[0].rating).toBe(5);

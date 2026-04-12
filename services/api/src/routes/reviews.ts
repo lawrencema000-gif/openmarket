@@ -120,7 +120,7 @@ reviewsRouter.patch(
     const user = await findOrCreateUser(authUser.email, authUser.id);
 
     const review = await db.query.reviews.findFirst({
-      where: eq(reviews.id, reviewId),
+      where: eq(reviews.id, reviewId as string),
     });
 
     if (!review) {
@@ -141,7 +141,7 @@ reviewsRouter.patch(
         ...(body.body !== undefined && { body: body.body }),
         updatedAt: new Date(),
       })
-      .where(eq(reviews.id, reviewId))
+      .where(eq(reviews.id, reviewId as string))
       .returning();
 
     return c.json(updated);
@@ -156,7 +156,7 @@ reviewsRouter.delete("/reviews/:id", requireAuth, async (c) => {
   const user = await findOrCreateUser(authUser.email, authUser.id);
 
   const review = await db.query.reviews.findFirst({
-    where: eq(reviews.id, reviewId),
+    where: eq(reviews.id, reviewId as string),
   });
 
   if (!review) {
@@ -167,7 +167,7 @@ reviewsRouter.delete("/reviews/:id", requireAuth, async (c) => {
     throw new HTTPException(403, { message: "You do not own this review" });
   }
 
-  await db.delete(reviews).where(eq(reviews.id, reviewId));
+  await db.delete(reviews).where(eq(reviews.id, reviewId as string));
 
   return c.json({ success: true });
 });

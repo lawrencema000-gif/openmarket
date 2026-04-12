@@ -42,7 +42,7 @@ searchRouter.get(
 
     return c.json({
       hits: result.hits,
-      totalHits: result.totalHits ?? result.hits.length,
+      totalHits: result.estimatedTotalHits ?? result.hits.length,
       page,
       limit,
       processingTimeMs: result.processingTimeMs,
