@@ -1,0 +1,24 @@
+{
+  "name": "@openmarket/ingest-worker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openmarket/db": "workspace:*",
+    "@openmarket/security-rules": "workspace:*",
+    "bullmq": "^5.34.0",
+    "dotenv": "^16.4.0",
+    "drizzle-orm": "^0.39.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "vitest": "^3.1.0",
+    "typescript": "^5.8.0"
+  }
+}
