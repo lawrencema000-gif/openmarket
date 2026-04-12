@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: openmarket-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: openmarket
+      POSTGRES_USER: openmarket
+      POSTGRES_PASSWORD: openmarket_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openmarket"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: openmarket-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    container_name: openmarket-meilisearch
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: openmarket_dev_key
+      MEILI_ENV: development
+    volumes:
+      - msdata:/meili_data
+
+volumes:
+  pgdata:
+  msdata:
