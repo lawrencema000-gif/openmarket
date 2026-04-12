@@ -7,6 +7,8 @@ import { healthRouter } from "./routes/health";
 import { authRouter } from "./routes/auth";
 import { developersRouter } from "./routes/developers";
 import { signingKeysRouter } from "./routes/signing-keys";
+import { appsRouter } from "./routes/apps";
+import { releasesRouter } from "./routes/releases";
 import { errorHandler } from "./middleware/error-handler";
 
 const app = new Hono();
@@ -30,6 +32,8 @@ app.route("/", healthRouter);
 app.route("/api", authRouter);
 app.route("/api", developersRouter);
 app.route("/api", signingKeysRouter);
+app.route("/api", appsRouter);
+app.route("/api", releasesRouter);
 
 const port = parseInt(process.env.PORT ?? "3001", 10);
 
