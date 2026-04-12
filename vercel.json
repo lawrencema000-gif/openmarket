@@ -1,0 +1,5 @@
+{
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm turbo build --filter=@openmarket/market-web...",
+  "outputDirectory": "apps/market-web/.next"
+}
