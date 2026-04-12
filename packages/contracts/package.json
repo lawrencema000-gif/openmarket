@@ -8,7 +8,9 @@
     "./developers": "./src/developers.ts",
     "./apps": "./src/apps.ts",
     "./auth": "./src/auth.ts",
-    "./common": "./src/common.ts"
+    "./common": "./src/common.ts",
+    "./releases": "./src/releases.ts",
+    "./search": "./src/search.ts"
   },
   "scripts": {
     "test": "vitest run",
