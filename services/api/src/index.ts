@@ -9,6 +9,7 @@ import { developersRouter } from "./routes/developers";
 import { signingKeysRouter } from "./routes/signing-keys";
 import { appsRouter } from "./routes/apps";
 import { releasesRouter } from "./routes/releases";
+import { searchRouter } from "./routes/search";
 import { errorHandler } from "./middleware/error-handler";
 
 const app = new Hono();
@@ -34,6 +35,7 @@ app.route("/api", developersRouter);
 app.route("/api", signingKeysRouter);
 app.route("/api", appsRouter);
 app.route("/api", releasesRouter);
+app.route("/api", searchRouter);
 
 const port = parseInt(process.env.PORT ?? "3001", 10);
 

@@ -19,6 +19,7 @@
     "@openmarket/contracts": "workspace:*",
     "better-auth": "^1.2.0",
     "dotenv": "^16.4.0",
+    "meilisearch": "^0.46.0",
     "drizzle-orm": "^0.39.0",
     "zod": "^3.24.0"
   },
