@@ -11,7 +11,7 @@ import {
   releaseArtifacts,
   scanResults,
 } from "@openmarket/db/schema";
-import { requireAuth } from "../middleware/auth";
+import { requireAdmin } from "../middleware/admin";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
@@ -30,7 +30,7 @@ const auditLogQuerySchema = z.object({
 });
 
 // GET /admin/risk-queue — releases in "review" status with latest scan risk score
-adminRouter.get("/admin/risk-queue", requireAuth, async (c) => {
+adminRouter.get("/admin/risk-queue", requireAdmin, async (c) => {
   // Get all releases in review status
   const reviewReleases = await db.query.releases.findMany({
     where: eq(releases.status, "review"),
@@ -82,7 +82,7 @@ adminRouter.get("/admin/risk-queue", requireAuth, async (c) => {
 // POST /admin/releases/:id/approve — approve a release
 adminRouter.post(
   "/admin/releases/:id/approve",
-  requireAuth,
+  requireAdmin,
   zValidator("json", approveRejectSchema),
   async (c) => {
     const authUser = c.get("user");
@@ -120,7 +120,7 @@ adminRouter.post(
 // POST /admin/releases/:id/reject — reject a release (back to draft)
 adminRouter.post(
   "/admin/releases/:id/reject",
-  requireAuth,
+  requireAdmin,
   zValidator("json", approveRejectSchema),
   async (c) => {
     const authUser = c.get("user");
@@ -168,7 +168,7 @@ adminRouter.post(
 // POST /admin/developers/:id/suspend — suspend a developer
 adminRouter.post(
   "/admin/developers/:id/suspend",
-  requireAuth,
+  requireAdmin,
   zValidator("json", suspendSchema),
   async (c) => {
     const authUser = c.get("user");
@@ -215,7 +215,7 @@ adminRouter.post(
 // POST /admin/developers/:id/reinstate — reinstate a suspended developer
 adminRouter.post(
   "/admin/developers/:id/reinstate",
-  requireAuth,
+  requireAdmin,
   zValidator("json", approveRejectSchema),
   async (c) => {
     const authUser = c.get("user");
@@ -262,7 +262,7 @@ adminRouter.post(
 // GET /admin/audit-log — list moderation actions, paginated
 adminRouter.get(
   "/admin/audit-log",
-  requireAuth,
+  requireAdmin,
   zValidator("query", auditLogQuerySchema),
   async (c) => {
     const { page, limit } = c.req.valid("query");

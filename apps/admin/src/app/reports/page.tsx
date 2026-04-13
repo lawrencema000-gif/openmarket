@@ -1,6 +1,5 @@
 import { ReportStatusUpdater } from "./ReportStatusUpdater";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 type ReportStatus = "open" | "investigating" | "resolved" | "dismissed";
 
@@ -17,7 +16,7 @@ interface Report {
 
 async function getReports(): Promise<Report[]> {
   try {
-    const res = await fetch(`${API}/api/reports`, {
+    const res = await fetch(`${API_URL}/api/reports`, {
       credentials: "include",
       cache: "no-store",
     });

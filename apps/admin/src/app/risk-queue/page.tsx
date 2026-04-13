@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ApproveRejectButtons } from "./ApproveRejectButtons";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 interface ReleaseEntry {
   id: string;
@@ -17,7 +16,7 @@ interface ReleaseEntry {
 
 async function getRiskQueue(): Promise<ReleaseEntry[]> {
   try {
-    const res = await fetch(`${API}/api/admin/risk-queue`, {
+    const res = await fetch(`${API_URL}/api/admin/risk-queue`, {
       credentials: "include",
       cache: "no-store",
     });

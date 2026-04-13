@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "../lib/db";
 import { reports, users } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
+import { requireAdmin } from "../middleware/admin";
 import type { Variables } from "../lib/types";
 
 export const reportsRouter = new Hono<{ Variables: Variables }>();
@@ -73,8 +74,8 @@ reportsRouter.post(
   }
 );
 
-// GET /reports — list all reports, admin only (auth required for now)
-reportsRouter.get("/reports", requireAuth, async (c) => {
+// GET /reports — list all reports, admin only
+reportsRouter.get("/reports", requireAdmin, async (c) => {
   const status = c.req.query("status") as
     | "open"
     | "investigating"
@@ -89,10 +90,10 @@ reportsRouter.get("/reports", requireAuth, async (c) => {
   return c.json(allReports);
 });
 
-// PATCH /reports/:id — update report status, admin only (auth required for now)
+// PATCH /reports/:id — update report status, admin only
 reportsRouter.patch(
   "/reports/:id",
-  requireAuth,
+  requireAdmin,
   zValidator("json", updateReportSchema),
   async (c) => {
     const reportId = c.req.param("id");

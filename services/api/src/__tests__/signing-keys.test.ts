@@ -55,7 +55,8 @@ describe("GET /api/signing-keys", () => {
     const res = await app.request("/api/signing-keys");
     expect(res.status).toBe(200);
 
-    const body = await res.json();
-    expect(body).toEqual([]);
+    const body = await res.json() as any;
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body.items).toHaveLength(0);
   });
 });

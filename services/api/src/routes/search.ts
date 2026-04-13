@@ -23,11 +23,13 @@ searchRouter.get(
     const filters: string[] = ["isPublished = true"];
 
     if (category) {
-      filters.push(`category = "${category}"`);
+      const sanitized = category.replace(/["\\]/g, "");
+      filters.push(`category = "${sanitized}"`);
     }
 
     if (trustTier) {
-      filters.push(`trustTier = "${trustTier}"`);
+      const sanitized = trustTier.replace(/["\\]/g, "");
+      filters.push(`trustTier = "${sanitized}"`);
     }
 
     const filter = filters.join(" AND ");

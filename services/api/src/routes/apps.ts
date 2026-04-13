@@ -6,13 +6,16 @@ import { db } from "../lib/db";
 import { apps, appListings, developers } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { createAppSchema } from "@openmarket/contracts/apps";
+import { paginationSchema } from "@openmarket/contracts/common";
 import type { Variables } from "../lib/types";
 
 export const appsRouter = new Hono<{ Variables: Variables }>();
 
 // List apps for authenticated developer
-appsRouter.get("/apps", requireAuth, async (c) => {
+appsRouter.get("/apps", requireAuth, zValidator("query", paginationSchema), async (c) => {
   const user = c.get("user");
+  const { page, limit } = c.req.valid("query");
+  const offset = (page - 1) * limit;
 
   const developer = await db.query.developers.findFirst({
     where: eq(developers.email, user.email),
@@ -27,9 +30,11 @@ appsRouter.get("/apps", requireAuth, async (c) => {
     with: {
       listings: true,
     },
+    limit,
+    offset,
   });
 
-  return c.json(developerApps);
+  return c.json({ items: developerApps, page, limit });
 });
 
 // Create app + initial listing
@@ -116,4 +121,51 @@ appsRouter.get("/apps/:id", async (c) => {
   }
 
   return c.json(app);
+});
+
+// Update app listing
+appsRouter.patch("/apps/:id", requireAuth, async (c) => {
+  const appId = c.req.param("id") as string;
+  const user = c.get("user");
+  const body = await c.req.json();
+
+  const developer = await db.query.developers.findFirst({
+    where: eq(developers.email, user.email),
+  });
+  if (!developer) throw new HTTPException(404, { message: "Developer not found" });
+
+  const app = await db.query.apps.findFirst({
+    where: and(eq(apps.id, appId), eq(apps.developerId, developer.id)),
+  });
+  if (!app) throw new HTTPException(404, { message: "App not found or not owned by you" });
+
+  if (app.currentListingId) {
+    await db.update(appListings).set({
+      ...body,
+      updatedAt: new Date(),
+    }).where(eq(appListings.id, app.currentListingId));
+  }
+
+  return c.json({ success: true });
+});
+
+// Soft-delete app
+appsRouter.delete("/apps/:id", requireAuth, async (c) => {
+  const appId = c.req.param("id") as string;
+  const user = c.get("user");
+
+  const developer = await db.query.developers.findFirst({
+    where: eq(developers.email, user.email),
+  });
+  if (!developer) throw new HTTPException(404, { message: "Developer not found" });
+
+  const [updated] = await db.update(apps).set({
+    isDelisted: true,
+    delistReason: "Deleted by developer",
+    updatedAt: new Date(),
+  }).where(and(eq(apps.id, appId), eq(apps.developerId, developer.id))).returning();
+
+  if (!updated) throw new HTTPException(404, { message: "App not found" });
+
+  return c.json(updated);
 });

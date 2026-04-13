@@ -4,3 +4,6 @@ export * from "./apps";
 export * from "./auth";
 export * from "./releases";
 export * from "./search";
+export * from "./reviews";
+export * from "./reports";
+export * from "./moderation";

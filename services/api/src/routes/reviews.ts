@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "../lib/db";
 import { reviews, users, apps } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
+import { paginationSchema } from "@openmarket/contracts/common";
 import type { Variables } from "../lib/types";
 
 export const reviewsRouter = new Hono<{ Variables: Variables }>();
@@ -41,8 +42,10 @@ async function findOrCreateUser(email: string, authUserId: string) {
 }
 
 // GET /apps/:appId/reviews — list reviews for an app (public)
-reviewsRouter.get("/apps/:appId/reviews", async (c) => {
+reviewsRouter.get("/apps/:appId/reviews", zValidator("query", paginationSchema), async (c) => {
   const appId = c.req.param("appId");
+  const { page, limit } = c.req.valid("query");
+  const offset = (page - 1) * limit;
 
   const app = await db.query.apps.findFirst({
     where: eq(apps.id, appId),
@@ -55,9 +58,11 @@ reviewsRouter.get("/apps/:appId/reviews", async (c) => {
   const appReviews = await db.query.reviews.findMany({
     where: eq(reviews.appId, appId),
     orderBy: [desc(reviews.createdAt)],
+    limit,
+    offset,
   });
 
-  return c.json(appReviews);
+  return c.json({ items: appReviews, page, limit });
 });
 
 // POST /apps/:appId/reviews — create a review (auth required)

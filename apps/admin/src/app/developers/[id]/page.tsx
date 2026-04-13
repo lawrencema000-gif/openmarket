@@ -1,6 +1,5 @@
 import { DeveloperActions } from "./DeveloperActions";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 interface App {
   id: string;
@@ -31,7 +30,7 @@ interface Developer {
 
 async function getDeveloper(id: string): Promise<Developer | null> {
   try {
-    const res = await fetch(`${API}/api/admin/developers/${id}`, {
+    const res = await fetch(`${API_URL}/api/admin/developers/${id}`, {
       credentials: "include",
       cache: "no-store",
     });

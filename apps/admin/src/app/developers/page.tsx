@@ -1,6 +1,5 @@
 import Link from "next/link";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 type TrustLevel = "new" | "verified" | "trusted" | "suspended" | string;
 
@@ -16,7 +15,7 @@ interface Developer {
 
 async function getDevelopers(): Promise<Developer[]> {
   try {
-    const res = await fetch(`${API}/api/admin/developers`, {
+    const res = await fetch(`${API_URL}/api/admin/developers`, {
       credentials: "include",
       cache: "no-store",
     });

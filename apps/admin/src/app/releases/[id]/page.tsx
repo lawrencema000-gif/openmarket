@@ -1,6 +1,5 @@
 import { ReleaseActions } from "./ReleaseActions";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 interface ScanFinding {
   severity?: string;
@@ -30,7 +29,7 @@ interface Release {
 
 async function getRelease(id: string): Promise<Release | null> {
   try {
-    const res = await fetch(`${API}/api/admin/releases/${id}`, {
+    const res = await fetch(`${API_URL}/api/admin/releases/${id}`, {
       credentials: "include",
       cache: "no-store",
     });

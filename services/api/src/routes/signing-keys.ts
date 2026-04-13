@@ -6,13 +6,16 @@ import { db } from "../lib/db";
 import { developers, signingKeys } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { enrollSigningKeySchema } from "@openmarket/contracts/developers";
+import { paginationSchema } from "@openmarket/contracts/common";
 import type { Variables } from "../lib/types";
 
 export const signingKeysRouter = new Hono<{ Variables: Variables }>();
 
 // List signing keys for current developer
-signingKeysRouter.get("/signing-keys", requireAuth, async (c) => {
+signingKeysRouter.get("/signing-keys", requireAuth, zValidator("query", paginationSchema), async (c) => {
   const user = c.get("user");
+  const { page, limit } = c.req.valid("query");
+  const offset = (page - 1) * limit;
 
   const developer = await db.query.developers.findFirst({
     where: eq(developers.email, user.email),
@@ -24,9 +27,11 @@ signingKeysRouter.get("/signing-keys", requireAuth, async (c) => {
 
   const keys = await db.query.signingKeys.findMany({
     where: eq(signingKeys.developerId, developer.id),
+    limit,
+    offset,
   });
 
-  return c.json(keys);
+  return c.json({ items: keys, page, limit });
 });
 
 // Enroll a new signing key

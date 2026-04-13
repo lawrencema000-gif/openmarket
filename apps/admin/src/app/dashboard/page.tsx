@@ -1,17 +1,17 @@
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 async function getDashboardData() {
   try {
     const [queueRes, reportsRes, auditRes] = await Promise.all([
-      fetch(`${API}/api/admin/risk-queue`, {
+      fetch(`${API_URL}/api/admin/risk-queue`, {
         credentials: "include",
         cache: "no-store",
       }),
-      fetch(`${API}/api/reports`, {
+      fetch(`${API_URL}/api/reports`, {
         credentials: "include",
         cache: "no-store",
       }),
-      fetch(`${API}/api/admin/audit-log`, {
+      fetch(`${API_URL}/api/admin/audit-log`, {
         credentials: "include",
         cache: "no-store",
       }),

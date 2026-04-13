@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../lib/db";
 import { apps, releases, releaseArtifacts, developers } from "@openmarket/db/schema";
@@ -217,4 +217,33 @@ releasesRouter.get("/apps/:appId/releases", async (c) => {
   });
 
   return c.json(appReleases);
+});
+
+// Cancel draft release
+releasesRouter.delete("/releases/:id", requireAuth, async (c) => {
+  const releaseId = c.req.param("id") as string;
+  const user = c.get("user");
+
+  const developer = await db.query.developers.findFirst({
+    where: eq(developers.email, user.email),
+  });
+  if (!developer) throw new HTTPException(404, { message: "Developer not found" });
+
+  const release = await db.query.releases.findFirst({
+    where: eq(releases.id, releaseId),
+  }) as any;
+
+  if (!release || release.status !== "draft") {
+    throw new HTTPException(400, { message: "Can only cancel draft releases" });
+  }
+
+  // Verify ownership through app
+  const app = await db.query.apps.findFirst({
+    where: and(eq(apps.id, release.appId), eq(apps.developerId, developer.id)),
+  });
+  if (!app) throw new HTTPException(403, { message: "Not your app" });
+
+  await db.delete(releases).where(eq(releases.id, releaseId));
+
+  return c.json({ success: true });
 });

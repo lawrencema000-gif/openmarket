@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 export function ApproveRejectButtons({ releaseId }: { releaseId: string }) {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
@@ -14,7 +13,7 @@ export function ApproveRejectButtons({ releaseId }: { releaseId: string }) {
     setStatus("loading");
     try {
       const res = await fetch(
-        `${API}/api/admin/releases/${releaseId}/${action}`,
+        `${API_URL}/api/admin/releases/${releaseId}/${action}`,
         {
           method: "POST",
           credentials: "include",

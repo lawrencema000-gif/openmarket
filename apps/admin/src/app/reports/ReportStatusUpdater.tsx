@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 const STATUSES = ["open", "investigating", "resolved", "dismissed"] as const;
 type ReportStatus = (typeof STATUSES)[number];
@@ -20,7 +19,7 @@ export function ReportStatusUpdater({
   async function handleChange(newStatus: ReportStatus) {
     setSaving(true);
     try {
-      const res = await fetch(`${API}/api/reports/${reportId}`, {
+      const res = await fetch(`${API_URL}/api/reports/${reportId}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

@@ -1,4 +1,4 @@
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 interface AuditEntry {
   id?: string;
@@ -15,7 +15,7 @@ interface AuditEntry {
 
 async function getAuditLog(): Promise<AuditEntry[]> {
   try {
-    const res = await fetch(`${API}/api/admin/audit-log`, {
+    const res = await fetch(`${API_URL}/api/admin/audit-log`, {
       credentials: "include",
       cache: "no-store",
     });

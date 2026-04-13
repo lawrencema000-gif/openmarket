@@ -10,7 +10,10 @@
     "./auth": "./src/auth.ts",
     "./common": "./src/common.ts",
     "./releases": "./src/releases.ts",
-    "./search": "./src/search.ts"
+    "./search": "./src/search.ts",
+    "./reviews": "./src/reviews.ts",
+    "./reports": "./src/reports.ts",
+    "./moderation": "./src/moderation.ts"
   },
   "scripts": {
     "test": "vitest run",

@@ -175,9 +175,9 @@ describe("GET /api/apps/:appId/reviews", () => {
     expect(res.status).toBe(200);
 
     const body = await res.json() as any;
-    expect(Array.isArray(body)).toBe(true);
-    expect(body).toHaveLength(1);
-    expect(body[0].rating).toBe(5);
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].rating).toBe(5);
   });
 
   it("returns 404 when app not found", async () => {

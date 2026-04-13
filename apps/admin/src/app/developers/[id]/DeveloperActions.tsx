@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const API = "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 export function DeveloperActions({
   developerId,
@@ -21,7 +20,7 @@ export function DeveloperActions({
     setStatus("loading");
     try {
       const res = await fetch(
-        `${API}/api/admin/developers/${developerId}/suspend`,
+        `${API_URL}/api/admin/developers/${developerId}/suspend`,
         {
           method: "POST",
           credentials: "include",
@@ -49,7 +48,7 @@ export function DeveloperActions({
     setStatus("loading");
     try {
       const res = await fetch(
-        `${API}/api/admin/developers/${developerId}/reinstate`,
+        `${API_URL}/api/admin/developers/${developerId}/reinstate`,
         {
           method: "POST",
           credentials: "include",

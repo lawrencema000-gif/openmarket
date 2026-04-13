@@ -83,9 +83,9 @@ describe("GET /api/apps", () => {
     const res = await app.request("/api/apps");
     expect(res.status).toBe(200);
 
-    const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
-    expect(body).toHaveLength(0);
+    const body = await res.json() as any;
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body.items).toHaveLength(0);
   });
 });
 
