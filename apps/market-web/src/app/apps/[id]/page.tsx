@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { apiFetch } from "@/lib/api";
@@ -60,6 +61,19 @@ function StarRating({ rating }: { rating: number }) {
       {"☆".repeat(Math.max(0, 5 - Math.round(rating)))}
     </span>
   );
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const app = await apiFetch<any>(`/api/apps/${id}`);
+    return {
+      title: `${app.listing?.title ?? "App"} — OpenMarket`,
+      description: app.listing?.shortDescription ?? "Android app on OpenMarket",
+    };
+  } catch {
+    return { title: "App — OpenMarket" };
+  }
 }
 
 export default async function AppDetailPage({

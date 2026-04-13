@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { apiFetch } from "@/lib/api";
@@ -26,6 +27,19 @@ async function getDeveloper(id: string): Promise<DeveloperProfile | null> {
     return await apiFetch<DeveloperProfile>(`/api/developers/${id}`);
   } catch {
     return null;
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const dev = await apiFetch<any>(`/api/developers/${id}`);
+    return {
+      title: `${dev.displayName ?? "Developer"} — OpenMarket`,
+      description: `Apps by ${dev.displayName} on OpenMarket`,
+    };
+  } catch {
+    return { title: "Developer — OpenMarket" };
   }
 }
 

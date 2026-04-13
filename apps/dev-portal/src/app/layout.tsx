@@ -22,7 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white">
+          Skip to content
+        </a>
+        <header role="banner" className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-6">
             <Link href="/dashboard" className="font-bold text-xl text-blue-600 shrink-0">
               OpenMarket Developer Console
@@ -33,7 +36,7 @@ export default function RootLayout({
         <div className="flex flex-1 max-w-7xl mx-auto w-full">
           {/* Sidebar */}
           <aside className="w-56 shrink-0 border-r border-gray-200 bg-white px-4 py-6 hidden md:block">
-            <nav className="flex flex-col gap-1">
+            <nav role="navigation" aria-label="Developer console navigation" className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -47,13 +50,13 @@ export default function RootLayout({
           </aside>
 
           {/* Main content */}
-          <main className="flex-1 px-4 sm:px-8 py-8 min-w-0">
+          <main id="main-content" className="flex-1 px-4 sm:px-8 py-8 min-w-0">
             {children}
           </main>
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex">
+        <nav role="navigation" aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}

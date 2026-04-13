@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, TrustBadge, Badge } from "@openmarket/ui";
@@ -46,6 +47,14 @@ async function getCategories(): Promise<Category[]> {
   } catch {
     return [];
   }
+}
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string }> }): Promise<Metadata> {
+  const { q } = await searchParams;
+  return {
+    title: q ? `Search: ${q} — OpenMarket` : "Search — OpenMarket",
+    description: "Search for Android apps on OpenMarket",
+  };
 }
 
 export default async function SearchPage({
