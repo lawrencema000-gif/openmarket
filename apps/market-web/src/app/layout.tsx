@@ -64,7 +64,7 @@ export default function RootLayout({
                 Browse
               </Link>
               <Link
-                href="/search?category=productivity"
+                href="/search"
                 className="px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium transition-colors"
               >
                 Developers
@@ -107,10 +107,10 @@ export default function RootLayout({
                   Developers
                 </h3>
                 <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Developer Portal</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Publish an App</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">API Reference</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Trust Framework</a></li>
+                  <li><a href="https://openmarket-dev-portal.vercel.app" className="hover:text-gray-900 transition-colors">Developer Portal</a></li>
+                  <li><a href="https://openmarket-dev-portal.vercel.app/apps/new" className="hover:text-gray-900 transition-colors">Publish an App</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">API Reference</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Trust Framework</a></li>
                 </ul>
               </div>
 
@@ -120,10 +120,10 @@ export default function RootLayout({
                   About
                 </h3>
                 <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Our Mission</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Security Reviews</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Terms of Service</a></li>
+                  <li><a href="/mission" className="hover:text-gray-900 transition-colors">Our Mission</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Security Reviews</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Privacy Policy</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Terms of Service</a></li>
                 </ul>
               </div>
 
@@ -133,10 +133,10 @@ export default function RootLayout({
                   Community
                 </h3>
                 <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">GitHub</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Discord</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Blog</a></li>
-                  <li><a href="#" className="hover:text-gray-900 transition-colors">Changelog</a></li>
+                  <li><a href="https://github.com/lawrencema000-gif/openmarket" className="hover:text-gray-900 transition-colors">GitHub</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Discord</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Blog</a></li>
+                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Changelog</a></li>
                 </ul>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function RootLayout({
                 </div>
                 <span className="text-sm font-semibold text-gray-900">OpenMarket</span>
               </div>
-              <p className="text-xs text-gray-400">© 2025 OpenMarket. Open source, transparent, yours.</p>
+              <p className="text-xs text-gray-400">© 2026 OpenMarket. Open source, transparent, yours.</p>
             </div>
           </div>
         </footer>
