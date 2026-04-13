@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, TrustBadge, Badge } from "@openmarket/ui";
-import type { TrustBadgeType } from "@openmarket/ui";
+import {
+  PageHeader,
+  AppCard,
+  AppCardSkeleton,
+  EmptyState,
+  Badge,
+} from "@openmarket/ui";
 
 interface AppListing {
   id: string;
@@ -10,7 +15,9 @@ interface AppListing {
   shortDescription?: string;
   iconUrl?: string;
   category?: string;
-  trustBadges?: TrustBadgeType[];
+  trustTier?: string;
+  isExperimental?: boolean;
+  rating?: number;
   developer?: {
     id: string;
     name: string;
@@ -31,6 +38,7 @@ interface Category {
 }
 
 const TRUST_TIERS = [
+  { value: "", label: "All" },
   { value: "verified", label: "Verified" },
   { value: "experimental", label: "Experimental" },
   { value: "new", label: "New" },
@@ -49,11 +57,19 @@ async function getCategories(): Promise<Category[]> {
   }
 }
 
+function buildSearchUrl(base: Record<string, string>, overrides: Record<string, string>) {
+  const merged = { ...base, ...overrides };
+  // Remove empty strings
+  Object.keys(merged).forEach((k) => { if (!merged[k]) delete merged[k]; });
+  const qs = new URLSearchParams(merged).toString();
+  return `/search${qs ? `?${qs}` : ""}`;
+}
+
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string }> }): Promise<Metadata> {
   const { q } = await searchParams;
   return {
-    title: q ? `Search: ${q} — OpenMarket` : "Search — OpenMarket",
-    description: "Search for Android apps on OpenMarket",
+    title: q ? `"${q}" — Search OpenMarket` : "Browse Apps — OpenMarket",
+    description: "Search and discover Android apps on OpenMarket",
   };
 }
 
@@ -68,9 +84,15 @@ export default async function SearchPage({
   const trustTier = params.trustTier ?? "";
   const page = params.page ?? "1";
 
+  const baseParams = {
+    ...(q && { q }),
+    ...(category && { category }),
+    ...(trustTier && { trustTier }),
+  };
+
   const [categories, searchResult] = await Promise.allSettled([
     getCategories(),
-    searchApps({ ...(q && { q }), ...(category && { category }), ...(trustTier && { trustTier }), page, limit: "20" }),
+    searchApps({ ...baseParams, page, limit: "21" }),
   ]);
 
   const cats = categories.status === "fulfilled" ? categories.value : [];
@@ -78,143 +100,204 @@ export default async function SearchPage({
   const apps = result?.apps ?? [];
   const total = result?.total ?? 0;
   const currentPage = result?.page ?? 1;
-  const limit = result?.limit ?? 20;
+  const limit = result?.limit ?? 21;
+  const totalPages = Math.ceil(total / limit);
+
+  const pageTitle = q
+    ? `Results for "${q}"`
+    : category
+    ? cats.find((c) => c.slug === category)?.name ?? "Browse Apps"
+    : "Browse Apps";
 
   return (
-    <div className="flex gap-8">
-      {/* Sidebar filters */}
-      <aside className="w-56 shrink-0 space-y-6">
-        <div>
-          <h3 className="font-semibold text-sm text-gray-700 mb-2 uppercase tracking-wide">Category</h3>
-          <div className="space-y-1">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <PageHeader
+        title={pageTitle}
+        description={total > 0 ? `${total.toLocaleString()} app${total !== 1 ? "s" : ""} found` : undefined}
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: q ? "Search" : "Browse" },
+        ]}
+      />
+
+      {/* Filter chips row */}
+      <div className="space-y-3">
+        {/* Category chips */}
+        {cats.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Category:</span>
             <Link
-              href={`/search?${new URLSearchParams({ ...(q && { q }), ...(trustTier && { trustTier }) }).toString()}`}
-              className={`block text-sm px-2 py-1 rounded hover:bg-gray-100 ${!category ? "font-medium text-blue-600 bg-blue-50" : "text-gray-600"}`}
+              href={buildSearchUrl(baseParams, { category: "", page: "" })}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+                !category
+                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-700"
+              }`}
             >
-              All Categories
+              All
             </Link>
             {cats.map((cat) => (
               <Link
                 key={cat.id}
-                href={`/search?${new URLSearchParams({ ...(q && { q }), category: cat.slug, ...(trustTier && { trustTier }) }).toString()}`}
-                className={`block text-sm px-2 py-1 rounded hover:bg-gray-100 ${category === cat.slug ? "font-medium text-blue-600 bg-blue-50" : "text-gray-600"}`}
+                href={buildSearchUrl(baseParams, { category: cat.slug, page: "" })}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+                  category === cat.slug
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-700"
+                }`}
               >
                 {cat.name}
               </Link>
             ))}
           </div>
-        </div>
+        )}
 
-        <div>
-          <h3 className="font-semibold text-sm text-gray-700 mb-2 uppercase tracking-wide">Trust Tier</h3>
-          <div className="space-y-1">
+        {/* Trust tier chips */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Trust:</span>
+          {TRUST_TIERS.map((tier) => (
             <Link
-              href={`/search?${new URLSearchParams({ ...(q && { q }), ...(category && { category }) }).toString()}`}
-              className={`block text-sm px-2 py-1 rounded hover:bg-gray-100 ${!trustTier ? "font-medium text-blue-600 bg-blue-50" : "text-gray-600"}`}
+              key={tier.value}
+              href={buildSearchUrl(baseParams, { trustTier: tier.value, page: "" })}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+                trustTier === tier.value
+                  ? tier.value === "experimental"
+                    ? "bg-violet-600 text-white border-violet-600 shadow-sm"
+                    : "bg-blue-600 text-white border-blue-600 shadow-sm"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-700"
+              }`}
             >
-              All
-            </Link>
-            {TRUST_TIERS.map((tier) => (
-              <Link
-                key={tier.value}
-                href={`/search?${new URLSearchParams({ ...(q && { q }), ...(category && { category }), trustTier: tier.value }).toString()}`}
-                className={`block text-sm px-2 py-1 rounded hover:bg-gray-100 ${trustTier === tier.value ? "font-medium text-blue-600 bg-blue-50" : "text-gray-600"}`}
-              >
-                {tier.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </aside>
-
-      {/* Results */}
-      <div className="flex-1 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">
-            {q ? `Results for "${q}"` : "Browse Apps"}
-            {total > 0 && <span className="text-sm font-normal text-gray-500 ml-2">{total} apps</span>}
-          </h1>
-        </div>
-
-        {searchResult.status === "rejected" && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
-            Could not load results — API may be unavailable. Please try again later.
-          </div>
-        )}
-
-        {apps.length === 0 && searchResult.status === "fulfilled" && (
-          <div className="text-center py-16 text-gray-500">
-            <p className="text-lg">No apps found.</p>
-            <p className="text-sm mt-1">Try a different search term or remove filters.</p>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          {apps.map((app) => (
-            <Link key={app.id} href={`/apps/${app.id}`}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="pt-4">
-                  <div className="flex items-start gap-4">
-                    {app.iconUrl ? (
-                      <img src={app.iconUrl} alt={app.name} className="w-14 h-14 rounded-xl object-cover shrink-0" />
-                    ) : (
-                      <div className="w-14 h-14 bg-gray-200 rounded-xl shrink-0 flex items-center justify-center text-gray-400 text-xs">
-                        APK
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="font-semibold text-gray-900">{app.name}</h2>
-                        {app.category && (
-                          <Badge variant="secondary" className="text-xs">{app.category}</Badge>
-                        )}
-                      </div>
-                      {app.developer && (
-                        <p className="text-sm text-gray-500">{app.developer.name}</p>
-                      )}
-                      {app.shortDescription && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{app.shortDescription}</p>
-                      )}
-                      {app.trustBadges && app.trustBadges.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {app.trustBadges.map((badge) => (
-                            <TrustBadge key={badge} type={badge} />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {tier.label}
             </Link>
           ))}
         </div>
-
-        {/* Pagination */}
-        {total > limit && (
-          <div className="flex gap-2 pt-4">
-            {currentPage > 1 && (
-              <Link
-                href={`/search?${new URLSearchParams({ ...(q && { q }), ...(category && { category }), ...(trustTier && { trustTier }), page: String(currentPage - 1) }).toString()}`}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-              >
-                Previous
-              </Link>
-            )}
-            <span className="px-4 py-2 text-sm text-gray-600">
-              Page {currentPage} of {Math.ceil(total / limit)}
-            </span>
-            {currentPage * limit < total && (
-              <Link
-                href={`/search?${new URLSearchParams({ ...(q && { q }), ...(category && { category }), ...(trustTier && { trustTier }), page: String(currentPage + 1) }).toString()}`}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-              >
-                Next
-              </Link>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* API error notice */}
+      {searchResult.status === "rejected" && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+          <svg className="w-4 h-4 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          Could not load results — API may be unavailable. Please try again later.
+        </div>
+      )}
+
+      {/* Results grid */}
+      {apps.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {apps.map((app) => (
+            <Link key={app.id} href={`/apps/${app.id}`} className="block">
+              <AppCard
+                id={app.id}
+                title={app.name}
+                iconUrl={app.iconUrl ?? ""}
+                developerName={app.developer?.name ?? "Unknown Developer"}
+                shortDescription={app.shortDescription ?? ""}
+                category={app.category ?? ""}
+                trustTier={app.trustTier ?? "new"}
+                isExperimental={app.isExperimental}
+                rating={app.rating}
+                variant="grid"
+              />
+            </Link>
+          ))}
+        </div>
+      ) : searchResult.status === "fulfilled" ? (
+        <EmptyState
+          icon={
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+          }
+          title="No apps found"
+          description={
+            q
+              ? `No results for "${q}". Try a different search term or remove filters.`
+              : "No apps match the current filters. Try adjusting your selection."
+          }
+          action={
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Clear all filters
+            </Link>
+          }
+        />
+      ) : null}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1 pt-4">
+          {/* Previous */}
+          {currentPage > 1 ? (
+            <Link
+              href={buildSearchUrl(baseParams, { page: String(currentPage - 1) })}
+              className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
+              </svg>
+              Prev
+            </Link>
+          ) : (
+            <span className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-gray-300 cursor-not-allowed">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
+              </svg>
+              Prev
+            </span>
+          )}
+
+          {/* Page numbers */}
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            let pageNum: number;
+            if (totalPages <= 7) {
+              pageNum = i + 1;
+            } else if (currentPage <= 4) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 3) {
+              pageNum = totalPages - 6 + i;
+            } else {
+              pageNum = currentPage - 3 + i;
+            }
+            return pageNum;
+          }).map((pageNum) => (
+            <Link
+              key={pageNum}
+              href={buildSearchUrl(baseParams, { page: String(pageNum) })}
+              className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                pageNum === currentPage
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+              }`}
+            >
+              {pageNum}
+            </Link>
+          ))}
+
+          {/* Next */}
+          {currentPage < totalPages ? (
+            <Link
+              href={buildSearchUrl(baseParams, { page: String(currentPage + 1) })}
+              className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            >
+              Next
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
+          ) : (
+            <span className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-gray-300 cursor-not-allowed">
+              Next
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
