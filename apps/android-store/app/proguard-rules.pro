@@ -1,0 +1,2 @@
+-keep class com.openmarket.store.data.api.models.** { *; }
+-keepattributes *Annotation*
