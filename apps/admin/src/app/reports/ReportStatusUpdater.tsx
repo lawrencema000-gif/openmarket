@@ -36,7 +36,7 @@ export function ReportStatusUpdater({
       value={status}
       onChange={(e) => handleChange(e.target.value as ReportStatus)}
       disabled={saving}
-      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 shrink-0"
+      className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 shrink-0 cursor-pointer hover:border-gray-300 transition-colors"
     >
       {STATUSES.map((s) => (
         <option key={s} value={s}>

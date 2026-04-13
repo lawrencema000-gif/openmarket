@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button, ConfirmDialog } from "@openmarket/ui";
 import { API_URL } from "@/lib/api";
 
 export function DeveloperActions({
@@ -11,61 +12,55 @@ export function DeveloperActions({
   isSuspended: boolean;
 }) {
   const [suspended, setSuspended] = useState(isSuspended);
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [confirmSuspend, setConfirmSuspend] = useState(false);
+  const [confirmReinstate, setConfirmReinstate] = useState(false);
   const [reason, setReason] = useState("");
-  const [feedback, setFeedback] = useState<string | null>(null);
 
   async function handleSuspend() {
-    setStatus("loading");
+    setLoading(true);
     try {
-      const res = await fetch(
-        `${API_URL}/api/admin/developers/${developerId}/suspend`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reason }),
-        }
-      );
+      const res = await fetch(`${API_URL}/api/admin/developers/${developerId}/suspend`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
       if (res.ok) {
         setSuspended(true);
-        setShowForm(false);
-        setReason("");
-        setFeedback("Developer suspended");
-        setStatus("idle");
+        setFeedback({ ok: true, msg: "Developer suspended." });
       } else {
-        setStatus("error");
-        setFeedback("Failed to suspend");
+        setFeedback({ ok: false, msg: "Failed to suspend developer." });
       }
     } catch {
-      setStatus("error");
-      setFeedback("Error contacting API");
+      setFeedback({ ok: false, msg: "Error contacting API." });
+    } finally {
+      setLoading(false);
+      setConfirmSuspend(false);
+      setReason("");
     }
   }
 
   async function handleReinstate() {
-    setStatus("loading");
+    setLoading(true);
     try {
-      const res = await fetch(
-        `${API_URL}/api/admin/developers/${developerId}/reinstate`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const res = await fetch(`${API_URL}/api/admin/developers/${developerId}/reinstate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (res.ok) {
         setSuspended(false);
-        setFeedback("Developer reinstated");
-        setStatus("idle");
+        setFeedback({ ok: true, msg: "Developer reinstated." });
       } else {
-        setStatus("error");
-        setFeedback("Failed to reinstate");
+        setFeedback({ ok: false, msg: "Failed to reinstate." });
       }
     } catch {
-      setStatus("error");
-      setFeedback("Error contacting API");
+      setFeedback({ ok: false, msg: "Error contacting API." });
+    } finally {
+      setLoading(false);
+      setConfirmReinstate(false);
     }
   }
 
@@ -74,49 +69,75 @@ export function DeveloperActions({
       {feedback && (
         <p
           className={`text-xs font-medium px-3 py-1.5 rounded-lg ${
-            status === "error"
-              ? "bg-red-50 text-red-600"
-              : "bg-green-50 text-green-600"
+            feedback.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
           }`}
         >
-          {feedback}
+          {feedback.msg}
         </p>
       )}
 
       {suspended ? (
-        <button
-          onClick={handleReinstate}
-          disabled={status === "loading"}
-          className="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+        <Button
+          onClick={() => setConfirmReinstate(true)}
+          disabled={loading}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
         >
           Reinstate Developer
-        </button>
+        </Button>
       ) : (
-        <button
-          onClick={() => setShowForm(!showForm)}
-          disabled={status === "loading"}
-          className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+        <Button
+          variant="destructive"
+          onClick={() => setConfirmSuspend(true)}
+          disabled={loading}
         >
           Suspend Developer
-        </button>
+        </Button>
       )}
 
-      {showForm && !suspended && (
-        <div className="flex flex-col gap-2 w-72">
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Suspension reason (optional)"
-            rows={3}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300"
-          />
-          <button
-            onClick={handleSuspend}
-            disabled={status === "loading"}
-            className="w-full px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-          >
-            Confirm Suspend
-          </button>
+      <ConfirmDialog
+        open={confirmReinstate}
+        onClose={() => setConfirmReinstate(false)}
+        onConfirm={handleReinstate}
+        title="Reinstate Developer"
+        description="This will restore the developer's account and allow them to publish apps again."
+        confirmLabel="Reinstate"
+        variant="default"
+        loading={loading}
+      />
+
+      {/* Suspend dialog with reason textarea */}
+      {confirmSuspend && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setConfirmSuspend(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6" role="dialog" aria-modal="true">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Suspend Developer</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              This will suspend the developer&apos;s account and block all app publications. Provide a reason for your records.
+            </p>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Suspension reason (optional)"
+              rows={3}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmSuspend(false)}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSuspend}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-60 transition-colors"
+              >
+                {loading ? "Processing..." : "Confirm Suspend"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
