@@ -2,6 +2,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { categories } from "./schema/moderation";
+import { developers } from "./schema/developers";
 
 const CATEGORIES = [
   { slug: "art-design", name: "Art & Design", sortOrder: 1 },
@@ -64,6 +65,19 @@ async function seed() {
     .onConflictDoNothing({ target: categories.slug });
 
   console.log(`Seeded ${CATEGORIES.length} categories`);
+
+  console.log("Seeding default admin developer...");
+  await db
+    .insert(developers)
+    .values({
+      email: "admin@openmarket.dev",
+      displayName: "OpenMarket Admin",
+      trustLevel: "audited",
+      isAdmin: true,
+      authProvider: "email",
+    })
+    .onConflictDoNothing({ target: developers.email });
+  console.log("Seeded default admin");
 
   await client.end();
 }

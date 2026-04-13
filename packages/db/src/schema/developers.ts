@@ -9,6 +9,15 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+export const evidenceTypeEnum = pgEnum("evidence_type", [
+  "id_document",
+  "domain_verification",
+  "play_console_screenshot",
+  "signed_apk_challenge",
+]);
+
+export const algorithmEnum = pgEnum("algorithm", ["RSA", "EC", "DSA"]);
+
 export const trustLevelEnum = pgEnum("trust_level", [
   "experimental",
   "verified",
@@ -47,6 +56,7 @@ export const developers = pgTable("developers", {
   privacyPolicyUrl: text("privacy_policy_url"),
   trustLevel: trustLevelEnum("trust_level").default("experimental").notNull(),
   suspensionReason: text("suspension_reason"),
+  isAdmin: boolean("is_admin").default(false).notNull(),
   authProvider: text("auth_provider"),
   authProviderId: text("auth_provider_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -74,7 +84,7 @@ export const developerVerificationEvidence = pgTable(
     developerId: uuid("developer_id")
       .references(() => developers.id, { onDelete: "cascade" })
       .notNull(),
-    evidenceType: text("evidence_type").notNull(),
+    evidenceType: evidenceTypeEnum("evidence_type").notNull(),
     fileUrl: text("file_url").notNull(),
     notes: text("notes"),
     reviewedBy: uuid("reviewed_by").references(() => developers.id),
@@ -92,7 +102,7 @@ export const signingKeys = pgTable(
       .references(() => developers.id, { onDelete: "cascade" })
       .notNull(),
     fingerprintSha256: text("fingerprint_sha256").notNull(),
-    algorithm: text("algorithm").notNull(),
+    algorithm: algorithmEnum("algorithm").notNull(),
     certificatePem: text("certificate_pem"),
     keySize: integer("key_size"),
     isActive: boolean("is_active").default(true).notNull(),

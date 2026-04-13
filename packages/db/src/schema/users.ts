@@ -7,6 +7,7 @@ import {
   integer,
   pgEnum,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { apps } from "./apps";
 
@@ -49,21 +50,28 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const installEvents = pgTable("install_events", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  appId: uuid("app_id")
-    .references(() => apps.id, { onDelete: "cascade" })
-    .notNull(),
-  userId: uuid("user_id"),
-  deviceFingerprintHash: text("device_fingerprint_hash"),
-  installedVersionCode: integer("installed_version_code").notNull(),
-  source: installSourceEnum("source").default("store_app").notNull(),
-  osVersion: text("os_version"),
-  deviceModel: text("device_model"),
-  success: boolean("success").default(true).notNull(),
-  failureReason: text("failure_reason"),
-  installedAt: timestamp("installed_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const installEvents = pgTable(
+  "install_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appId: uuid("app_id")
+      .references(() => apps.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id"),
+    deviceFingerprintHash: text("device_fingerprint_hash"),
+    installedVersionCode: integer("installed_version_code").notNull(),
+    source: installSourceEnum("source").default("store_app").notNull(),
+    osVersion: text("os_version"),
+    deviceModel: text("device_model"),
+    success: boolean("success").default(true).notNull(),
+    failureReason: text("failure_reason"),
+    installedAt: timestamp("installed_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("install_events_app_id_idx").on(table.appId),
+    index("install_events_user_id_idx").on(table.userId),
+  ]
+);
 
 export const reviews = pgTable(
   "reviews",
@@ -89,18 +97,25 @@ export const reviews = pgTable(
   ]
 );
 
-export const reports = pgTable("reports", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  targetType: reportTargetTypeEnum("target_type").notNull(),
-  targetId: uuid("target_id").notNull(),
-  reporterId: uuid("reporter_id")
-    .references(() => users.id)
-    .notNull(),
-  reportType: reportTypeEnum("report_type").notNull(),
-  description: text("description").notNull(),
-  status: reportStatusEnum("status").default("open").notNull(),
-  resolutionNotes: text("resolution_notes"),
-  resolvedBy: uuid("resolved_by"),
-  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const reports = pgTable(
+  "reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    targetType: reportTargetTypeEnum("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    reporterId: uuid("reporter_id")
+      .references(() => users.id)
+      .notNull(),
+    reportType: reportTypeEnum("report_type").notNull(),
+    description: text("description").notNull(),
+    status: reportStatusEnum("status").default("open").notNull(),
+    resolutionNotes: text("resolution_notes"),
+    resolvedBy: uuid("resolved_by"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("reports_target_idx").on(table.targetType, table.targetId),
+    index("reports_status_idx").on(table.status),
+  ]
+);

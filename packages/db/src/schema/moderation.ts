@@ -7,6 +7,7 @@ import {
   integer,
   pgEnum,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { developers } from "./developers";
 import { apps } from "./apps";
@@ -32,19 +33,25 @@ export const appealStatusEnum = pgEnum("appeal_status", [
   "overturned",
 ]);
 
-export const moderationActions = pgTable("moderation_actions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  targetType: moderationTargetTypeEnum("target_type").notNull(),
-  targetId: uuid("target_id").notNull(),
-  action: moderationActionEnum("action").notNull(),
-  reason: text("reason").notNull(),
-  moderatorId: uuid("moderator_id")
-    .references(() => developers.id)
-    .notNull(),
-  appealStatus: appealStatusEnum("appeal_status").default("none").notNull(),
-  appealNotes: text("appeal_notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const moderationActions = pgTable(
+  "moderation_actions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    targetType: moderationTargetTypeEnum("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    action: moderationActionEnum("action").notNull(),
+    reason: text("reason").notNull(),
+    moderatorId: uuid("moderator_id")
+      .references(() => developers.id)
+      .notNull(),
+    appealStatus: appealStatusEnum("appeal_status").default("none").notNull(),
+    appealNotes: text("appeal_notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("moderation_actions_target_idx").on(table.targetType, table.targetId),
+  ]
+);
 
 export const releaseChannels = pgTable(
   "release_channels",
