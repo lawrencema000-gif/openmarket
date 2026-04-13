@@ -16,7 +16,10 @@ const worker = new Worker<ScanJobData>(
     await processScanJob(job);
     console.log(`[scan-worker] Completed job ${job.id}`);
   },
-  { connection: redisConnection }
+  {
+    connection: redisConnection,
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY ?? "3", 10),
+  }
 );
 
 worker.on("completed", (job) => {

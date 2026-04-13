@@ -44,4 +44,12 @@ worker.on("error", (err) => {
 
 console.log(`[ingest-worker] Listening on queue "${QUEUE_NAME}" (Redis ${redisHost}:${redisPort})`);
 
+async function shutdown() {
+  console.log("Shutting down ingest worker...");
+  await worker.close();
+  process.exit(0);
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
+
 export { worker };

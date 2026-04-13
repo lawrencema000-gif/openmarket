@@ -37,7 +37,10 @@ async function main() {
         console.warn(`Unknown action: ${action}`);
       }
     },
-    { connection: redisConnection }
+    {
+      connection: redisConnection,
+      concurrency: parseInt(process.env.WORKER_CONCURRENCY ?? "5", 10),
+    }
   );
 
   worker.on("completed", (job) => {
@@ -49,6 +52,14 @@ async function main() {
   });
 
   console.log("Search worker started, listening on openmarket:search-index");
+
+  async function shutdown() {
+    console.log("Shutting down search worker...");
+    await worker.close();
+    process.exit(0);
+  }
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
 }
 
 main().catch((err) => {
