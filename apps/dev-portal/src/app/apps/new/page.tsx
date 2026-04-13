@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
+import {
+  PageHeader,
+  Button,
+  Input,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@openmarket/ui";
 
 const CATEGORIES = [
   "communication",
@@ -27,6 +36,75 @@ const CATEGORIES = [
 ];
 
 const CONTENT_RATINGS = ["everyone", "teen", "mature_17", "adults_only"];
+
+function Field({
+  label,
+  hint,
+  children,
+  charCount,
+  maxLength,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+  charCount?: number;
+  maxLength?: number;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-1">
+        <label className="block text-sm font-medium text-gray-700">
+          {label}
+          {hint && <span className="ml-1 font-normal text-gray-400 text-xs">({hint})</span>}
+        </label>
+        {charCount !== undefined && maxLength !== undefined && (
+          <span className={`text-xs ${charCount > maxLength * 0.9 ? "text-amber-600" : "text-gray-400"}`}>
+            {charCount}/{maxLength}
+          </span>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Toggle({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-start gap-4 cursor-pointer select-none">
+      <div className="mt-0.5 flex-shrink-0">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          onClick={() => onChange(!checked)}
+          className={`relative w-10 h-5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            checked ? "bg-blue-600" : "bg-gray-300"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+              checked ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-700">{label}</p>
+        {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+      </div>
+    </label>
+  );
+}
 
 export default function NewAppPage() {
   const router = useRouter();
@@ -76,236 +154,224 @@ export default function NewAppPage() {
     }
   }
 
+  const selectCls =
+    "flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Create New App</h1>
+    <div className="max-w-2xl">
+      <PageHeader
+        title="Create New App"
+        breadcrumbs={[
+          { label: "My Apps", href: "/apps" },
+          { label: "Create New App" },
+        ]}
+      />
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5 bg-white rounded-xl border border-gray-200 p-6">
-        {/* Package name */}
-        <Field label="Package Name" hint="e.g. com.example.myapp">
-          <input
-            type="text"
-            required
-            pattern="[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+"
-            value={form.packageName}
-            onChange={(e) => set("packageName", e.target.value)}
-            className="input"
-            placeholder="com.example.myapp"
-          />
-        </Field>
-
-        {/* Title */}
-        <Field label="App Title">
-          <input
-            type="text"
-            required
-            maxLength={50}
-            value={form.title}
-            onChange={(e) => set("title", e.target.value)}
-            className="input"
-            placeholder="My Awesome App"
-          />
-        </Field>
-
-        {/* Short description */}
-        <Field label="Short Description" hint="Max 80 characters">
-          <input
-            type="text"
-            required
-            maxLength={80}
-            value={form.shortDescription}
-            onChange={(e) => set("shortDescription", e.target.value)}
-            className="input"
-            placeholder="A brief one-line description"
-          />
-        </Field>
-
-        {/* Full description */}
-        <Field label="Full Description">
-          <textarea
-            required
-            rows={5}
-            value={form.fullDescription}
-            onChange={(e) => set("fullDescription", e.target.value)}
-            className="input resize-none"
-            placeholder="Detailed description of your app…"
-          />
-        </Field>
-
-        {/* Category */}
-        <Field label="Category">
-          <select
-            value={form.category}
-            onChange={(e) => set("category", e.target.value)}
-            className="input"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        {/* Icon URL */}
-        <Field label="Icon URL">
-          <input
-            type="url"
-            value={form.iconUrl}
-            onChange={(e) => set("iconUrl", e.target.value)}
-            className="input"
-            placeholder="https://example.com/icon.png"
-          />
-        </Field>
-
-        {/* Screenshots */}
-        <Field label="Screenshot URLs" hint="Up to 3 screenshot URLs">
-          <div className="space-y-2">
-            {form.screenshots.map((url, i) => (
-              <input
-                key={i}
-                type="url"
-                value={url}
-                onChange={(e) => setScreenshot(i, e.target.value)}
-                className="input"
-                placeholder={`Screenshot ${i + 1} URL`}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Info</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field label="Package Name" hint="e.g. com.example.myapp">
+              <Input
+                type="text"
+                required
+                pattern="[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+"
+                value={form.packageName}
+                onChange={(e) => set("packageName", e.target.value)}
+                placeholder="com.example.myapp"
+                className="font-mono"
               />
-            ))}
-          </div>
-        </Field>
+            </Field>
 
-        {/* Privacy policy */}
-        <Field label="Privacy Policy URL">
-          <input
-            type="url"
-            value={form.privacyPolicyUrl}
-            onChange={(e) => set("privacyPolicyUrl", e.target.value)}
-            className="input"
-            placeholder="https://example.com/privacy"
-          />
-        </Field>
+            <Field label="App Title" charCount={form.title.length} maxLength={50}>
+              <Input
+                type="text"
+                required
+                maxLength={50}
+                value={form.title}
+                onChange={(e) => set("title", e.target.value)}
+                placeholder="My Awesome App"
+              />
+            </Field>
 
-        {/* Website */}
-        <Field label="Website URL">
-          <input
-            type="url"
-            value={form.websiteUrl}
-            onChange={(e) => set("websiteUrl", e.target.value)}
-            className="input"
-            placeholder="https://example.com"
-          />
-        </Field>
+            <Field label="Category">
+              <select
+                value={form.category}
+                onChange={(e) => set("category", e.target.value)}
+                className={selectCls}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </CardContent>
+        </Card>
 
-        {/* Content rating */}
-        <Field label="Content Rating">
-          <select
-            value={form.contentRating}
-            onChange={(e) => set("contentRating", e.target.value)}
-            className="input"
-          >
-            {CONTENT_RATINGS.map((r) => (
-              <option key={r} value={r}>
-                {r.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {/* Description */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Description</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field
+              label="Short Description"
+              hint="Max 80 characters"
+              charCount={form.shortDescription.length}
+              maxLength={80}
+            >
+              <Input
+                type="text"
+                required
+                maxLength={80}
+                value={form.shortDescription}
+                onChange={(e) => set("shortDescription", e.target.value)}
+                placeholder="A brief one-line description"
+              />
+            </Field>
 
-        {/* Toggles */}
-        <div className="flex flex-col gap-3">
-          <Toggle
-            label="Contains Ads"
-            checked={form.containsAds}
-            onChange={(v) => set("containsAds", v)}
-          />
-          <Toggle
-            label="Experimental / Beta"
-            checked={form.isExperimental}
-            onChange={(v) => set("isExperimental", v)}
-          />
-        </div>
+            <Field
+              label="Full Description"
+              charCount={form.fullDescription.length}
+              maxLength={4000}
+            >
+              <textarea
+                required
+                rows={6}
+                maxLength={4000}
+                value={form.fullDescription}
+                onChange={(e) => set("fullDescription", e.target.value)}
+                placeholder="Detailed description of your app…"
+                className="flex w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              />
+            </Field>
+          </CardContent>
+        </Card>
 
-        <div className="pt-2 flex gap-3">
-          <button
+        {/* Media */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Media</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field label="Icon URL">
+              <Input
+                type="url"
+                value={form.iconUrl}
+                onChange={(e) => set("iconUrl", e.target.value)}
+                placeholder="https://example.com/icon.png"
+              />
+            </Field>
+
+            <Field label="Screenshot URLs" hint="Up to 3 screenshots">
+              <div className="space-y-2">
+                {form.screenshots.map((url, i) => (
+                  <Input
+                    key={i}
+                    type="url"
+                    value={url}
+                    onChange={(e) => setScreenshot(i, e.target.value)}
+                    placeholder={`Screenshot ${i + 1} URL`}
+                  />
+                ))}
+              </div>
+            </Field>
+          </CardContent>
+        </Card>
+
+        {/* Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field label="Privacy Policy URL">
+              <Input
+                type="url"
+                value={form.privacyPolicyUrl}
+                onChange={(e) => set("privacyPolicyUrl", e.target.value)}
+                placeholder="https://example.com/privacy"
+              />
+            </Field>
+
+            <Field label="Website URL">
+              <Input
+                type="url"
+                value={form.websiteUrl}
+                onChange={(e) => set("websiteUrl", e.target.value)}
+                placeholder="https://example.com"
+              />
+            </Field>
+
+            <Field label="Content Rating">
+              <select
+                value={form.contentRating}
+                onChange={(e) => set("contentRating", e.target.value)}
+                className={selectCls}
+              >
+                {CONTENT_RATINGS.map((r) => (
+                  <option key={r} value={r}>
+                    {r.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <div className="pt-2 space-y-4 border-t border-gray-100">
+              <Toggle
+                label="Contains Ads"
+                description="Your app displays advertisements"
+                checked={form.containsAds}
+                onChange={(v) => set("containsAds", v)}
+              />
+              <Toggle
+                label="Experimental / Beta"
+                description="Mark this app as experimental — users will be warned"
+                checked={form.isExperimental}
+                onChange={(v) => set("isExperimental", v)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-3 pb-4">
+          <Button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-lg px-5 py-2.5 text-sm transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-60"
           >
-            {loading ? "Creating…" : "Create App"}
-          </button>
-          <button
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Creating…
+              </span>
+            ) : (
+              "Create App"
+            )}
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={() => router.back()}
-            className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium rounded-lg px-5 py-2.5 text-sm transition-colors"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          border: 1px solid #d1d5db;
-          border-radius: 0.5rem;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          outline: none;
-        }
-        .input:focus {
-          ring: 2px solid #3b82f6;
-        }
-      `}</style>
     </div>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-        {hint && <span className="ml-1 font-normal text-gray-400 text-xs">({hint})</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function Toggle({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex items-center gap-3 cursor-pointer select-none">
-      <div
-        onClick={() => onChange(!checked)}
-        className={`relative w-10 h-5 rounded-full transition-colors ${checked ? "bg-blue-600" : "bg-gray-300"}`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${checked ? "translate-x-5" : "translate-x-0"}`}
-        />
-      </div>
-      <span className="text-sm text-gray-700">{label}</span>
-    </label>
   );
 }
