@@ -26,3 +26,13 @@ export const searchIndexQueue = new Queue("openmarket:search-index", {
   connection: redisConnection,
   defaultJobOptions,
 });
+
+export const notifyQueue = new Queue("openmarket:notify", {
+  connection: redisConnection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 2000 },
+    removeOnComplete: { count: 100 },
+    removeOnFail: false,
+  },
+});
