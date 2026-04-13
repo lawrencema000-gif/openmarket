@@ -9,15 +9,15 @@ describe("parsePermissions", () => {
   it("marks dangerous permissions correctly", () => {
     const results = parsePermissions(["android.permission.CAMERA"]);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("android.permission.CAMERA");
-    expect(results[0].isDangerous).toBe(true);
+    expect(results[0]!.name).toBe("android.permission.CAMERA");
+    expect(results[0]!.isDangerous).toBe(true);
   });
 
   it("marks normal permissions correctly", () => {
     const results = parsePermissions(["android.permission.INTERNET"]);
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe("android.permission.INTERNET");
-    expect(results[0].isDangerous).toBe(false);
+    expect(results[0]!.name).toBe("android.permission.INTERNET");
+    expect(results[0]!.isDangerous).toBe(false);
   });
 
   it("handles mixed permissions", () => {
@@ -42,17 +42,17 @@ describe("parsePermissions", () => {
   it("preserves permission name as-is in output", () => {
     const raw = ["android.permission.ACCESS_FINE_LOCATION"];
     const results = parsePermissions(raw);
-    expect(results[0].name).toBe("android.permission.ACCESS_FINE_LOCATION");
+    expect(results[0]!.name).toBe("android.permission.ACCESS_FINE_LOCATION");
   });
 
   it("handles permissions without android.permission. prefix", () => {
     const results = parsePermissions(["READ_SMS"]);
-    expect(results[0].isDangerous).toBe(true);
+    expect(results[0]!.isDangerous).toBe(true);
   });
 
   it("handles sensitive capability permissions", () => {
     const results = parsePermissions(["android.permission.BIND_ACCESSIBILITY_SERVICE"]);
-    expect(results[0].isDangerous).toBe(true);
+    expect(results[0]!.isDangerous).toBe(true);
   });
 });
 

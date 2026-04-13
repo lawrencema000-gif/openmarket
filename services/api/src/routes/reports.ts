@@ -42,7 +42,7 @@ async function findOrCreateUser(email: string, authUserId: string) {
       .insert(users)
       .values({ email, authProvider: "better-auth", authProviderId: authUserId })
       .returning();
-    user = created;
+    user = created!;
   }
 
   return user;

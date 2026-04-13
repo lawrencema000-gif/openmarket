@@ -78,7 +78,7 @@ appsRouter.post(
     const [listing] = await db
       .insert(appListings)
       .values({
-        appId: app.id,
+        appId: app!.id,
         title: body.title,
         shortDescription: body.shortDescription,
         fullDescription: body.fullDescription,

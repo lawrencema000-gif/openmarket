@@ -7,13 +7,21 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
+    "lint:root": "eslint .",
     "typecheck": "turbo typecheck",
+    "clean": "rm -rf node_modules/.cache && turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\" --ignore-path .gitignore",
+    "validate": "pnpm typecheck && pnpm test && pnpm build",
     "db:migrate": "pnpm --filter @openmarket/db migrate",
     "db:push": "pnpm --filter @openmarket/db push",
     "db:seed": "pnpm --filter @openmarket/db seed",
     "db:studio": "pnpm --filter @openmarket/db studio"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0"
   }

@@ -100,9 +100,9 @@ releasesRouter.post("/releases/:id/upload-url", requireAuth, async (c) => {
     })
     .returning();
 
-  const uploadUrl = `https://storage.openmarket.example/uploads/${artifact.id}`;
+  const uploadUrl = `https://storage.openmarket.example/uploads/${artifact!.id}`;
 
-  return c.json({ uploadUrl, artifactId: artifact.id });
+  return c.json({ uploadUrl, artifactId: artifact!.id });
 });
 
 // Complete upload
@@ -162,11 +162,11 @@ releasesRouter.post(
     // Enqueue ingest job
     await ingestQueue.add("ingest", {
       releaseId: release.id,
-      artifactId: updatedArtifact.id,
+      artifactId: updatedArtifact!.id,
       developerId: developer.id,
     });
 
-    return c.json({ success: true, artifactId: updatedArtifact.id });
+    return c.json({ success: true, artifactId: updatedArtifact!.id });
   }
 );
 

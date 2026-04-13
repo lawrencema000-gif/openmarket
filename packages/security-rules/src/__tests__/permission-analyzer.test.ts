@@ -57,8 +57,8 @@ describe("detectSuspiciousCombinations", () => {
   it("detects CAMERA + INTERNET", () => {
     const combos = detectSuspiciousCombinations(["CAMERA", "INTERNET", "VIBRATE"]);
     expect(combos).toHaveLength(1);
-    expect(combos[0].permissions).toContain("CAMERA");
-    expect(combos[0].permissions).toContain("INTERNET");
+    expect(combos[0]!.permissions).toContain("CAMERA");
+    expect(combos[0]!.permissions).toContain("INTERNET");
   });
 
   it("detects SMS + INTERNET combinations", () => {
@@ -73,7 +73,7 @@ describe("detectSuspiciousCombinations", () => {
       "SYSTEM_ALERT_WINDOW",
     ]);
     expect(combos).toHaveLength(1);
-    expect(combos[0].reason).toMatch(/accessibility/i);
+    expect(combos[0]!.reason).toMatch(/accessibility/i);
   });
 
   it("detects ACCESSIBILITY + INTERNET", () => {

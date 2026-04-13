@@ -13,3 +13,16 @@ coverage/
 build/
 *.apk
 *.aab
+
+# IDE
+.idea/
+.vscode/settings.json
+
+# pnpm
+pnpm-debug.log*
+
+# Vercel
+.vercel/
+
+# Cache
+.cache/
