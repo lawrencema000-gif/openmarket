@@ -159,12 +159,16 @@ releasesRouter.post(
       .where(eq(releaseArtifacts.id, artifact.id))
       .returning();
 
-    // Enqueue ingest job
-    await ingestQueue.add("ingest", {
-      releaseId: release.id,
-      artifactId: updatedArtifact!.id,
-      developerId: developer.id,
-    });
+    // Enqueue ingest job (non-fatal — release is saved; job can be retried)
+    try {
+      await ingestQueue.add("ingest", {
+        releaseId: release.id,
+        artifactId: updatedArtifact!.id,
+        developerId: developer.id,
+      });
+    } catch (err) {
+      console.error("Failed to enqueue ingest job:", err);
+    }
 
     return c.json({ success: true, artifactId: updatedArtifact!.id });
   }

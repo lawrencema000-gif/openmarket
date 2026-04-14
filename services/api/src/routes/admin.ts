@@ -12,6 +12,7 @@ import {
   scanResults,
 } from "@openmarket/db/schema";
 import { requireAdmin } from "../middleware/admin";
+import { notifyQueue } from "../lib/queue";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
@@ -113,6 +114,13 @@ adminRouter.post(
       .where(eq(releases.id, releaseId))
       .returning();
 
+    await notifyQueue.add("notify", {
+      type: "release_approved",
+      releaseId,
+      appId: release.appId,
+      moderatorId: moderator?.id ?? null,
+    });
+
     return c.json(updated);
   }
 );
@@ -161,6 +169,14 @@ adminRouter.post(
       });
     }
 
+    await notifyQueue.add("notify", {
+      type: "release_rejected",
+      releaseId,
+      appId: release.appId,
+      reason: body.reason ?? null,
+      moderatorId: moderator?.id ?? null,
+    });
+
     return c.json(updated);
   }
 );
@@ -208,6 +224,13 @@ adminRouter.post(
       });
     }
 
+    await notifyQueue.add("notify", {
+      type: "developer_suspended",
+      developerId,
+      reason: body.reason,
+      moderatorId: moderator?.id ?? null,
+    });
+
     return c.json(updated);
   }
 );
@@ -254,6 +277,13 @@ adminRouter.post(
         moderatorId: moderator.id,
       });
     }
+
+    await notifyQueue.add("notify", {
+      type: "developer_reinstated",
+      developerId,
+      reason: body.reason ?? null,
+      moderatorId: moderator?.id ?? null,
+    });
 
     return c.json(updated);
   }

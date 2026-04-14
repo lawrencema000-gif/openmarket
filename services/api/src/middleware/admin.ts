@@ -15,7 +15,10 @@ export async function requireAdmin(c: Context, next: Next) {
     where: eq(developers.email, user.email),
   });
 
-  if (!developer || !developer.isAdmin) {
+  if (!developer) {
+    throw new HTTPException(403, { message: "Developer profile required for admin access" });
+  }
+  if (!developer.isAdmin) {
     throw new HTTPException(403, { message: "Admin access required" });
   }
 

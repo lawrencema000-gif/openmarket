@@ -9,16 +9,16 @@ const MEILI_URL = process.env.MEILI_URL ?? "http://localhost:7700";
 const MEILI_MASTER_KEY = process.env.MEILI_MASTER_KEY ?? "openmarket_dev_key";
 const APPS_INDEX = "apps";
 
+const meiliClient = new MeiliSearch({
+  host: MEILI_URL,
+  apiKey: MEILI_MASTER_KEY,
+});
+
 searchRouter.get(
   "/search",
   zValidator("query", searchQuerySchema),
   async (c) => {
     const { q, category, trustTier, page, limit } = c.req.valid("query");
-
-    const client = new MeiliSearch({
-      host: MEILI_URL,
-      apiKey: MEILI_MASTER_KEY,
-    });
 
     const filters: string[] = ["isPublished = true"];
 
@@ -35,7 +35,7 @@ searchRouter.get(
     const filter = filters.join(" AND ");
     const offset = (page - 1) * limit;
 
-    const index = client.index(APPS_INDEX);
+    const index = meiliClient.index(APPS_INDEX);
     const result = await index.search(q, {
       filter,
       limit,

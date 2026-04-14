@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { Hono } from "hono";
 
+vi.mock("../lib/queue", () => ({
+  ingestQueue: { add: vi.fn().mockResolvedValue(undefined) },
+  scanQueue: { add: vi.fn().mockResolvedValue(undefined) },
+  searchIndexQueue: { add: vi.fn().mockResolvedValue(undefined) },
+  notifyQueue: { add: vi.fn().mockResolvedValue(undefined) },
+}));
+
 vi.mock("../lib/db", () => ({
   db: {
     insert: vi.fn().mockReturnValue({

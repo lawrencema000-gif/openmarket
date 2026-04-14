@@ -49,7 +49,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="bg-gradient-to-b from-white to-slate-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
+          <div className="relative z-10 max-w-3xl mx-auto text-center space-y-6">
             {/* Eyebrow */}
             <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-full px-4 py-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
@@ -175,7 +175,7 @@ export default async function HomePage() {
 
               <div className="flex flex-col gap-3 shrink-0">
                 <a
-                  href="#"
+                  href="https://openmarket-dev-portal.vercel.app/register"
                   className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors shadow-md text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -184,7 +184,7 @@ export default async function HomePage() {
                   Start Publishing
                 </a>
                 <a
-                  href="#"
+                  href="https://github.com/lawrencema000-gif/openmarket"
                   className="inline-flex items-center justify-center text-sm text-blue-200 hover:text-white transition-colors"
                 >
                   Read the docs →

@@ -2,8 +2,9 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import "./globals.css";
+import { API_URL } from "@/lib/api";
 
 // Note: metadata must be in a server component; keeping here for reference
 // export const metadata: Metadata = {
@@ -52,6 +53,19 @@ const navLinks = [
 
 function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    try {
+      await fetch(`${API_URL}/api/auth/sign-out`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // ignore errors — redirect anyway
+    }
+    router.push("/login");
+  }
 
   return (
     <aside className="fixed left-0 top-0 h-full w-60 bg-slate-900 hidden md:flex flex-col z-20">
@@ -93,8 +107,17 @@ function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-slate-800">
+      <div className="px-5 py-4 border-t border-slate-800 space-y-2">
         <p className="text-xs text-slate-500">v1.0.0</p>
+        <button
+          onClick={handleSignOut}
+          className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1.5"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+          </svg>
+          Sign Out
+        </button>
       </div>
     </aside>
   );
