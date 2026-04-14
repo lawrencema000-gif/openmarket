@@ -1,5 +1,7 @@
 # OpenMarket — Claude Code Instructions
 
+> Full project documentation: see `/c/Users/lmao/openmarket/README.md`
+
 ## Project Overview
 OpenMarket is a viewpoint-neutral Android app marketplace. pnpm + Turborepo monorepo.
 
@@ -29,7 +31,30 @@ OpenMarket is a viewpoint-neutral Android app marketplace. pnpm + Turborepo mono
 ## Database
 - PostgreSQL 17 via Docker Compose or Neon
 - Drizzle ORM — schema in `packages/db/src/schema/`
-- Run `cd infrastructure/docker && docker compose up -d` for local DB
+- Schema tables: `developers`, `apps`, `releases`, `users`, `moderation`, `security`
+
+### Local DB Setup (step by step)
+```bash
+# 1. Start Docker services (Postgres + Redis + Meilisearch)
+cd infrastructure/docker && docker compose up -d && cd ../..
+
+# 2. Copy environment variables
+cp infrastructure/docker/.env.example .env
+
+# 3. Push schema to database (dev — no migration files)
+pnpm db:push
+
+# 4. Seed categories and initial data
+pnpm db:seed
+
+# 5. (Optional) Open Drizzle Studio GUI
+pnpm db:studio
+```
+
+### Schema changes
+1. Edit files in `packages/db/src/schema/`
+2. Run `pnpm db:push` (dev) or `pnpm db:generate` + `pnpm db:migrate` (production)
+3. Update `packages/contracts/` Zod schemas to match
 
 ## API
 - Hono framework at `services/api/`
