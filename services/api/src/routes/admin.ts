@@ -13,6 +13,7 @@ import {
 } from "@openmarket/db/schema";
 import { requireAdmin } from "../middleware/admin";
 import { notifyQueue } from "../lib/queue";
+import { enqueueEmail } from "../lib/email";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
@@ -306,4 +307,89 @@ adminRouter.get(
 
     return c.json({ page, limit, data: actions });
   }
+);
+
+// POST /admin/test-email — send a test email through the queue (any template)
+const testEmailSchema = z.object({
+  to: z.string().email(),
+  template: z.enum([
+    "welcome",
+    "verify-email",
+    "password-reset",
+    "release-published",
+    "release-rejected",
+    "report-resolved",
+    "developer-takedown",
+    "review-response",
+  ]),
+});
+
+adminRouter.post(
+  "/admin/test-email",
+  requireAdmin,
+  zValidator("json", testEmailSchema),
+  async (c) => {
+    const { to, template } = c.req.valid("json");
+
+    // Default props per template, sufficient to render an exemplar email.
+    const propsByTemplate = {
+      welcome: { recipientName: "Test User", ctaUrl: "https://openmarket.app" },
+      "verify-email": {
+        verifyUrl: "https://openmarket.app/verify?token=test",
+        expiryMinutes: 60,
+      },
+      "password-reset": {
+        resetUrl: "https://openmarket.app/reset?token=test",
+        expiryMinutes: 30,
+        ipAddress: "127.0.0.1",
+      },
+      "release-published": {
+        appName: "TestApp",
+        versionName: "1.0.0",
+        versionCode: 1,
+        releaseUrl: "https://openmarket.app/apps/com.test",
+        riskScore: 12,
+      },
+      "release-rejected": {
+        appName: "TestApp",
+        versionName: "1.0.0",
+        versionCode: 1,
+        reason: "Test rejection — declared permissions don't match the manifest.",
+        findings: ["Missing data-safety entry", "Below minimum SDK"],
+        fixUrl: "https://dev.openmarket.app/apps/test",
+        appealUrl: "https://dev.openmarket.app/apps/test/appeal",
+      },
+      "report-resolved": {
+        reportId: "00000000-0000-0000-0000-000000000000",
+        targetType: "app",
+        resolution: "delisted" as const,
+        notes: "Test resolution notes.",
+        transparencyUrl: "https://openmarket.app/transparency-report",
+      },
+      "developer-takedown": {
+        appName: "TestApp",
+        reason: "Test takedown — repackaged copy.",
+        ruleVersion: "v2026-01",
+        rulesUrl: "https://openmarket.app/content-policy",
+        appealUrl: "https://dev.openmarket.app/appeals/new",
+        effectiveAt: new Date().toISOString().slice(0, 10),
+      },
+      "review-response": {
+        appName: "TestApp",
+        developerName: "Acme Inc.",
+        responseBody: "Thanks for the feedback!",
+        reviewUrl: "https://openmarket.app/apps/com.test#reviews",
+      },
+    } as const;
+
+    const props = propsByTemplate[template];
+    const result = await enqueueEmail({
+      template,
+      to,
+      props: props as never,
+      tags: [{ name: "category", value: "test" }],
+    });
+
+    return c.json({ success: true, jobId: result.jobId, template, to });
+  },
 );
