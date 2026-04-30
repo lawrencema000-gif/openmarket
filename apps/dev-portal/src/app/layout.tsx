@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import "./globals.css";
 import { API_URL } from "@/lib/api";
 
+const WEB_BASE_URL = process.env.NEXT_PUBLIC_WEB_BASE_URL ?? "https://openmarket.app";
+
 // Note: metadata must be in a server component; keeping here for reference
 // export const metadata: Metadata = {
 //   title: "OpenMarket Developer Console",
@@ -107,7 +109,14 @@ function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-slate-800 space-y-2">
+      <div className="px-5 py-4 border-t border-slate-800 space-y-3">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
+          <a href={`${WEB_BASE_URL}/content-policy`} className="hover:text-slate-300">Content&nbsp;Policy</a>
+          <a href={`${WEB_BASE_URL}/dmca`} className="hover:text-slate-300">DMCA</a>
+          <a href={`${WEB_BASE_URL}/privacy`} className="hover:text-slate-300">Privacy</a>
+          <a href={`${WEB_BASE_URL}/terms`} className="hover:text-slate-300">Terms</a>
+          <a href={`${WEB_BASE_URL}/transparency-report`} className="hover:text-slate-300">Transparency</a>
+        </div>
         <p className="text-xs text-slate-500">v1.0.0</p>
         <button
           onClick={handleSignOut}

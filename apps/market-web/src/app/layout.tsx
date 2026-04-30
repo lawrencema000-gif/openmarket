@@ -120,23 +120,23 @@ export default function RootLayout({
                   About
                 </h3>
                 <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><a href="/mission" className="hover:text-gray-900 transition-colors">Our Mission</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Security Reviews</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Privacy Policy</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Terms of Service</a></li>
+                  <li><Link href="/about" className="hover:text-gray-900 transition-colors">About OpenMarket</Link></li>
+                  <li><Link href="/content-policy" className="hover:text-gray-900 transition-colors">Content Policy</Link></li>
+                  <li><Link href="/transparency-report" className="hover:text-gray-900 transition-colors">Transparency Report</Link></li>
+                  <li><a href="https://github.com/lawrencema000-gif/openmarket" className="hover:text-gray-900 transition-colors">GitHub</a></li>
                 </ul>
               </div>
 
-              {/* Community */}
+              {/* Legal */}
               <div>
                 <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">
-                  Community
+                  Legal
                 </h3>
                 <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><a href="https://github.com/lawrencema000-gif/openmarket" className="hover:text-gray-900 transition-colors">GitHub</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Discord</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Blog</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Changelog</a></li>
+                  <li><Link href="/privacy" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
+                  <li><Link href="/terms" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
+                  <li><Link href="/dmca" className="hover:text-gray-900 transition-colors">DMCA</Link></li>
+                  <li><Link href="/security" className="hover:text-gray-900 transition-colors">Security</Link></li>
                 </ul>
               </div>
             </div>

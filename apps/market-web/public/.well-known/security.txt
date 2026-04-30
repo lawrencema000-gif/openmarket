@@ -1,0 +1,8 @@
+Contact: mailto:security@openmarket.app
+Contact: https://openmarket.app/security
+Expires: 2027-04-30T00:00:00.000Z
+Encryption: https://openmarket.app/.well-known/pgp-key.asc
+Acknowledgments: https://openmarket.app/security#recognition
+Preferred-Languages: en
+Canonical: https://openmarket.app/.well-known/security.txt
+Policy: https://openmarket.app/security
