@@ -12,22 +12,22 @@ const defaultJobOptions = {
   removeOnFail: false,
 };
 
-export const ingestQueue = new Queue("openmarket:ingest", {
+export const ingestQueue = new Queue("openmarket-ingest", {
   connection: redisConnection,
   defaultJobOptions,
 });
 
-export const scanQueue = new Queue("openmarket:scan", {
+export const scanQueue = new Queue("openmarket-scan", {
   connection: redisConnection,
   defaultJobOptions,
 });
 
-export const searchIndexQueue = new Queue("openmarket:search-index", {
+export const searchIndexQueue = new Queue("openmarket-search-index", {
   connection: redisConnection,
   defaultJobOptions,
 });
 
-export const notifyQueue = new Queue("openmarket:notify", {
+export const notifyQueue = new Queue("openmarket-notify", {
   connection: redisConnection,
   defaultJobOptions: {
     attempts: 3,
