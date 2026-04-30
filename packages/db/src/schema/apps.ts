@@ -119,6 +119,10 @@ export const releaseArtifacts = pgTable("release_artifacts", {
     .references(() => releases.id, { onDelete: "cascade" })
     .notNull(),
   artifactType: artifactTypeEnum("artifact_type").default("apk").notNull(),
+  // S3-compatible object storage (R2 in prod, MinIO locally)
+  storageBucket: text("storage_bucket"),
+  storageKey: text("storage_key"),
+  // Legacy: kept for back-compat; new code derives URL from bucket+key via signed URL
   fileUrl: text("file_url").notNull(),
   fileSize: bigint("file_size", { mode: "number" }).notNull(),
   sha256: text("sha256").notNull(),

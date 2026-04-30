@@ -2,12 +2,21 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import { z } from "zod";
 import { db } from "../lib/db";
 import { apps, releases, releaseArtifacts, developers } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { createReleaseSchema } from "@openmarket/contracts/apps";
 import { completeUploadSchema } from "@openmarket/contracts/releases";
 import { ingestQueue } from "../lib/queue";
+import {
+  buildArtifactKey,
+  getSignedUploadUrl,
+  getSignedDownloadUrl,
+  headObject,
+  isStorageConfigured,
+  StorageNotConfiguredError,
+} from "../lib/storage";
 import type { Variables } from "../lib/types";
 
 export const releasesRouter = new Hono<{ Variables: Variables }>();
@@ -59,53 +68,133 @@ releasesRouter.post(
   }
 );
 
-// Get upload URL for a release
-releasesRouter.post("/releases/:id/upload-url", requireAuth, async (c) => {
-  const user = c.get("user");
-  const releaseId = c.req.param("id");
+// Request a presigned upload URL for a release artifact.
+// Body: { sha256, fileSize, artifactType?: "apk"|"aab" }
+// Response: { artifactId, uploadUrl, bucket, key, expiresAt }
+releasesRouter.post(
+  "/releases/:id/upload-url",
+  requireAuth,
+  zValidator(
+    "json",
+    z.object({
+      sha256: z.string().regex(/^[a-f0-9]{64}$/i, "must be a 64-char hex SHA256"),
+      fileSize: z.number().int().positive().max(500 * 1024 * 1024, "max 500MB"),
+      artifactType: z.enum(["apk", "aab"]).default("apk"),
+    }),
+  ),
+  async (c) => {
+    if (!isStorageConfigured()) {
+      throw new HTTPException(503, {
+        message:
+          "Object storage is not configured on this server. Contact the operator.",
+      });
+    }
 
-  const developer = await db.query.developers.findFirst({
-    where: eq(developers.email, user.email),
-  });
+    const user = c.get("user");
+    const releaseId = c.req.param("id");
+    const body = c.req.valid("json");
 
-  if (!developer) {
-    throw new HTTPException(404, { message: "Developer profile not found" });
-  }
+    const developer = await db.query.developers.findFirst({
+      where: eq(developers.email, user.email),
+    });
+    if (!developer) {
+      throw new HTTPException(404, { message: "Developer profile not found" });
+    }
 
-  const release = await db.query.releases.findFirst({
-    where: eq(releases.id, releaseId as string),
-    with: {
-      app: true,
-    },
-  }) as any;
+    const release = (await db.query.releases.findFirst({
+      where: eq(releases.id, releaseId as string),
+      with: { app: true },
+    })) as any;
+    if (!release) {
+      throw new HTTPException(404, { message: "Release not found" });
+    }
+    if (release.app.developerId !== developer.id) {
+      throw new HTTPException(403, { message: "You do not own this release" });
+    }
 
-  if (!release) {
-    throw new HTTPException(404, { message: "Release not found" });
-  }
-
-  if (release.app.developerId !== developer.id) {
-    throw new HTTPException(403, { message: "You do not own this release" });
-  }
-
-  // Create artifact record (placeholder upload URL)
-  const [artifact] = await db
-    .insert(releaseArtifacts)
-    .values({
+    const key = buildArtifactKey({
+      appId: release.app.id,
       releaseId: release.id,
-      artifactType: "apk",
-      fileUrl: `pending://${release.id}`,
-      fileSize: 0,
-      sha256: "0".repeat(64),
-      uploadStatus: "pending",
-    })
-    .returning();
+      sha256: body.sha256,
+      artifactType: body.artifactType,
+    });
 
-  const uploadUrl = `https://storage.openmarket.example/uploads/${artifact!.id}`;
+    let signed;
+    try {
+      signed = await getSignedUploadUrl({
+        bucket: "artifacts",
+        key,
+        contentType:
+          body.artifactType === "aab"
+            ? "application/octet-stream"
+            : "application/vnd.android.package-archive",
+        contentLength: body.fileSize,
+        expiresInSeconds: 600,
+      });
+    } catch (err) {
+      if (err instanceof StorageNotConfiguredError) {
+        throw new HTTPException(503, { message: err.message });
+      }
+      throw err;
+    }
 
-  return c.json({ uploadUrl, artifactId: artifact!.id });
-});
+    const [artifact] = await db
+      .insert(releaseArtifacts)
+      .values({
+        releaseId: release.id,
+        artifactType: body.artifactType,
+        storageBucket: signed.bucket,
+        storageKey: signed.key,
+        fileUrl: `s3://${signed.bucket}/${signed.key}`,
+        fileSize: body.fileSize,
+        sha256: body.sha256.toLowerCase(),
+        uploadStatus: "pending",
+      })
+      .returning();
 
-// Complete upload
+    return c.json({
+      artifactId: artifact!.id,
+      uploadUrl: signed.url,
+      bucket: signed.bucket,
+      key: signed.key,
+      expiresAt: signed.expiresAt.toISOString(),
+    });
+  },
+);
+
+// Generate a short-lived signed download URL for an artifact.
+// Public-ish: requires auth (we'll loosen for the Android client via API token in P2-O).
+releasesRouter.get(
+  "/artifacts/:artifactId/download",
+  requireAuth,
+  async (c) => {
+    if (!isStorageConfigured()) {
+      throw new HTTPException(503, { message: "Object storage not configured" });
+    }
+    const artifactId = c.req.param("artifactId") as string;
+    const artifact = await db.query.releaseArtifacts.findFirst({
+      where: eq(releaseArtifacts.id, artifactId),
+    });
+    if (!artifact || !artifact.storageKey || !artifact.storageBucket) {
+      throw new HTTPException(404, { message: "Artifact not found" });
+    }
+    if (artifact.uploadStatus !== "verified" && artifact.uploadStatus !== "uploaded") {
+      throw new HTTPException(409, { message: "Artifact not yet available" });
+    }
+
+    const url = await getSignedDownloadUrl({
+      bucket: "artifacts",
+      key: artifact.storageKey,
+      expiresInSeconds: 300,
+      contentDisposition: `attachment; filename="${artifact.id}.${artifact.artifactType}"`,
+    });
+
+    return c.json({ url, expiresInSeconds: 300 });
+  },
+);
+
+// Confirm an upload completed. Verifies the object landed in storage,
+// matches the size we expected, and enqueues ingest+scan workers.
 releasesRouter.post(
   "/releases/:id/complete",
   requireAuth,
@@ -118,60 +207,80 @@ releasesRouter.post(
     const developer = await db.query.developers.findFirst({
       where: eq(developers.email, user.email),
     });
-
     if (!developer) {
       throw new HTTPException(404, { message: "Developer profile not found" });
     }
 
-    const release = await db.query.releases.findFirst({
+    const release = (await db.query.releases.findFirst({
       where: eq(releases.id, releaseId as string),
-      with: {
-        app: true,
-      },
-    }) as any;
-
+      with: { app: true },
+    })) as any;
     if (!release) {
       throw new HTTPException(404, { message: "Release not found" });
     }
-
     if (release.app.developerId !== developer.id) {
       throw new HTTPException(403, { message: "You do not own this release" });
     }
 
-    // Find the pending artifact
+    // Find the most recent pending artifact for this release.
     const artifact = await db.query.releaseArtifacts.findFirst({
-      where: eq(releaseArtifacts.releaseId, releaseId),
+      where: and(
+        eq(releaseArtifacts.releaseId, releaseId),
+        eq(releaseArtifacts.uploadStatus, "pending"),
+      ),
     });
-
     if (!artifact) {
-      throw new HTTPException(404, { message: "No artifact found for this release" });
+      throw new HTTPException(404, {
+        message: "No pending artifact found for this release",
+      });
     }
 
-    // Update artifact with real data
+    // Verify object actually landed in storage (defense against client-side fakery).
+    if (artifact.storageKey && artifact.storageBucket && isStorageConfigured()) {
+      const head = await headObject({
+        bucket: "artifacts",
+        key: artifact.storageKey,
+      });
+      if (!head) {
+        throw new HTTPException(409, {
+          message:
+            "Upload was not received by storage. Retry the upload before calling complete.",
+        });
+      }
+      if (head.size !== body.fileSize) {
+        throw new HTTPException(409, {
+          message: `Storage size (${head.size}) does not match declared size (${body.fileSize})`,
+        });
+      }
+    }
+
     const [updatedArtifact] = await db
       .update(releaseArtifacts)
       .set({
         fileSize: body.fileSize,
-        sha256: body.sha256,
+        sha256: body.sha256.toLowerCase(),
         uploadStatus: "uploaded",
         uploadedAt: new Date(),
       })
       .where(eq(releaseArtifacts.id, artifact.id))
       .returning();
 
-    // Enqueue ingest job (non-fatal — release is saved; job can be retried)
+    // Ingest worker takes over from here: parses APK, extracts manifest, runs scans.
     try {
       await ingestQueue.add("ingest", {
         releaseId: release.id,
         artifactId: updatedArtifact!.id,
         developerId: developer.id,
+        storageBucket: updatedArtifact!.storageBucket,
+        storageKey: updatedArtifact!.storageKey,
       });
     } catch (err) {
+      // Non-fatal: release is saved; retry via admin tooling.
       console.error("Failed to enqueue ingest job:", err);
     }
 
     return c.json({ success: true, artifactId: updatedArtifact!.id });
-  }
+  },
 );
 
 // Get release by ID (public)

@@ -19,4 +19,7 @@ function findEnvFile(): string | undefined {
 const envPath = findEnvFile();
 if (envPath) {
   config({ path: envPath });
+} else if (process.env.DEBUG_ENV) {
+  console.error("[env] no .env file found among candidates");
 }
+
