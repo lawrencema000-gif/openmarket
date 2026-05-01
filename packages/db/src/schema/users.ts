@@ -5,11 +5,13 @@ import {
   timestamp,
   boolean,
   integer,
+  jsonb,
   pgEnum,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
 import { apps } from "./apps";
+import { authUser } from "./auth";
 
 export const installSourceEnum = pgEnum("install_source", [
   "store_app",
@@ -41,14 +43,65 @@ export const reportTargetTypeEnum = pgEnum("report_target_type", [
   "review",
 ]);
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").unique().notNull(),
-  displayName: text("display_name"),
-  authProvider: text("auth_provider"),
-  authProviderId: text("auth_provider_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+/**
+ * Storefront user profile.
+ *
+ * Identity (email, password, OAuth) lives in the `auth_user` table managed by
+ * Better Auth. This table holds storefront-specific profile data: avatar,
+ * locale, country, notification preferences, soft-delete state.
+ *
+ * One row per Better Auth user that has signed up on the storefront. A user
+ * who later registers as a developer also gets a row in `developers` — same
+ * authUserId, two profile rows.
+ */
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** FK into Better Auth's auth_user table. One profile per identity. */
+    authUserId: text("auth_user_id")
+      .references(() => authUser.id, { onDelete: "cascade" }),
+    /** Mirrored from auth_user.email at signup. Kept for indexing speed. */
+    email: text("email").unique().notNull(),
+    displayName: text("display_name"),
+    avatarUrl: text("avatar_url"),
+    /** BCP 47 tag, e.g., "en-US". Drives storefront localization. */
+    locale: text("locale").default("en-US").notNull(),
+    /** ISO 3166-1 alpha-2, derived from IP at signup. Drives chart region. */
+    country: text("country"),
+    /**
+     * Notification opt-ins. Shape:
+     *   { email: { reviewReply: bool, updateAvailable: bool, ... },
+     *     push:  { ... } }
+     * Default: email transactional only, push off until user opts in.
+     */
+    notificationPreferences: jsonb("notification_preferences").default({
+      email: {
+        transactional: true,
+        reviewReply: true,
+        updateAvailable: true,
+        marketing: false,
+      },
+      push: {
+        transactional: false,
+        reviewReply: false,
+        updateAvailable: false,
+        marketing: false,
+      },
+    }),
+    /** Legacy fields — kept until prior call sites are migrated. */
+    authProvider: text("auth_provider"),
+    authProviderId: text("auth_provider_id"),
+    /** Soft-delete: set when the user requests deletion; hard-deleted by cron after 30d. */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("users_auth_user_idx").on(t.authUserId),
+    index("users_deleted_at_idx").on(t.deletedAt),
+  ],
+);
 
 export const installEvents = pgTable(
   "install_events",

@@ -16,8 +16,8 @@
 
 const FLAG_DEFAULTS = {
   // P1-A. Sign-up / sign-in / account settings on the storefront.
-  // OFF until user accounts ship; the home + search pages work without it.
-  userAccounts: false,
+  // ON — Better Auth wired up, /sign-in /sign-up /account live.
+  userAccounts: true,
 
   // P1-B. "My library" page showing installed apps.
   // Requires userAccounts.

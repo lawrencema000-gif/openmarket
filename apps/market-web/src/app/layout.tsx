@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
+import { UserMenu } from "@/components/user-menu";
 
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 const PLAUSIBLE_HOST =
@@ -75,16 +76,11 @@ export default function RootLayout({
             >
               <Link
                 href="/search"
-                className="px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium transition-colors"
+                className="px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium transition-colors hidden sm:block"
               >
                 Browse
               </Link>
-              <Link
-                href="/search"
-                className="px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium transition-colors"
-              >
-                Developers
-              </Link>
+              <UserMenu />
             </nav>
           </div>
 

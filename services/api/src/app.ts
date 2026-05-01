@@ -14,6 +14,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { healthRouter } from "./routes/health";
 import { authRouter } from "./routes/auth";
+import { usersRouter } from "./routes/users";
 import { developersRouter } from "./routes/developers";
 import { signingKeysRouter } from "./routes/signing-keys";
 import { appsRouter } from "./routes/apps";
@@ -64,6 +65,7 @@ app.onError(errorHandler);
 
 app.route("/", healthRouter);
 app.route("/api", authRouter);
+app.route("/api", usersRouter);
 app.route("/api", developersRouter);
 app.route("/api", signingKeysRouter);
 app.route("/api", appsRouter);
