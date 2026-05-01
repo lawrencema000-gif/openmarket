@@ -126,6 +126,46 @@ export const installEvents = pgTable(
   ]
 );
 
+/**
+ * Per-user app library — what the user has installed via OpenMarket.
+ *
+ * Distinct from `install_events` (a per-event audit log). This table holds
+ * the *current state* of a user's library: one row per (user, app), with
+ * the installed version, when it was installed/uninstalled, and last open.
+ *
+ * Soft-delete on uninstall (uninstalledAt) so the "Uninstalled" tab still
+ * shows the app for reinstall. A reinstall clears uninstalledAt and updates
+ * installedVersionCode.
+ */
+export const libraryEntries = pgTable(
+  "library_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    appId: uuid("app_id")
+      .references(() => apps.id, { onDelete: "cascade" })
+      .notNull(),
+    /** Version code currently installed on the user's device. Null if the entry tracks intent only. */
+    installedVersionCode: integer("installed_version_code"),
+    installedAt: timestamp("installed_at", { withTimezone: true }).defaultNow().notNull(),
+    /** Set when user uninstalls. Cleared on reinstall. */
+    uninstalledAt: timestamp("uninstalled_at", { withTimezone: true }),
+    lastOpenedAt: timestamp("last_opened_at", { withTimezone: true }),
+    /** True for free apps (always); for paid apps (Tier 4) reflects purchase. */
+    isOwned: boolean("is_owned").default(true).notNull(),
+    source: installSourceEnum("source").default("store_app").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("library_user_app_idx").on(t.userId, t.appId),
+    index("library_user_idx").on(t.userId),
+    index("library_uninstalled_idx").on(t.uninstalledAt),
+  ],
+);
+
 export const reviews = pgTable(
   "reviews",
   {

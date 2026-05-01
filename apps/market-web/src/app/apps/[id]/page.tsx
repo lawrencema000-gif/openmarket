@@ -8,6 +8,7 @@ import {
   ServiceUnavailable,
 } from "@openmarket/ui";
 import type { TrustBadgeType } from "@openmarket/ui";
+import { LibraryButton } from "@/components/library-button";
 
 interface Developer {
   id: string;
@@ -216,6 +217,9 @@ export default async function AppDetailPage({
             {!app.apkUrl && (
               <span className="text-xs text-amber-600 font-medium">APK not yet available</span>
             )}
+            <div className="ml-auto">
+              <LibraryButton appId={app.id} />
+            </div>
           </div>
 
           {/* Screenshots */}

@@ -20,8 +20,8 @@ const FLAG_DEFAULTS = {
   userAccounts: true,
 
   // P1-B. "My library" page showing installed apps.
-  // Requires userAccounts.
-  library: false,
+  // ON — /library page + LibraryButton on app detail.
+  library: true,
 
   // P1-C. Wishlist hearts on app cards.
   // Requires userAccounts.
