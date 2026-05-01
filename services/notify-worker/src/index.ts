@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { Sentry, sentryEnabled } from "./lib/sentry.js";
 import { Worker } from "bullmq";
 import { type EmailJob, NOTIFY_QUEUE_NAME } from "./jobs.js";
 import { renderTemplate } from "./render.js";
@@ -46,10 +47,18 @@ const worker = new Worker<EmailJob>(
 
 worker.on("failed", (job, err) => {
   console.error(`[notify-worker] FAILED job=${job?.id} err=${err.message}`);
+  if (sentryEnabled) {
+    Sentry.withScope((scope) => {
+      scope.setTag("job_id", job?.id ?? "unknown");
+      scope.setTag("template", (job?.data as { template?: string })?.template ?? "unknown");
+      Sentry.captureException(err);
+    });
+  }
 });
 
 worker.on("error", (err) => {
   console.error(`[notify-worker] error: ${err.message}`);
+  if (sentryEnabled) Sentry.captureException(err);
 });
 
 console.log(

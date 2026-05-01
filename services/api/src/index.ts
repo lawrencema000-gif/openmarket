@@ -1,4 +1,5 @@
 import "./lib/env";
+import "./lib/sentry"; // Must come right after env so DSN is loaded.
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";

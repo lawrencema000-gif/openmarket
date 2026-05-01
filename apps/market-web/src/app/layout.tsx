@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
+
+const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+const PLAUSIBLE_HOST =
+  process.env.NEXT_PUBLIC_PLAUSIBLE_HOST ?? "https://plausible.io";
 
 export const metadata: Metadata = {
   title: "OpenMarket — Android App Marketplace",
@@ -16,6 +21,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-50/50 text-gray-900 flex flex-col">
+        {/* Plausible — privacy-respecting analytics. No cookies, no personal IDs.
+            Active only when NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set in env. */}
+        {PLAUSIBLE_DOMAIN ? (
+          <Script
+            defer
+            data-domain={PLAUSIBLE_DOMAIN}
+            src={`${PLAUSIBLE_HOST}/js/script.js`}
+            strategy="afterInteractive"
+          />
+        ) : null}
+
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white focus:text-sm focus:font-medium"
