@@ -88,6 +88,14 @@ export function UserMenu() {
               My library
             </Link>
             <Link
+              href="/wishlist"
+              role="menuitem"
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              Saved
+            </Link>
+            <Link
               href="/account"
               role="menuitem"
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

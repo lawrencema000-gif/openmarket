@@ -166,6 +166,34 @@ export const libraryEntries = pgTable(
   ],
 );
 
+/**
+ * Per-user wishlist — apps the user has heart-saved for later.
+ *
+ * Distinct from library_entries: wishlist is intent ("I'd like to install
+ * this someday"), library is reality ("I have installed this"). One row
+ * per (user, app); toggling the heart inserts or deletes the row.
+ *
+ * Hard-deletes on remove (no soft-delete). The heart is a low-stakes
+ * signal — there's no audit value in keeping ghost rows.
+ */
+export const wishlistEntries = pgTable(
+  "wishlist_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    appId: uuid("app_id")
+      .references(() => apps.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("wishlist_user_app_idx").on(t.userId, t.appId),
+    index("wishlist_user_idx").on(t.userId),
+  ],
+);
+
 export const reviews = pgTable(
   "reviews",
   {

@@ -9,6 +9,7 @@ import {
 } from "@openmarket/ui";
 import type { TrustBadgeType } from "@openmarket/ui";
 import { LibraryButton } from "@/components/library-button";
+import { WishlistHeart } from "@/components/wishlist-heart";
 
 interface Developer {
   id: string;
@@ -217,7 +218,8 @@ export default async function AppDetailPage({
             {!app.apkUrl && (
               <span className="text-xs text-amber-600 font-medium">APK not yet available</span>
             )}
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <WishlistHeart appId={app.id} variant="labeled" />
               <LibraryButton appId={app.id} />
             </div>
           </div>

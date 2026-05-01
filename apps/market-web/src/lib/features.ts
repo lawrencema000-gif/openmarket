@@ -24,8 +24,8 @@ const FLAG_DEFAULTS = {
   library: true,
 
   // P1-C. Wishlist hearts on app cards.
-  // Requires userAccounts.
-  wishlist: false,
+  // ON — /wishlist page + WishlistHeart on app detail.
+  wishlist: true,
 
   // P1-G. Reviews + ratings on app detail pages.
   reviews: false,
