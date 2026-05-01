@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import {
   Card, CardHeader, CardTitle, CardContent,
   TrustBadge, Badge, Button, StarRating,
+  ServiceUnavailable,
 } from "@openmarket/ui";
 import type { TrustBadgeType } from "@openmarket/ui";
 
@@ -43,11 +44,23 @@ interface Review {
   createdAt?: string;
 }
 
-async function getApp(id: string): Promise<AppDetail | null> {
+type AppFetchResult =
+  | { kind: "ok"; app: AppDetail }
+  | { kind: "not-found" }
+  | { kind: "unavailable"; reason: string };
+
+async function getApp(id: string): Promise<AppFetchResult> {
   try {
-    return await apiFetch<AppDetail>(`/api/apps/${id}`);
-  } catch {
-    return null;
+    const app = await apiFetch<AppDetail>(`/api/apps/${id}`);
+    return { kind: "ok", app };
+  } catch (err) {
+    if (err instanceof ApiError && err.isUnreachable) {
+      return { kind: "unavailable", reason: err.message };
+    }
+    if (err instanceof ApiError && err.isNotFound) {
+      return { kind: "not-found" };
+    }
+    return { kind: "unavailable", reason: "Unknown error fetching app" };
   }
 }
 
@@ -84,12 +97,29 @@ export default async function AppDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [app, reviews] = await Promise.all([getApp(id), getReviews(id)]);
+  const [appResult, reviews] = await Promise.all([getApp(id), getReviews(id)]);
 
-  if (!app) {
+  if (appResult.kind === "not-found") {
     notFound();
   }
 
+  if (appResult.kind === "unavailable") {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <ServiceUnavailable
+          title="We can't load this app right now"
+          description="The OpenMarket API is temporarily unreachable. The page itself is fine — refresh in a minute, or check the status page if you're curious."
+        />
+        <p className="mt-6 text-sm text-gray-500">
+          <Link href="/" className="text-blue-600 hover:text-blue-700">
+            ← Back home
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  const app = appResult.app;
   const dangerousPerms = app.dangerousPermissions ?? [];
   const normalPerms = (app.permissions ?? []).filter((p) => !dangerousPerms.includes(p));
 

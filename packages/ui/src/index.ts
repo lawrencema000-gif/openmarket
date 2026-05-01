@@ -30,3 +30,4 @@ export * from "./components/search-input";
 export * from "./components/stat";
 export * from "./components/page-header";
 export * from "./components/confirm-dialog";
+export * from "./components/service-unavailable";

@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  drizzle-orm: 0.39.3
+
 importers:
 
   .:
@@ -169,7 +172,7 @@ importers:
   packages/db:
     dependencies:
       drizzle-orm:
-        specifier: ^0.39.0
+        specifier: 0.39.3
         version: 0.39.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(kysely@0.28.16)(postgres@3.4.9)
       postgres:
         specifier: ^3.4.5
@@ -255,7 +258,7 @@ importers:
         specifier: ^16.4.0
         version: 16.6.1
       drizzle-orm:
-        specifier: ^0.39.0
+        specifier: 0.39.3
         version: 0.39.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(kysely@0.28.16)(postgres@3.4.9)
       hono:
         specifier: ^4.7.0
@@ -295,7 +298,7 @@ importers:
         specifier: ^16.4.0
         version: 16.6.1
       drizzle-orm:
-        specifier: ^0.39.0
+        specifier: 0.39.3
         version: 0.39.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(kysely@0.28.16)(postgres@3.4.9)
     devDependencies:
       tsx:
@@ -369,7 +372,7 @@ importers:
         specifier: ^16.4.0
         version: 16.6.1
       drizzle-orm:
-        specifier: ^0.39.0
+        specifier: 0.39.3
         version: 0.39.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(kysely@0.28.16)(postgres@3.4.9)
     devDependencies:
       tsx:
@@ -661,7 +664,7 @@ packages:
     peerDependencies:
       '@better-auth/core': ^1.6.2
       '@better-auth/utils': 0.4.0
-      drizzle-orm: '>=0.41.0'
+      drizzle-orm: 0.39.3
     peerDependenciesMeta:
       drizzle-orm:
         optional: true
@@ -2742,7 +2745,7 @@ packages:
       '@tanstack/solid-start': ^1.0.0
       better-sqlite3: ^12.0.0
       drizzle-kit: '>=0.31.4'
-      drizzle-orm: '>=0.41.0'
+      drizzle-orm: 0.39.3
       mongodb: ^6.0.0 || ^7.0.0
       mysql2: ^3.0.0
       next: ^14.0.0 || ^15.0.0 || ^16.0.0

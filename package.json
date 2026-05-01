@@ -25,5 +25,13 @@
     "next": "^15.3.0",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "drizzle-orm": "0.39.3"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": ["@types/pg"]
+    }
   }
 }

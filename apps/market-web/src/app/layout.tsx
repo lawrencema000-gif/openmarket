@@ -125,8 +125,8 @@ export default function RootLayout({
                 <ul className="space-y-2.5 text-sm text-gray-500">
                   <li><a href="https://openmarket-dev-portal.vercel.app" className="hover:text-gray-900 transition-colors">Developer Portal</a></li>
                   <li><a href="https://openmarket-dev-portal.vercel.app/apps/new" className="hover:text-gray-900 transition-colors">Publish an App</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">API Reference</a></li>
-                  <li><a href="#" title="Coming Soon" className="hover:text-gray-900 transition-colors">Trust Framework</a></li>
+                  <li><a href="https://github.com/lawrencema000-gif/openmarket/blob/main/docs/IMPLEMENTATION-PLAN.md" className="hover:text-gray-900 transition-colors">Implementation plan</a></li>
+                  <li><span className="text-gray-400 cursor-not-allowed" title="Tier 2 — coming after Tier 1 ships">API Reference (planned)</span></li>
                 </ul>
               </div>
 

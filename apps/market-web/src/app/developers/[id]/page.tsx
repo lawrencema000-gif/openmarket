@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import {
-  PageHeader, AppCard, TrustBadge, Card, CardContent, Badge
+  PageHeader, AppCard, TrustBadge, Card, CardContent, Badge,
+  ServiceUnavailable,
 } from "@openmarket/ui";
 import type { TrustBadgeType } from "@openmarket/ui";
 
@@ -27,11 +28,19 @@ interface DeveloperProfile {
   }>;
 }
 
-async function getDeveloper(id: string): Promise<DeveloperProfile | null> {
+type DevFetchResult =
+  | { kind: "ok"; developer: DeveloperProfile }
+  | { kind: "not-found" }
+  | { kind: "unavailable" };
+
+async function getDeveloper(id: string): Promise<DevFetchResult> {
   try {
-    return await apiFetch<DeveloperProfile>(`/api/developers/${id}`);
-  } catch {
-    return null;
+    const developer = await apiFetch<DeveloperProfile>(`/api/developers/${id}`);
+    return { kind: "ok", developer };
+  } catch (err) {
+    if (err instanceof ApiError && err.isUnreachable) return { kind: "unavailable" };
+    if (err instanceof ApiError && err.isNotFound) return { kind: "not-found" };
+    return { kind: "unavailable" };
   }
 }
 
@@ -54,12 +63,29 @@ export default async function DeveloperPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const developer = await getDeveloper(id);
+  const result = await getDeveloper(id);
 
-  if (!developer) {
+  if (result.kind === "not-found") {
     notFound();
   }
 
+  if (result.kind === "unavailable") {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <ServiceUnavailable
+          title="We can't load this developer right now"
+          description="The OpenMarket API is temporarily unreachable. Refresh in a minute, or check the status page."
+        />
+        <p className="mt-6 text-sm text-gray-500">
+          <Link href="/" className="text-blue-600 hover:text-blue-700">
+            ← Back home
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  const developer = result.developer;
   const appCount = developer.apps?.length ?? 0;
   const memberSinceYear = developer.memberSince
     ? new Date(developer.memberSince).getFullYear()
