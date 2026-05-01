@@ -32,7 +32,7 @@ All SDKs are **no-op when env vars are unset** — local dev sees no Sentry traf
 - Request path + method tagged on every event.
 - 4xx HTTPExceptions (client errors) and ZodError (validation) **NOT** sent — those aren't actionable.
 - `/health` events filtered.
-- Profiling enabled at 10% in prod.
+- Profiling: not enabled in v1 (the native `@sentry/profiling-node` binary doesn't install cleanly across all our build environments). Add back later if traces aren't enough.
 
 **Workers:**
 - Job failure events captured with template + job ID tags.

@@ -1,0 +1,45 @@
+# OpenMarket notify-worker — Fly.io app config.
+#
+# Deployment: from repo root, `fly deploy --config services/notify-worker/fly.toml`.
+# First time: `fly launch --config services/notify-worker/fly.toml --no-deploy`
+# to create the app, then set secrets and deploy.
+
+app = "openmarket-notify-worker"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "Dockerfile"
+  ignorefile = "../../.dockerignore"
+  build_target = "runtime"
+
+[env]
+  NODE_ENV = "production"
+  WORKER_CONCURRENCY = "5"
+  EMAIL_FROM = "OpenMarket <noreply@openmarket.app>"
+  WEB_BASE_URL = "https://openmarket.app"
+
+# Workers don't accept HTTP traffic — no [[services]] block.
+# We do expose a tiny health check port for Fly to probe.
+[checks]
+  [checks.process]
+    type = "tcp"
+    interval = "30s"
+    grace_period = "10s"
+    timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"
+
+[scaling]
+  min_machines_running = 1
+
+# Secrets to set via `fly secrets set` (not in this file):
+#   DATABASE_URL              — Neon pooled connection string
+#   REDIS_URL                 — Upstash rediss:// URL
+#   RESEND_API_KEY            — Resend API key (production email)
+#   SENTRY_DSN                — error tracking
+#   GIT_COMMIT_SHA            — release tag (set by deploy script)

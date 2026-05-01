@@ -1,38 +1,31 @@
 import { Queue } from "bullmq";
+import { buildRedisConnection } from "./redis-connection";
 
-const redisConnection = {
-  host: process.env.REDIS_HOST ?? "localhost",
-  port: parseInt(process.env.REDIS_PORT ?? "6379", 10),
-};
+const connection = buildRedisConnection();
 
 const defaultJobOptions = {
   attempts: 3,
-  backoff: { type: "exponential", delay: 2000 },
+  backoff: { type: "exponential" as const, delay: 2000 },
   removeOnComplete: { count: 100 },
   removeOnFail: false,
 };
 
 export const ingestQueue = new Queue("openmarket-ingest", {
-  connection: redisConnection,
+  connection,
   defaultJobOptions,
 });
 
 export const scanQueue = new Queue("openmarket-scan", {
-  connection: redisConnection,
+  connection,
   defaultJobOptions,
 });
 
 export const searchIndexQueue = new Queue("openmarket-search-index", {
-  connection: redisConnection,
+  connection,
   defaultJobOptions,
 });
 
 export const notifyQueue = new Queue("openmarket-notify", {
-  connection: redisConnection,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: { type: "exponential", delay: 2000 },
-    removeOnComplete: { count: 100 },
-    removeOnFail: false,
-  },
+  connection,
+  defaultJobOptions,
 });

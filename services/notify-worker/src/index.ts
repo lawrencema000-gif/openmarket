@@ -4,11 +4,9 @@ import { Worker } from "bullmq";
 import { type EmailJob, NOTIFY_QUEUE_NAME } from "./jobs.js";
 import { renderTemplate } from "./render.js";
 import { getTransport } from "./transport/index.js";
+import { buildRedisConnection } from "./lib/redis-connection.js";
 
-const redisConnection = {
-  host: process.env.REDIS_HOST ?? "localhost",
-  port: parseInt(process.env.REDIS_PORT ?? "6379", 10),
-};
+const redisConnection = buildRedisConnection();
 
 const transport = getTransport();
 
@@ -61,8 +59,12 @@ worker.on("error", (err) => {
   if (sentryEnabled) Sentry.captureException(err);
 });
 
+const redisHost =
+  (redisConnection as { host?: string }).host ?? "<unknown>";
+const redisPort =
+  (redisConnection as { port?: number }).port ?? "?";
 console.log(
-  `[notify-worker] listening on ${NOTIFY_QUEUE_NAME} (Redis ${redisConnection.host}:${redisConnection.port}, transport=${transport.name()})`,
+  `[notify-worker] listening on ${NOTIFY_QUEUE_NAME} (Redis ${redisHost}:${redisPort}, transport=${transport.name()})`,
 );
 
 async function shutdown() {

@@ -4,7 +4,6 @@
 // No-op when SENTRY_DSN is unset.
 
 import * as Sentry from "@sentry/node";
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
 const env = (k: string) => {
   const v = process.env[k];
@@ -19,8 +18,6 @@ if (dsn) {
     environment: env("VERCEL_ENV") ?? env("NODE_ENV") ?? "development",
     release: env("VERCEL_GIT_COMMIT_SHA"),
     tracesSampleRate: env("NODE_ENV") === "production" ? 0.1 : 1.0,
-    profilesSampleRate: env("NODE_ENV") === "production" ? 0.1 : 1.0,
-    integrations: [nodeProfilingIntegration()],
     sendDefaultPii: false,
     // Filter known noise.
     ignoreErrors: [
