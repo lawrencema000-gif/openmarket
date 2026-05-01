@@ -1,12 +1,24 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../lib/db";
-import { apps, appListings, developers } from "@openmarket/db/schema";
+import {
+  apps,
+  appListings,
+  artifactMetadata,
+  developers,
+  releaseArtifacts,
+  releases,
+} from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { createAppSchema } from "@openmarket/contracts/apps";
 import { paginationSchema } from "@openmarket/contracts/common";
+import {
+  abisToArchitectures,
+  formatBytes,
+  requiresAndroidString,
+} from "../lib/compat";
 import type { Variables } from "../lib/types";
 
 export const appsRouter = new Hono<{ Variables: Variables }>();
@@ -98,7 +110,26 @@ appsRouter.post(
   }
 );
 
-// Get app by ID (public)
+/**
+ * GET /apps/:id — public app detail.
+ *
+ * Returns app + current listing + developer + recent published releases
+ * and compatibility derived from the latest stable artifact.
+ *
+ * Shape (stable v1):
+ *   {
+ *     id, packageName, trustTier, isPublished, isDelisted, createdAt, updatedAt,
+ *     developer: { id, displayName, trustLevel },
+ *     currentListing: { ...listing },
+ *     listings: [ ...all listings ],
+ *     latestRelease: { id, versionName, versionCode, channel, releaseNotes, publishedAt }
+ *       | null when no stable release yet,
+ *     latestArtifact: { id, fileSize, fileSizeFormatted, sha256, minSdk, targetSdk, abis }
+ *       | null when no artifact metadata,
+ *     compatibility: { requiresAndroid, architectures } | null,
+ *     recentReleases: [ ...up to 5 most recent published, newest first ],
+ *   }
+ */
 appsRouter.get("/apps/:id", async (c) => {
   const id = c.req.param("id");
 
@@ -120,7 +151,98 @@ appsRouter.get("/apps/:id", async (c) => {
     throw new HTTPException(404, { message: "App not found" });
   }
 
-  return c.json(app);
+  // Pull recent published+stable releases (newest first) for "version history".
+  // Limit 5 — enough for the disclosure UI without paging.
+  const recentReleases = await db.query.releases.findMany({
+    where: and(
+      eq(releases.appId, id),
+      eq(releases.status, "published"),
+      eq(releases.channel, "stable"),
+    ),
+    orderBy: [desc(releases.versionCode)],
+    limit: 5,
+    columns: {
+      id: true,
+      versionCode: true,
+      versionName: true,
+      channel: true,
+      releaseNotes: true,
+      publishedAt: true,
+      createdAt: true,
+    },
+  });
+
+  const latestRelease = recentReleases[0] ?? null;
+
+  // For the latest release, pull the verified APK artifact + its parsed
+  // metadata. We deliberately scope to verified artifacts so we never
+  // surface size/SDK info for a release that hasn't passed scanning.
+  let latestArtifact: {
+    id: string;
+    fileSize: number;
+    fileSizeFormatted: string;
+    sha256: string;
+    minSdk: number;
+    targetSdk: number;
+    abis: string[];
+  } | null = null;
+
+  if (latestRelease) {
+    const artifactRow = await db
+      .select({
+        artifact: releaseArtifacts,
+        metadata: artifactMetadata,
+      })
+      .from(releaseArtifacts)
+      .leftJoin(
+        artifactMetadata,
+        eq(artifactMetadata.artifactId, releaseArtifacts.id),
+      )
+      .where(
+        and(
+          eq(releaseArtifacts.releaseId, latestRelease.id),
+          eq(releaseArtifacts.uploadStatus, "verified"),
+        ),
+      )
+      .limit(1);
+
+    const row = artifactRow[0];
+    if (row?.artifact && row.metadata) {
+      latestArtifact = {
+        id: row.artifact.id,
+        fileSize: row.artifact.fileSize,
+        fileSizeFormatted: formatBytes(row.artifact.fileSize),
+        sha256: row.artifact.sha256,
+        minSdk: row.metadata.minSdk,
+        targetSdk: row.metadata.targetSdk,
+        abis: abisToArchitectures(row.metadata.abis),
+      };
+    }
+  }
+
+  const compatibility = latestArtifact
+    ? {
+        requiresAndroid: requiresAndroidString(latestArtifact.minSdk),
+        architectures: latestArtifact.abis,
+      }
+    : null;
+
+  // Resolve currentListing convenience: the listing referenced by
+  // app.currentListingId, or the most recent listing if currentListingId
+  // isn't set yet.
+  const currentListing =
+    app.listings?.find((l) => l.id === app.currentListingId) ??
+    app.listings?.[app.listings.length - 1] ??
+    null;
+
+  return c.json({
+    ...app,
+    currentListing,
+    latestRelease,
+    latestArtifact,
+    compatibility,
+    recentReleases,
+  });
 });
 
 // Update app listing

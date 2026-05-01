@@ -10,12 +10,33 @@ import {
 import type { TrustBadgeType } from "@openmarket/ui";
 import { LibraryButton } from "@/components/library-button";
 import { WishlistHeart } from "@/components/wishlist-heart";
+import { ReleaseNotes } from "@/components/release-notes";
 
 interface Developer {
   id: string;
   name: string;
   trustLevel?: string;
   trustBadges?: TrustBadgeType[];
+}
+
+interface ReleaseSummary {
+  id: string;
+  versionCode: number;
+  versionName: string;
+  channel: string;
+  releaseNotes: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+}
+
+interface ArtifactSummary {
+  id: string;
+  fileSize: number;
+  fileSizeFormatted: string;
+  sha256: string;
+  minSdk: number;
+  targetSdk: number;
+  abis: string[];
 }
 
 interface AppDetail {
@@ -36,6 +57,12 @@ interface AppDetail {
   reviewCount?: number;
   sizeBytes?: number;
   developer: Developer;
+  // P1-D / P1-E enrichments
+  latestRelease?: ReleaseSummary | null;
+  latestArtifact?: ArtifactSummary | null;
+  compatibility?: { requiresAndroid: string; architectures: string[] } | null;
+  recentReleases?: ReleaseSummary[];
+  updatedAt?: string;
 }
 
 interface Review {
@@ -51,10 +78,45 @@ type AppFetchResult =
   | { kind: "not-found" }
   | { kind: "unavailable"; reason: string };
 
+/**
+ * The API returns the raw apps row + a `currentListing` sub-object.
+ * Our page renders flattened fields (`app.name`, `app.iconUrl`, etc.).
+ * Map the API shape to the view shape here in one place.
+ */
+interface ApiAppResponse extends AppDetail {
+  currentListing?: {
+    title: string;
+    shortDescription: string;
+    fullDescription: string;
+    category: string;
+    iconUrl: string | null;
+    screenshots: string[] | null;
+    contentRating: string | null;
+  } | null;
+}
+
+function flattenApp(raw: ApiAppResponse): AppDetail {
+  const listing = raw.currentListing;
+  const dev = raw.developer as Developer & { displayName?: string };
+  return {
+    ...raw,
+    name: raw.name ?? listing?.title ?? raw.packageName ?? "",
+    description: raw.description ?? listing?.fullDescription,
+    shortDescription: raw.shortDescription ?? listing?.shortDescription,
+    iconUrl: raw.iconUrl ?? listing?.iconUrl ?? undefined,
+    screenshots: raw.screenshots ?? listing?.screenshots ?? undefined,
+    category: raw.category ?? listing?.category,
+    developer: {
+      ...dev,
+      name: dev?.name ?? dev?.displayName ?? "Unknown developer",
+    },
+  };
+}
+
 async function getApp(id: string): Promise<AppFetchResult> {
   try {
-    const app = await apiFetch<AppDetail>(`/api/apps/${id}`);
-    return { kind: "ok", app };
+    const raw = await apiFetch<ApiAppResponse>(`/api/apps/${id}`);
+    return { kind: "ok", app: flattenApp(raw) };
   } catch (err) {
     if (err instanceof ApiError && err.isUnreachable) {
       return { kind: "unavailable", reason: err.message };
@@ -68,7 +130,11 @@ async function getApp(id: string): Promise<AppFetchResult> {
 
 async function getReviews(appId: string): Promise<Review[]> {
   try {
-    return await apiFetch<Review[]>(`/api/apps/${appId}/reviews`);
+    // Reviews API returns { items, page, limit } — pluck items.
+    const res = await apiFetch<{ items: Review[] } | Review[]>(
+      `/api/apps/${appId}/reviews`,
+    );
+    return Array.isArray(res) ? res : (res.items ?? []);
   } catch {
     return [];
   }
@@ -80,10 +146,40 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function fmtRelative(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  const diffMs = Date.now() - date.getTime();
+  const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  if (days < 1) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days} days ago`;
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return `${Math.floor(days / 365)} years ago`;
+}
+
+function FactItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-gray-500 font-semibold">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-gray-800">{value}</dd>
+    </div>
+  );
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   try {
-    const app = await apiFetch<AppDetail>(`/api/apps/${id}`);
+    const raw = await apiFetch<ApiAppResponse>(`/api/apps/${id}`);
+    const app = flattenApp(raw);
     return {
       title: `${app.name ?? "App"} — OpenMarket`,
       description: app.shortDescription ?? "Android app on OpenMarket",
@@ -249,7 +345,7 @@ export default async function AppDetailPage({
             </section>
           )}
 
-          {/* Tabbed sections — About / Reviews / Permissions */}
+          {/* Tabbed sections — About / What's new / Permissions / Reviews */}
           <div className="space-y-6">
             {/* About */}
             <section>
@@ -261,7 +357,88 @@ export default async function AppDetailPage({
               ) : (
                 <p className="text-gray-400 text-sm italic">No description provided.</p>
               )}
+
+              {/* About this app — facts table (P1-D) */}
+              {(app.latestRelease || app.latestArtifact) && (
+                <dl className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                  {app.latestRelease ? (
+                    <>
+                      <FactItem
+                        label="Version"
+                        value={`${app.latestRelease.versionName} (build ${app.latestRelease.versionCode})`}
+                      />
+                      <FactItem
+                        label="Last updated"
+                        value={fmtRelative(app.latestRelease.publishedAt ?? app.latestRelease.createdAt)}
+                      />
+                    </>
+                  ) : null}
+                  {app.latestArtifact ? (
+                    <>
+                      <FactItem
+                        label="Download size"
+                        value={app.latestArtifact.fileSizeFormatted}
+                      />
+                      {app.compatibility ? (
+                        <FactItem
+                          label="Requires"
+                          value={app.compatibility.requiresAndroid}
+                        />
+                      ) : null}
+                      <FactItem
+                        label="Target SDK"
+                        value={`API ${app.latestArtifact.targetSdk}`}
+                      />
+                      {app.compatibility && app.compatibility.architectures.length > 0 ? (
+                        <FactItem
+                          label="Architectures"
+                          value={app.compatibility.architectures.join(", ")}
+                        />
+                      ) : null}
+                    </>
+                  ) : null}
+                  {app.packageName ? (
+                    <FactItem
+                      label="Package"
+                      value={<code className="text-xs font-mono text-gray-700">{app.packageName}</code>}
+                    />
+                  ) : null}
+                </dl>
+              )}
             </section>
+
+            {/* What's new (P1-E) */}
+            {app.latestRelease?.releaseNotes ? (
+              <section>
+                <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
+                  What's new in {app.latestRelease.versionName}
+                </h2>
+                <ReleaseNotes markdown={app.latestRelease.releaseNotes} />
+                {app.recentReleases && app.recentReleases.length > 1 ? (
+                  <details className="mt-4 text-sm">
+                    <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
+                      Version history
+                    </summary>
+                    <ul className="mt-3 space-y-4 border-l-2 border-gray-100 pl-4">
+                      {app.recentReleases.slice(1).map((r) => (
+                        <li key={r.id}>
+                          <p className="font-medium text-gray-900">
+                            v{r.versionName} <span className="text-gray-500 font-normal text-xs">· {fmtRelative(r.publishedAt ?? r.createdAt)}</span>
+                          </p>
+                          {r.releaseNotes ? (
+                            <div className="mt-1">
+                              <ReleaseNotes markdown={r.releaseNotes} />
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 italic text-xs mt-1">No notes for this release.</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
+              </section>
+            ) : null}
 
             {/* Permissions */}
             {((app.permissions && app.permissions.length > 0) || dangerousPerms.length > 0) && (
