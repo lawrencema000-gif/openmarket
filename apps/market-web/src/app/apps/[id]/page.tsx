@@ -11,6 +11,7 @@ import type { TrustBadgeType } from "@openmarket/ui";
 import { LibraryButton } from "@/components/library-button";
 import { WishlistHeart } from "@/components/wishlist-heart";
 import { ReleaseNotes } from "@/components/release-notes";
+import { ReviewsSection } from "@/components/reviews-section";
 
 interface Developer {
   id: string;
@@ -65,13 +66,6 @@ interface AppDetail {
   updatedAt?: string;
 }
 
-interface Review {
-  id: string;
-  rating: number;
-  comment?: string;
-  author?: string;
-  createdAt?: string;
-}
 
 type AppFetchResult =
   | { kind: "ok"; app: AppDetail }
@@ -128,17 +122,8 @@ async function getApp(id: string): Promise<AppFetchResult> {
   }
 }
 
-async function getReviews(appId: string): Promise<Review[]> {
-  try {
-    // Reviews API returns { items, page, limit } — pluck items.
-    const res = await apiFetch<{ items: Review[] } | Review[]>(
-      `/api/apps/${appId}/reviews`,
-    );
-    return Array.isArray(res) ? res : (res.items ?? []);
-  } catch {
-    return [];
-  }
-}
+// Reviews are fetched client-side by <ReviewsSection> for live sort/filter.
+
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -195,7 +180,7 @@ export default async function AppDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [appResult, reviews] = await Promise.all([getApp(id), getReviews(id)]);
+  const appResult = await getApp(id);
 
   if (appResult.kind === "not-found") {
     notFound();
@@ -482,50 +467,8 @@ export default async function AppDetailPage({
               </section>
             )}
 
-            {/* Reviews */}
-            <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
-                Reviews
-                {reviews.length > 0 && (
-                  <span className="text-base font-normal text-gray-400 ml-2">({reviews.length})</span>
-                )}
-              </h2>
-
-              {reviews.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 text-sm">
-                  <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                  </svg>
-                  No reviews yet — be the first to review this app.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-500">
-                            {(review.author ?? "A").charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">{review.author ?? "Anonymous"}</p>
-                            <StarRating rating={review.rating} size="sm" />
-                          </div>
-                        </div>
-                        {review.createdAt && (
-                          <span className="text-xs text-gray-400 shrink-0 mt-0.5">
-                            {new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                          </span>
-                        )}
-                      </div>
-                      {review.comment && (
-                        <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+            {/* Reviews — full P1-G surface (histogram, sort, filter, helpful, report, write) */}
+            <ReviewsSection appId={app.id} />
           </div>
         </div>
 

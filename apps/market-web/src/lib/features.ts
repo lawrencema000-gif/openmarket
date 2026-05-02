@@ -28,7 +28,9 @@ const FLAG_DEFAULTS = {
   wishlist: true,
 
   // P1-G. Reviews + ratings on app detail pages.
-  reviews: false,
+  // ON — full <ReviewsSection> with histogram, sort, filter, helpful, report,
+  // write composer (install-gated), developer responses (P1-H).
+  reviews: true,
 
   // P1-F. Update-all + auto-update flow on Android.
   androidAutoUpdate: false,

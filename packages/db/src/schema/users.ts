@@ -218,6 +218,54 @@ export const reviews = pgTable(
   ]
 );
 
+/**
+ * One row per (review, user) when a user marks a review "helpful".
+ * Unique on (reviewId, userId) enforces one vote per user per review —
+ * toggling is insert or delete. Source of truth for the count; the
+ * `reviews.helpful_count` denormalized total is maintained on write.
+ */
+export const reviewHelpfulVotes = pgTable(
+  "review_helpful_votes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    reviewId: uuid("review_id")
+      .references(() => reviews.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("review_helpful_votes_review_user_idx").on(t.reviewId, t.userId),
+    index("review_helpful_votes_review_idx").on(t.reviewId),
+  ],
+);
+
+/**
+ * Developer response to a review. One per review (unique constraint).
+ *
+ * Per §2 principle 1 (viewpoint-neutrality): the developer can respond
+ * but cannot remove or hide a review. Renders below the original review
+ * with a "Developer response" label.
+ */
+export const reviewResponses = pgTable(
+  "review_responses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    reviewId: uuid("review_id")
+      .references(() => reviews.id, { onDelete: "cascade" })
+      .unique()
+      .notNull(),
+    /** developers.id; route enforces (app.developerId === currentDev.id). */
+    developerId: uuid("developer_id").notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("review_responses_developer_idx").on(t.developerId)],
+);
+
 export const reports = pgTable(
   "reports",
   {
