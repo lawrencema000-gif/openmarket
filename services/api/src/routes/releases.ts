@@ -10,6 +10,7 @@ import {
   releaseArtifacts,
   releaseEvents,
   developers,
+  scanResults,
 } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { createReleaseSchema } from "@openmarket/contracts/apps";
@@ -312,6 +313,37 @@ releasesRouter.get("/releases/:id", async (c) => {
   });
 
   const artifact = release.artifacts?.[0] ?? null;
+
+  // Latest scan result for this artifact, if any (P1-J).
+  let scan: {
+    status: string;
+    riskScore: number | null;
+    band: string | null;
+    summary: string | null;
+    findings: unknown;
+    completedAt: Date | null;
+  } | null = null;
+  if (artifact) {
+    const [scanRow] = await db
+      .select()
+      .from(scanResults)
+      .where(eq(scanResults.artifactId, artifact.id))
+      .orderBy(desc(scanResults.completedAt))
+      .limit(1);
+    if (scanRow) {
+      // Pull band off the latest "scan_complete" event details if present.
+      const completeEvent = events.find((e) => e.eventType === "scan_complete");
+      scan = {
+        status: scanRow.status,
+        riskScore: scanRow.riskScore,
+        band: ((completeEvent?.details as { band?: string }) ?? null)?.band ?? null,
+        summary: scanRow.summary,
+        findings: scanRow.findings,
+        completedAt: scanRow.completedAt,
+      };
+    }
+  }
+
   const lastRejection = events.find((e) => e.eventType === "rejected");
 
   return c.json({
@@ -325,6 +357,7 @@ releasesRouter.get("/releases/:id", async (c) => {
         }
       : null,
     events,
+    scan,
     rejectionReason: lastRejection
       ? {
           code: (lastRejection.details as any)?.code,

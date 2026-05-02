@@ -1,11 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 
-vi.mock("../lib/db", () => ({
-  db: {
-    insert: vi.fn(),
-    update: vi.fn(),
-    query: {
+vi.mock("../lib/db", () => {
+  // Default `select` chain returns no rows — used by the scan-result lookup
+  // in GET /releases/:id. Tests can override per-call.
+  const select = vi.fn(() => ({
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([]),
+  }));
+  return {
+    db: {
+      insert: vi.fn(),
+      update: vi.fn(),
+      select,
+      query: {
       developers: {
         findFirst: vi.fn(),
       },
@@ -24,7 +34,8 @@ vi.mock("../lib/db", () => ({
       },
     },
   },
-}));
+};
+});
 
 vi.mock("../middleware/auth", () => ({
   requireAuth: vi.fn(async (c: any, next: any) => {

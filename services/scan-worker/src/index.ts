@@ -1,50 +1,54 @@
 import "dotenv/config";
 import { Worker } from "bullmq";
+import { createDb } from "@openmarket/db";
 import { processScanJob, type ScanJobData } from "./processor.js";
+import { buildRedisConnection } from "./lib/redis-connection.js";
 
-const QUEUE_NAME = "openmarket:scan";
+const QUEUE_NAME = "openmarket-scan";
 
-const redisConnection = {
-  host: process.env["REDIS_HOST"] ?? "localhost",
-  port: parseInt(process.env["REDIS_PORT"] ?? "6379", 10),
-};
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
+
+const connection = buildRedisConnection();
+const db = createDb(connectionString);
 
 const worker = new Worker<ScanJobData>(
   QUEUE_NAME,
   async (job) => {
-    console.log(`[scan-worker] Processing job ${job.id} for release ${job.data.releaseId}`);
-    await processScanJob(job);
-    console.log(`[scan-worker] Completed job ${job.id}`);
+    return processScanJob(job, db);
   },
   {
-    connection: redisConnection,
+    connection,
     concurrency: parseInt(process.env.WORKER_CONCURRENCY ?? "3", 10),
-  }
+  },
 );
 
-worker.on("completed", (job) => {
-  console.log(`[scan-worker] Job ${job.id} completed successfully`);
+worker.on("completed", (job, result) => {
+  const status = (result as { status?: string })?.status ?? "?";
+  const score = (result as { result?: { riskScore?: number } })?.result?.riskScore;
+  console.log(
+    `[scan-worker] completed job=${job.id} status=${status} score=${score ?? "—"}`,
+  );
 });
-
 worker.on("failed", (job, err) => {
-  console.error(`[scan-worker] Job ${job?.id} failed:`, err);
+  console.error(`[scan-worker] FAILED job=${job?.id}:`, err.message);
 });
-
 worker.on("error", (err) => {
-  console.error("[scan-worker] Worker error:", err);
+  console.error("[scan-worker] error:", err);
 });
 
-console.log(`[scan-worker] Listening on queue "${QUEUE_NAME}"`);
+const host = (connection as { host?: string }).host ?? "<unknown>";
+const port = (connection as { port?: number }).port ?? "?";
+console.log(`[scan-worker] listening on ${QUEUE_NAME} (Redis ${host}:${port})`);
 
-// Graceful shutdown
-process.on("SIGTERM", async () => {
-  console.log("[scan-worker] SIGTERM received, closing worker...");
+async function shutdown() {
+  console.log("[scan-worker] shutting down...");
   await worker.close();
   process.exit(0);
-});
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
-process.on("SIGINT", async () => {
-  console.log("[scan-worker] SIGINT received, closing worker...");
-  await worker.close();
-  process.exit(0);
-});
+export { worker };
