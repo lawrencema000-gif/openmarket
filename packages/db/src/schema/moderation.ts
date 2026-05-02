@@ -54,6 +54,43 @@ export const moderationActions = pgTable(
 );
 
 /**
+ * Developer appeals against takedowns / suspensions / review removals.
+ *
+ * Per §2 principle 3 (developer due process): every action against a
+ * developer's content is appealable with a written response within 5
+ * business days. This table is the queue.
+ *
+ * targetType captures which prior decision is being appealed:
+ *   - app_delisting       → reverses to app.isDelisted=false on accept
+ *   - developer_ban       → reverses developer suspension on accept
+ *   - review_removal      → restores a removed review on accept
+ *
+ * status: open | in_review | accepted | rejected.
+ */
+export const appeals = pgTable(
+  "appeals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    developerId: uuid("developer_id")
+      .references(() => developers.id, { onDelete: "cascade" })
+      .notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    body: text("body").notNull(),
+    status: text("status").default("open").notNull(),
+    resolution: text("resolution"),
+    resolvedBy: uuid("resolved_by"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("appeals_developer_idx").on(t.developerId),
+    index("appeals_status_idx").on(t.status),
+    index("appeals_target_idx").on(t.targetType, t.targetId),
+  ],
+);
+
+/**
  * Public, append-only transparency log. Every moderation action that
  * affects what users see (delistings, account bans, takedown notices,
  * government requests, policy changes) writes a row here.

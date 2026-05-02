@@ -10,7 +10,7 @@ import {
 } from "./apps";
 import { scanResults, permissionsDetected, sdkFingerprints } from "./security";
 import { users, installEvents, reviews, reports } from "./users";
-import { moderationActions, releaseChannels, categories } from "./moderation";
+import { appeals, moderationActions, releaseChannels, categories } from "./moderation";
 
 export const developersRelations = relations(developers, ({ many }) => ({
   apps: many(apps),
@@ -160,5 +160,12 @@ export const releaseChannelsRelations = relations(releaseChannels, ({ one }) => 
   app: one(apps, {
     fields: [releaseChannels.appId],
     references: [apps.id],
+  }),
+}));
+
+export const appealsRelations = relations(appeals, ({ one }) => ({
+  developer: one(developers, {
+    fields: [appeals.developerId],
+    references: [developers.id],
   }),
 }));
