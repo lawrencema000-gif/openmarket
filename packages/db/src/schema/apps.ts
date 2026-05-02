@@ -131,6 +131,33 @@ export const releaseArtifacts = pgTable("release_artifacts", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/**
+ * Append-only audit log of significant events on a release. Drives the
+ * dev-portal release-detail timeline ("uploaded 2:41pm → parsed 2:42pm →
+ * rejected: signing-key changed 2:42pm") and gives admins a paper trail.
+ *
+ * One row per event. Never updated; never deleted (cascades only if the
+ * release itself is hard-deleted, which we generally don't do).
+ */
+export const releaseEvents = pgTable(
+  "release_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    releaseId: uuid("release_id")
+      .references(() => releases.id, { onDelete: "cascade" })
+      .notNull(),
+    /**
+     * Stable string keys so we can grep for them in the dev-portal:
+     *   uploaded, parsed, rejected, scan_queued, scan_complete,
+     *   published, paused, rolled_back, delisted.
+     */
+    eventType: text("event_type").notNull(),
+    /** Free-form details. For "rejected": { code, reason, ... }. */
+    details: jsonb("details"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+);
+
 export const artifactMetadata = pgTable("artifact_metadata", {
   id: uuid("id").primaryKey().defaultRandom(),
   artifactId: uuid("artifact_id")

@@ -285,12 +285,18 @@ importers:
 
   services/ingest-worker:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.700.0
+        version: 3.1039.0
       '@openmarket/db':
         specifier: workspace:*
         version: link:../../packages/db
       '@openmarket/security-rules':
         specifier: workspace:*
         version: link:../../packages/security-rules
+      '@types/yauzl':
+        specifier: ^2.10.3
+        version: 2.10.3
       adbkit-apkreader:
         specifier: ^3.2.0
         version: 3.2.0
@@ -303,6 +309,9 @@ importers:
       drizzle-orm:
         specifier: 0.39.3
         version: 0.39.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(kysely@0.28.16)(postgres@3.4.9)
+      yauzl:
+        specifier: ^3.2.0
+        version: 3.3.0
     devDependencies:
       tsx:
         specifier: ^4.19.0
@@ -2540,6 +2549,9 @@ packages:
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
+  '@types/yauzl@2.10.3':
+    resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
+
   '@typescript-eslint/eslint-plugin@8.58.2':
     resolution: {integrity: sha512-aC2qc5thQahutKjP+cl8cgN9DWe3ZUqVko30CMSZHnFEHyhOYoZSzkGtAI2mcwZ38xeImDucI4dnqsHiOYuuCw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -4317,6 +4329,10 @@ packages:
 
   yauzl@2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
+
+  yauzl@3.3.0:
+    resolution: {integrity: sha512-PtGEvEP30p7sbIBJKUBjUnqgTVOyMURc4dLo9iNyAJnNIEz9pm88cCXF21w94Kg3k6RXkeZh5DHOGS0qEONvNQ==}
+    engines: {node: '>=12'}
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -6613,6 +6629,10 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
+  '@types/yauzl@2.10.3':
+    dependencies:
+      '@types/node': 22.19.17
+
   '@typescript-eslint/eslint-plugin@8.58.2(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
@@ -8555,6 +8575,11 @@ snapshots:
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
+
+  yauzl@3.3.0:
+    dependencies:
+      buffer-crc32: 0.2.13
+      pend: 1.2.0
 
   yocto-queue@0.1.0: {}
 

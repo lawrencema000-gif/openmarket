@@ -1,6 +1,13 @@
 import { relations } from "drizzle-orm";
 import { developers, developerIdentities, developerVerificationEvidence, signingKeys } from "./developers";
-import { apps, appListings, releases, releaseArtifacts, artifactMetadata } from "./apps";
+import {
+  apps,
+  appListings,
+  releases,
+  releaseArtifacts,
+  artifactMetadata,
+  releaseEvents,
+} from "./apps";
 import { scanResults, permissionsDetected, sdkFingerprints } from "./security";
 import { users, installEvents, reviews, reports } from "./users";
 import { moderationActions, releaseChannels, categories } from "./moderation";
@@ -62,6 +69,14 @@ export const releasesRelations = relations(releases, ({ one, many }) => ({
     references: [apps.id],
   }),
   artifacts: many(releaseArtifacts),
+  events: many(releaseEvents),
+}));
+
+export const releaseEventsRelations = relations(releaseEvents, ({ one }) => ({
+  release: one(releases, {
+    fields: [releaseEvents.releaseId],
+    references: [releases.id],
+  }),
 }));
 
 export const releaseArtifactsRelations = relations(releaseArtifacts, ({ one, many }) => ({

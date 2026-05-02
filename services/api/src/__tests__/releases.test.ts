@@ -19,6 +19,9 @@ vi.mock("../lib/db", () => ({
       releaseArtifacts: {
         findFirst: vi.fn(),
       },
+      releaseEvents: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
     },
   },
 }));

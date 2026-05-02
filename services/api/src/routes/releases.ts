@@ -1,10 +1,16 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../lib/db";
-import { apps, releases, releaseArtifacts, developers } from "@openmarket/db/schema";
+import {
+  apps,
+  releases,
+  releaseArtifacts,
+  releaseEvents,
+  developers,
+} from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { createReleaseSchema } from "@openmarket/contracts/apps";
 import { completeUploadSchema } from "@openmarket/contracts/releases";
@@ -283,22 +289,30 @@ releasesRouter.post(
   },
 );
 
-// Get release by ID (public)
+// Get release by ID (public). Includes the audit timeline so the
+// dev-portal can render: uploaded → parsed → rejected/scanned/published.
 releasesRouter.get("/releases/:id", async (c) => {
   const releaseId = c.req.param("id");
 
-  const release = await db.query.releases.findFirst({
+  const release = (await db.query.releases.findFirst({
     where: eq(releases.id, releaseId as string),
     with: {
       artifacts: true,
     },
-  }) as any;
+  })) as any;
 
   if (!release) {
     throw new HTTPException(404, { message: "Release not found" });
   }
 
+  const events = await db.query.releaseEvents.findMany({
+    where: eq(releaseEvents.releaseId, releaseId as string),
+    orderBy: [desc(releaseEvents.createdAt)],
+    limit: 50,
+  });
+
   const artifact = release.artifacts?.[0] ?? null;
+  const lastRejection = events.find((e) => e.eventType === "rejected");
 
   return c.json({
     ...release,
@@ -308,6 +322,15 @@ releasesRouter.get("/releases/:id", async (c) => {
           fileSize: artifact.fileSize,
           sha256: artifact.sha256,
           uploadStatus: artifact.uploadStatus,
+        }
+      : null,
+    events,
+    rejectionReason: lastRejection
+      ? {
+          code: (lastRejection.details as any)?.code,
+          reason: (lastRejection.details as any)?.reason,
+          warnings: (lastRejection.details as any)?.warnings ?? [],
+          at: lastRejection.createdAt,
         }
       : null,
   });
