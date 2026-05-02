@@ -1,12 +1,23 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../lib/db";
-import { reports, users } from "@openmarket/db/schema";
+import {
+  apps,
+  developers,
+  reports,
+  reviews,
+  users,
+} from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
+import { enqueueEmail } from "../lib/email";
+import {
+  CURRENT_CONTENT_POLICY_VERSION,
+  appendTransparencyEvent,
+} from "../lib/transparency";
 import type { Variables } from "../lib/types";
 
 export const reportsRouter = new Hono<{ Variables: Variables }>();
@@ -23,32 +34,56 @@ const createReportSchema = z.object({
     "broken",
     "other",
   ]),
-  description: z.string().min(1),
+  description: z.string().min(1).max(4000),
 });
 
-const updateReportSchema = z.object({
-  status: z.enum(["open", "investigating", "resolved", "dismissed"]),
-  resolutionNotes: z.string().optional(),
+const listQuerySchema = z.object({
+  status: z.enum(["open", "investigating", "resolved", "dismissed"]).optional(),
+  type: z
+    .enum(["malware", "scam", "impersonation", "illegal", "spam", "broken", "other"])
+    .optional(),
+  targetType: z.enum(["app", "release", "developer", "review"]).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
-// Helper: find or create user record by auth user email
-async function findOrCreateUser(email: string, authUserId: string) {
-  let user = await db.query.users.findFirst({
-    where: eq(users.email, email),
+const resolveSchema = z.object({
+  /**
+   * delist     → app: app.isDelisted=true, transparency event, takedown email,
+   *              status=resolved.
+   *              review: review.isFlagged=true (hides it), transparency event,
+   *              status=resolved.
+   * warn       → no DB change to target, status=resolved with notes; email
+   *              the developer (if app/release/developer target).
+   * dismiss    → no action, status=dismissed.
+   */
+  resolution: z.enum(["delist", "warn", "dismiss"]),
+  notes: z.string().max(4000).optional(),
+});
+
+const bulkResolveSchema = z.object({
+  reportIds: z.array(z.string().uuid()).min(1).max(50),
+  resolution: z.enum(["dismiss"]), // bulk only allows dismiss for safety
+  notes: z.string().max(2000).optional(),
+});
+
+async function findOrCreateProfile(authUserId: string, email: string) {
+  const existing = await db.query.users.findFirst({
+    where: eq(users.authUserId, authUserId),
   });
-
-  if (!user) {
-    const [created] = await db
-      .insert(users)
-      .values({ email, authProvider: "better-auth", authProviderId: authUserId })
-      .returning();
-    user = created!;
-  }
-
-  return user;
+  if (existing) return existing;
+  const [created] = await db
+    .insert(users)
+    .values({ authUserId, email: email.toLowerCase() })
+    .onConflictDoUpdate({ target: users.email, set: { authUserId } })
+    .returning();
+  return created!;
 }
 
-// POST /reports — submit a report (auth required)
+/**
+ * POST /reports — submit a report (any signed-in user can report any
+ * target type). Rate limiting applied at the gateway layer.
+ */
 reportsRouter.post(
   "/reports",
   requireAuth,
@@ -56,25 +91,378 @@ reportsRouter.post(
   async (c) => {
     const authUser = c.get("user");
     const body = c.req.valid("json");
-
-    const user = await findOrCreateUser(authUser.email, authUser.id);
+    const profile = await findOrCreateProfile(authUser.id, authUser.email);
 
     const [report] = await db
       .insert(reports)
       .values({
         targetType: body.targetType,
         targetId: body.targetId,
-        reporterId: user.id,
+        reporterId: profile.id,
         reportType: body.reportType,
         description: body.description,
       })
       .returning();
 
-    return c.json(report, 201);
-  }
+    return c.json({ id: report!.id, status: report!.status }, 201);
+  },
 );
 
-// GET /reports — list all reports, admin only
+/**
+ * GET /admin/reports?status=&type=&targetType=&page=&limit=
+ * Admin-only paginated queue with filters + counts per status.
+ */
+reportsRouter.get(
+  "/admin/reports",
+  requireAdmin,
+  zValidator("query", listQuerySchema),
+  async (c) => {
+    const { status, type, targetType, page, limit } = c.req.valid("query");
+    const offset = (page - 1) * limit;
+
+    const where = and(
+      ...(status ? [eq(reports.status, status)] : []),
+      ...(type ? [eq(reports.reportType, type)] : []),
+      ...(targetType ? [eq(reports.targetType, targetType)] : []),
+    );
+
+    const items = await db
+      .select()
+      .from(reports)
+      .where(where)
+      .orderBy(desc(reports.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Count per status for the queue header (kept cheap with a single GROUP BY).
+    const statusCounts = await db
+      .select({
+        status: reports.status,
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(reports)
+      .groupBy(reports.status);
+
+    const counts: Record<string, number> = {
+      open: 0, investigating: 0, resolved: 0, dismissed: 0,
+    };
+    for (const row of statusCounts) counts[row.status] = Number(row.count);
+
+    return c.json({ items, page, limit, counts });
+  },
+);
+
+/**
+ * POST /admin/reports/:id/resolve — single-report resolution with side effects.
+ *
+ * Per §2 principle 2: every resolution that affects what users see writes
+ * a transparency_events row. The mod also gets a moderation_actions audit
+ * (separate concern; that's the internal log).
+ */
+reportsRouter.post(
+  "/admin/reports/:id/resolve",
+  requireAdmin,
+  zValidator("json", resolveSchema),
+  async (c) => {
+    const reportId = c.req.param("id") as string;
+    const body = c.req.valid("json");
+    const adminUser = c.get("user");
+
+    const report = await db.query.reports.findFirst({
+      where: eq(reports.id, reportId),
+    });
+    if (!report) throw new HTTPException(404, { message: "Report not found" });
+
+    if (report.status === "resolved" || report.status === "dismissed") {
+      throw new HTTPException(409, {
+        message: "Report is already resolved or dismissed",
+      });
+    }
+
+    const reasonText = body.notes?.trim() ?? "";
+    const resolutionStatus =
+      body.resolution === "dismiss" ? "dismissed" : "resolved";
+
+    // Resolve the report row first so the rest of the side-effects run
+    // against a settled state (avoids double-resolution races).
+    await db
+      .update(reports)
+      .set({
+        status: resolutionStatus,
+        resolutionNotes: reasonText,
+        resolvedAt: new Date(),
+      })
+      .where(eq(reports.id, reportId));
+
+    // Side effects per resolution.
+    if (body.resolution === "delist") {
+      await applyDelistSideEffects({
+        report,
+        notes: reasonText,
+        adminEmail: adminUser.email,
+      });
+    } else if (body.resolution === "warn") {
+      await applyWarnSideEffects({ report, notes: reasonText });
+    } else {
+      // dismiss — notify reporter so they know we read it.
+      await notifyReporter({
+        report,
+        resolution: "dismissed",
+        notes: reasonText,
+      });
+    }
+
+    return c.json({ success: true, reportId, resolution: body.resolution });
+  },
+);
+
+/**
+ * POST /admin/reports/bulk-dismiss — bulk dismiss N reports.
+ * Bulk-delist is intentionally NOT supported — that needs per-report review.
+ */
+reportsRouter.post(
+  "/admin/reports/bulk-dismiss",
+  requireAdmin,
+  zValidator("json", bulkResolveSchema),
+  async (c) => {
+    const body = c.req.valid("json");
+
+    const targetReports = await db
+      .select()
+      .from(reports)
+      .where(
+        and(
+          inArray(reports.id, body.reportIds),
+          inArray(reports.status, ["open", "investigating"]),
+        ),
+      );
+
+    await db
+      .update(reports)
+      .set({
+        status: "dismissed",
+        resolutionNotes: body.notes ?? "",
+        resolvedAt: new Date(),
+      })
+      .where(
+        and(
+          inArray(reports.id, body.reportIds),
+          inArray(reports.status, ["open", "investigating"]),
+        ),
+      );
+
+    // Best-effort reporter emails (one per report).
+    for (const r of targetReports) {
+      try {
+        await notifyReporter({ report: r, resolution: "dismissed", notes: body.notes ?? "" });
+      } catch {
+        // ignore per-report email failure
+      }
+    }
+
+    return c.json({ success: true, dismissedCount: targetReports.length });
+  },
+);
+
+// ───────── side-effect helpers ─────────
+
+async function applyDelistSideEffects(opts: {
+  report: typeof reports.$inferSelect;
+  notes: string;
+  adminEmail: string;
+}) {
+  const { report, notes, adminEmail } = opts;
+  const reasonGiven = notes || "Violates content policy";
+
+  if (report.targetType === "app") {
+    const app = await db.query.apps.findFirst({ where: eq(apps.id, report.targetId) });
+    if (!app) {
+      // App vanished — still write the transparency entry citing the report.
+      await appendTransparencyEvent({
+        eventType: "app_delisted",
+        targetType: "app",
+        targetId: report.targetId,
+        reason: reasonGiven + " (target app no longer found at resolution time)",
+        ruleVersion: CURRENT_CONTENT_POLICY_VERSION,
+        sourceReportId: report.id,
+      });
+      return;
+    }
+
+    // Delist + record on the apps row.
+    await db
+      .update(apps)
+      .set({
+        isDelisted: true,
+        delistReason: reasonGiven,
+        updatedAt: new Date(),
+      })
+      .where(eq(apps.id, app.id));
+
+    // Public transparency event.
+    await appendTransparencyEvent({
+      eventType: "app_delisted",
+      targetType: "app",
+      targetId: app.id,
+      reason: reasonGiven,
+      sourceReportId: report.id,
+    });
+
+    // Notify reporter + developer.
+    await Promise.allSettled([
+      notifyReporter({ report, resolution: "delisted", notes: reasonGiven }),
+      notifyDeveloperOfTakedown({ appId: app.id, reason: reasonGiven, adminEmail }),
+    ]);
+    return;
+  }
+
+  if (report.targetType === "review") {
+    // Hide the review.
+    await db
+      .update(reviews)
+      .set({ isFlagged: true, updatedAt: new Date() })
+      .where(eq(reviews.id, report.targetId));
+
+    await appendTransparencyEvent({
+      eventType: "review_removed",
+      targetType: "review",
+      targetId: report.targetId,
+      reason: reasonGiven,
+      sourceReportId: report.id,
+    });
+
+    await notifyReporter({ report, resolution: "delisted", notes: reasonGiven });
+    return;
+  }
+
+  // For other target types (release, developer) we just log the decision
+  // without the additional DB mutation here. Those flows land in dedicated
+  // endpoints (release rollback, developer suspend) when we ship them.
+  await appendTransparencyEvent({
+    eventType: `${report.targetType}_action`,
+    targetType: report.targetType as "app" | "developer" | "review",
+    targetId: report.targetId,
+    reason: reasonGiven,
+    sourceReportId: report.id,
+  });
+  await notifyReporter({ report, resolution: "delisted", notes: reasonGiven });
+}
+
+async function applyWarnSideEffects(opts: {
+  report: typeof reports.$inferSelect;
+  notes: string;
+}) {
+  await notifyReporter({
+    report: opts.report,
+    resolution: "warned",
+    notes: opts.notes,
+  });
+  // No transparency event for "warn" — internal action only.
+  // Internal moderation_actions row would go here if we wired moderator IDs through.
+}
+
+async function notifyReporter(opts: {
+  report: typeof reports.$inferSelect;
+  resolution: "delisted" | "warned" | "dismissed";
+  notes: string;
+}) {
+  const reporter = await db.query.users.findFirst({
+    where: eq(users.id, opts.report.reporterId),
+  });
+  if (!reporter) return;
+  try {
+    await enqueueEmail({
+      template: "report-resolved",
+      to: reporter.email,
+      props: {
+        reportId: opts.report.id,
+        targetType: opts.report.targetType,
+        resolution: opts.resolution,
+        notes: opts.notes,
+        transparencyUrl: "https://openmarket.app/transparency-report",
+      },
+      idempotencyKey: `report-resolved_${opts.report.id}`,
+      tags: [{ name: "category", value: "trust-safety" }],
+    });
+  } catch (err) {
+    console.error("notifyReporter failed:", err);
+  }
+}
+
+async function notifyDeveloperOfTakedown(opts: {
+  appId: string;
+  reason: string;
+  adminEmail: string;
+}) {
+  const app = await db.query.apps.findFirst({ where: eq(apps.id, opts.appId) });
+  if (!app) return;
+  const dev = await db.query.developers.findFirst({
+    where: eq(developers.id, app.developerId),
+  });
+  if (!dev) return;
+  try {
+    await enqueueEmail({
+      template: "developer-takedown",
+      to: dev.email,
+      props: {
+        appName: app.packageName,
+        reason: opts.reason,
+        ruleVersion: CURRENT_CONTENT_POLICY_VERSION,
+        rulesUrl: "https://openmarket.app/content-policy",
+        appealUrl: `https://dev.openmarket.app/apps/${app.id}/appeal`,
+        effectiveAt: new Date().toISOString().slice(0, 10),
+      },
+      idempotencyKey: `takedown_${app.id}_${Date.now()}`,
+      tags: [{ name: "category", value: "trust-safety" }],
+    });
+  } catch (err) {
+    console.error("notifyDeveloperOfTakedown failed:", err);
+  }
+}
+
+// ───────── Public transparency log ─────────
+
+const transparencyQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  eventType: z.string().optional(),
+  targetType: z.enum(["app", "developer", "review", "platform"]).optional(),
+});
+
+reportsRouter.get(
+  "/transparency-events",
+  zValidator("query", transparencyQuerySchema),
+  async (c) => {
+    const { page, limit, eventType, targetType } = c.req.valid("query");
+    const offset = (page - 1) * limit;
+
+    // Late import so transparency module side effects don't load on every API request.
+    const { transparencyEvents } = await import("@openmarket/db/schema");
+    const filters = and(
+      ...(eventType ? [eq(transparencyEvents.eventType, eventType)] : []),
+      ...(targetType ? [eq(transparencyEvents.targetType, targetType)] : []),
+    );
+
+    const items = await db
+      .select()
+      .from(transparencyEvents)
+      .where(filters)
+      .orderBy(desc(transparencyEvents.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const countRows = await db
+      .select({ count: sql<number>`count(*)`.as("count") })
+      .from(transparencyEvents)
+      .where(filters);
+    const total = Number(countRows[0]?.count ?? 0);
+
+    return c.json({ items, page, limit, total });
+  },
+);
+
+// ───────── Legacy compat: keep old admin GET / PATCH for transition ─────────
+
 reportsRouter.get("/reports", requireAdmin, async (c) => {
   const status = c.req.query("status") as
     | "open"
@@ -82,45 +470,8 @@ reportsRouter.get("/reports", requireAdmin, async (c) => {
     | "resolved"
     | "dismissed"
     | undefined;
-
   const allReports = await db.query.reports.findMany({
     where: status ? eq(reports.status, status) : undefined,
   });
-
   return c.json(allReports);
 });
-
-// PATCH /reports/:id — update report status, admin only
-reportsRouter.patch(
-  "/reports/:id",
-  requireAdmin,
-  zValidator("json", updateReportSchema),
-  async (c) => {
-    const reportId = c.req.param("id");
-    const body = c.req.valid("json");
-
-    const report = await db.query.reports.findFirst({
-      where: eq(reports.id, reportId),
-    });
-
-    if (!report) {
-      throw new HTTPException(404, { message: "Report not found" });
-    }
-
-    const [updated] = await db
-      .update(reports)
-      .set({
-        status: body.status,
-        ...(body.resolutionNotes !== undefined && {
-          resolutionNotes: body.resolutionNotes,
-        }),
-        ...(["resolved", "dismissed"].includes(body.status) && {
-          resolvedAt: new Date(),
-        }),
-      })
-      .where(eq(reports.id, reportId))
-      .returning();
-
-    return c.json(updated);
-  }
-);

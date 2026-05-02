@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { apiFetch, ApiError } from "@/lib/api";
 import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
@@ -8,9 +9,61 @@ export const metadata: Metadata = {
     "Public log of every moderation action, takedown, and policy change on OpenMarket.",
 };
 
-export default function TransparencyReportPage() {
-  // P0-E placeholder: real data wiring lands in P1-K (reports + transparency_events).
-  // Until then, this page describes what will appear here and why.
+interface TransparencyEvent {
+  id: string;
+  eventType: string;
+  targetType: string;
+  targetId: string | null;
+  reason: string;
+  ruleVersion: string;
+  contentHash: string;
+  previousHash: string;
+  createdAt: string;
+}
+
+async function getEvents(): Promise<{
+  items: TransparencyEvent[];
+  total: number;
+  unavailable: boolean;
+}> {
+  try {
+    const r = await apiFetch<{ items: TransparencyEvent[]; total: number }>(
+      "/api/transparency-events?limit=100",
+    );
+    return { items: r.items, total: r.total, unavailable: false };
+  } catch (err) {
+    if (err instanceof ApiError && err.isUnreachable) {
+      return { items: [], total: 0, unavailable: true };
+    }
+    return { items: [], total: 0, unavailable: false };
+  }
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  app_delisted: "App delisted",
+  app_relisted: "App relisted",
+  developer_suspended: "Developer suspended",
+  developer_reinstated: "Developer reinstated",
+  review_removed: "Review removed",
+  dmca_takedown: "DMCA takedown",
+  dmca_counter_notice_restored: "DMCA counter-notice — content restored",
+  government_request_received: "Government request received",
+  government_request_complied: "Government request complied",
+  government_request_declined: "Government request declined",
+  policy_change: "Policy change",
+};
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export default async function TransparencyReportPage() {
+  const { items, total, unavailable } = await getEvents();
+
   return (
     <LegalLayout
       title="Transparency Report"
@@ -22,15 +75,68 @@ export default function TransparencyReportPage() {
         OpenMarket goes here. We hold ourselves accountable to this document.
       </p>
 
-      <div className="my-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        <p className="m-0 font-semibold">No events yet</p>
-        <p className="mt-1 m-0 text-blue-800">
-          We're at the very start of the platform. As soon as we take any
-          moderation action — a takedown, an account suspension, a DMCA
-          response, a government request — it appears here, with the rule
-          version cited and the reason given.
-        </p>
-      </div>
+      {unavailable ? (
+        <div className="my-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="m-0 font-semibold">Log temporarily unreachable</p>
+          <p className="mt-1 m-0 text-amber-800">
+            We can't talk to the API right now — the log itself is fine, just
+            try again in a minute.
+          </p>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="my-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <p className="m-0 font-semibold">No events yet</p>
+          <p className="mt-1 m-0 text-blue-800">
+            We're at the very start of the platform. As soon as we take any
+            moderation action it appears here, with the rule version cited
+            and the reason given.
+          </p>
+        </div>
+      ) : (
+        <div className="my-6 not-prose">
+          <p className="text-sm text-gray-600 mb-3">
+            Showing {items.length} of {total.toLocaleString()} events. Each
+            row is hash-chained to the previous — see the audit notes below.
+          </p>
+          <ul className="space-y-3">
+            {items.map((e) => (
+              <li
+                key={e.id}
+                className="rounded-lg border border-gray-200 bg-white p-4 text-sm"
+              >
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {TYPE_LABELS[e.eventType] ?? e.eventType}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {fmtDate(e.createdAt)} · target: {e.targetType}
+                      {e.targetId ? ` · ${e.targetId.slice(0, 8)}…` : ""}
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-mono text-gray-400">
+                    rule {e.ruleVersion}
+                  </span>
+                </div>
+                <p className="mt-2 text-gray-800 whitespace-pre-wrap">
+                  {e.reason}
+                </p>
+                <details className="mt-2 text-[11px] text-gray-500">
+                  <summary className="cursor-pointer hover:text-gray-700">
+                    Audit hash
+                  </summary>
+                  <p className="mt-1 font-mono break-all">
+                    contentHash: {e.contentHash}
+                  </p>
+                  <p className="font-mono break-all">
+                    previousHash: {e.previousHash || "(genesis)"}
+                  </p>
+                </details>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <h2>What appears here</h2>
       <p>The transparency log will include, for each event:</p>

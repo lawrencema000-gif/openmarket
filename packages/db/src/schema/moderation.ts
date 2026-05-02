@@ -53,6 +53,63 @@ export const moderationActions = pgTable(
   ]
 );
 
+/**
+ * Public, append-only transparency log. Every moderation action that
+ * affects what users see (delistings, account bans, takedown notices,
+ * government requests, policy changes) writes a row here.
+ *
+ * Hash-chain: each row's contentHash = sha256(canonical(prev.contentHash
+ * || this.payload)). Tamper-evidence — if any row is rewritten, the
+ * subsequent contentHashes won't match. We checkpoint the latest hash
+ * to a public timestamping service weekly (deferred — added by a cron
+ * job in P1-T or later).
+ *
+ * Per §2 principle 2: every action gets a row here. No hidden takedowns.
+ */
+export const transparencyEvents = pgTable(
+  "transparency_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /**
+     * Stable, citable event-type strings:
+     *   app_delisted, app_relisted, developer_suspended, developer_reinstated,
+     *   review_removed, dmca_takedown, dmca_counter_notice_restored,
+     *   government_request_received, government_request_complied,
+     *   government_request_declined, policy_change.
+     */
+    eventType: text("event_type").notNull(),
+    /** "app" | "developer" | "review" | "platform" (for policy changes). */
+    targetType: text("target_type").notNull(),
+    /** UUID of the affected entity. Null when targetType=platform. */
+    targetId: uuid("target_id"),
+    /** Verbatim text of the reason given to the affected party. */
+    reason: text("reason").notNull(),
+    /** Pointer to the content-policy version applied (e.g., v2026.04.30). */
+    ruleVersion: text("rule_version").notNull(),
+    /**
+     * sha256 hex of the previous row's contentHash, or "" for the genesis row.
+     * Read at insert time and frozen.
+     */
+    previousHash: text("previous_hash").notNull(),
+    /**
+     * sha256 hex over the canonical-JSON of (previousHash, eventType,
+     * targetType, targetId, reason, ruleVersion, createdAt). Frozen.
+     */
+    contentHash: text("content_hash").notNull(),
+    /**
+     * Optional reference back to the report or appeal that triggered this.
+     */
+    sourceReportId: uuid("source_report_id"),
+    sourceAppealId: uuid("source_appeal_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("transparency_events_event_type_idx").on(t.eventType),
+    index("transparency_events_target_idx").on(t.targetType, t.targetId),
+    index("transparency_events_created_at_idx").on(t.createdAt),
+  ],
+);
+
 export const releaseChannels = pgTable(
   "release_channels",
   {
