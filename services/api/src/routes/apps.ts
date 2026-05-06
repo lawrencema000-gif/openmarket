@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and, desc } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import { z } from "zod";
 import { db } from "../lib/db";
 import {
   apps,
@@ -130,6 +131,44 @@ appsRouter.post(
  *     recentReleases: [ ...up to 5 most recent published, newest first ],
  *   }
  */
+/**
+ * GET /apps/sitemap?page=1&limit=200
+ *
+ * Public, sitemap-shaped feed of every published, non-delisted app.
+ * Returns the bare minimum (id, packageName, updatedAt) so a sitemap.xml
+ * route can stream large catalogs without dragging in listings/screenshots
+ * etc.
+ *
+ * Pagination: capped at 1000 per page; sitemap.xml caps at 50k URLs per
+ * Google's spec, so ~50 pages of this endpoint covers a 50k-app catalog.
+ */
+appsRouter.get(
+  "/apps/sitemap",
+  zValidator(
+    "query",
+    z.object({
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(1000).default(200),
+    }),
+  ),
+  async (c) => {
+    const { page, limit } = c.req.valid("query");
+    const offset = (page - 1) * limit;
+    const items = await db
+      .select({
+        id: apps.id,
+        packageName: apps.packageName,
+        updatedAt: apps.updatedAt,
+      })
+      .from(apps)
+      .where(and(eq(apps.isPublished, true), eq(apps.isDelisted, false)))
+      .orderBy(desc(apps.updatedAt))
+      .limit(limit)
+      .offset(offset);
+    return c.json({ items, page, limit });
+  },
+);
+
 appsRouter.get("/apps/:id", async (c) => {
   const id = c.req.param("id");
 

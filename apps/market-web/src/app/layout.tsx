@@ -4,14 +4,32 @@ import "./globals.css";
 import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
 import { UserMenu } from "@/components/user-menu";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 const PLAUSIBLE_HOST =
   process.env.NEXT_PUBLIC_PLAUSIBLE_HOST ?? "https://plausible.io";
 
+const ROOT_TITLE = `${SITE_NAME} — Android App Marketplace`;
+const ROOT_DESCRIPTION =
+  "Discover, evaluate, and download Android apps with full transparency. Verified developers, security reviews, and an open transparency log.";
+
 export const metadata: Metadata = {
-  title: "OpenMarket — Android App Marketplace",
-  description: "Discover, evaluate, and download Android apps with full transparency.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: ROOT_TITLE,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: ROOT_DESCRIPTION,
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: ROOT_TITLE,
+    description: ROOT_DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image", title: ROOT_TITLE, description: ROOT_DESCRIPTION },
 };
 
 export default function RootLayout({

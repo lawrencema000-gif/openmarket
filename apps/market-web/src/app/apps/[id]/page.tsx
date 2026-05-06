@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/site";
 import {
   Card, CardHeader, CardTitle, CardContent,
   TrustBadge, Badge, Button, StarRating,
@@ -165,12 +166,33 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   try {
     const raw = await apiFetch<ApiAppResponse>(`/api/apps/${id}`);
     const app = flattenApp(raw);
+    const title = `${app.name ?? "App"} — ${SITE_NAME}`;
+    const description =
+      app.shortDescription ??
+      `Android app ${app.packageName ?? "on OpenMarket"} — full transparency about permissions, security review, and developer track record.`;
+    const canonical = `${SITE_URL}/apps/${id}`;
+    const ogImage = app.iconUrl ?? DEFAULT_OG_IMAGE;
     return {
-      title: `${app.name ?? "App"} — OpenMarket`,
-      description: app.shortDescription ?? "Android app on OpenMarket",
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: {
+        type: "website",
+        url: canonical,
+        siteName: SITE_NAME,
+        title,
+        description,
+        images: [{ url: ogImage }],
+      },
+      twitter: {
+        card: "summary",
+        title,
+        description,
+        images: [ogImage],
+      },
     };
   } catch {
-    return { title: "App — OpenMarket" };
+    return { title: `App — ${SITE_NAME}` };
   }
 }
 
@@ -206,8 +228,46 @@ export default async function AppDetailPage({
   const dangerousPerms = app.dangerousPermissions ?? [];
   const normalPerms = (app.permissions ?? []).filter((p) => !dangerousPerms.includes(p));
 
+  // Schema.org SoftwareApplication JSON-LD. Lets Google + Bing surface
+  // rich results (icon, rating, version, OS) in search. Schema validates
+  // against schema.org/SoftwareApplication.
+  const jsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: app.name,
+    description: app.shortDescription ?? app.description ?? undefined,
+    operatingSystem: "Android",
+    applicationCategory: app.category ?? "Mobile App",
+    url: `${SITE_URL}/apps/${id}`,
+    image: app.iconUrl ?? undefined,
+    softwareVersion: app.version ?? app.latestRelease?.versionName ?? undefined,
+    fileSize: app.latestArtifact?.fileSizeFormatted ?? undefined,
+    offers: { "@type": "Offer", price: 0, priceCurrency: "USD" },
+    author: app.developer
+      ? {
+          "@type": "Organization",
+          name: app.developer.name,
+        }
+      : undefined,
+    aggregateRating:
+      app.rating && app.reviewCount
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: app.rating,
+            reviewCount: app.reviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          }
+        : undefined,
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-8">
         <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
