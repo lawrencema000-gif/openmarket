@@ -35,7 +35,7 @@ vi.mock("../lib/db", () => ({
 
 vi.mock("../middleware/admin", () => ({
   requireAdmin: vi.fn(async (c: any, next: any) => {
-    c.set("user", { id: "admin-id", email: "admin@test.com" });
+    c.set("user", { id: "admin-id", email: "admin@test.com", emailVerified: true });
     c.set("admin", { id: "admin-dev-id", isAdmin: true });
     await next();
   }),
@@ -43,7 +43,7 @@ vi.mock("../middleware/admin", () => ({
 
 vi.mock("../middleware/auth", () => ({
   requireAuth: vi.fn(async (c: any, next: any) => {
-    c.set("user", { id: "admin-id", email: "admin@test.com" });
+    c.set("user", { id: "admin-id", email: "admin@test.com", emailVerified: true });
     c.set("session", { id: "test-session" });
     await next();
   }),

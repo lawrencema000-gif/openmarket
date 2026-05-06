@@ -182,24 +182,61 @@ reportsRouter.post(
     const reasonText = body.notes?.trim() ?? "";
     const resolutionStatus =
       body.resolution === "dismiss" ? "dismissed" : "resolved";
+    const reasonGiven = reasonText || "Violates content policy";
 
-    // Resolve the report row first so the rest of the side-effects run
-    // against a settled state (avoids double-resolution races).
-    await db
-      .update(reports)
-      .set({
-        status: resolutionStatus,
-        resolutionNotes: reasonText,
-        resolvedAt: new Date(),
-      })
-      .where(eq(reports.id, reportId));
+    // Atomicity: the report-status update and the target-state mutation
+    // (delist app / hide review) live in the same txn so a process crash
+    // can't leave the report flagged "resolved" with the target unchanged.
+    // The transparency event + emails run outside the txn — losing them
+    // on a crash is recoverable; a half-applied delist is not.
+    let delistedAppId: string | null = null;
+    let removedReviewId: string | null = null;
+    await db.transaction(async (tx) => {
+      await tx
+        .update(reports)
+        .set({
+          status: resolutionStatus,
+          resolutionNotes: reasonText,
+          resolvedAt: new Date(),
+        })
+        .where(eq(reports.id, reportId));
 
-    // Side effects per resolution.
+      if (body.resolution === "delist") {
+        if (report.targetType === "app") {
+          const app = await tx.query.apps.findFirst({
+            where: eq(apps.id, report.targetId),
+          });
+          if (app) {
+            await tx
+              .update(apps)
+              .set({
+                isDelisted: true,
+                delistReason: reasonGiven,
+                updatedAt: new Date(),
+              })
+              .where(eq(apps.id, app.id));
+            delistedAppId = app.id;
+          }
+        } else if (report.targetType === "review") {
+          await tx
+            .update(reviews)
+            .set({ isFlagged: true, updatedAt: new Date() })
+            .where(eq(reviews.id, report.targetId));
+          removedReviewId = report.targetId;
+        }
+      }
+    });
+
+    // Side effects (transparency log + notifications) run *after* the
+    // atomic state change. Each is best-effort and self-logged on
+    // failure so a recovery tool can replay them later.
     if (body.resolution === "delist") {
       await applyDelistSideEffects({
         report,
-        notes: reasonText,
+        notes: reasonGiven,
         adminEmail: adminUser.email,
+        delistedAppId,
+        removedReviewId,
       });
     } else if (body.resolution === "warn") {
       await applyWarnSideEffects({ report, notes: reasonText });
@@ -270,14 +307,16 @@ async function applyDelistSideEffects(opts: {
   report: typeof reports.$inferSelect;
   notes: string;
   adminEmail: string;
+  delistedAppId: string | null;
+  removedReviewId: string | null;
 }) {
-  const { report, notes, adminEmail } = opts;
-  const reasonGiven = notes || "Violates content policy";
+  const { report, notes, adminEmail, delistedAppId, removedReviewId } = opts;
+  const reasonGiven = notes;
 
   if (report.targetType === "app") {
-    const app = await db.query.apps.findFirst({ where: eq(apps.id, report.targetId) });
-    if (!app) {
-      // App vanished — still write the transparency entry citing the report.
+    if (delistedAppId === null) {
+      // App vanished between report creation and resolution — still
+      // record the public decision with a footnote.
       await appendTransparencyEvent({
         eventType: "app_delisted",
         targetType: "app",
@@ -289,44 +328,26 @@ async function applyDelistSideEffects(opts: {
       return;
     }
 
-    // Delist + record on the apps row.
-    await db
-      .update(apps)
-      .set({
-        isDelisted: true,
-        delistReason: reasonGiven,
-        updatedAt: new Date(),
-      })
-      .where(eq(apps.id, app.id));
-
-    // Public transparency event.
     await appendTransparencyEvent({
       eventType: "app_delisted",
       targetType: "app",
-      targetId: app.id,
+      targetId: delistedAppId,
       reason: reasonGiven,
       sourceReportId: report.id,
     });
 
-    // Notify reporter + developer.
     await Promise.allSettled([
       notifyReporter({ report, resolution: "delisted", notes: reasonGiven }),
-      notifyDeveloperOfTakedown({ appId: app.id, reason: reasonGiven, adminEmail }),
+      notifyDeveloperOfTakedown({ appId: delistedAppId, reason: reasonGiven, adminEmail }),
     ]);
     return;
   }
 
   if (report.targetType === "review") {
-    // Hide the review.
-    await db
-      .update(reviews)
-      .set({ isFlagged: true, updatedAt: new Date() })
-      .where(eq(reviews.id, report.targetId));
-
     await appendTransparencyEvent({
       eventType: "review_removed",
       targetType: "review",
-      targetId: report.targetId,
+      targetId: removedReviewId ?? report.targetId,
       reason: reasonGiven,
       sourceReportId: report.id,
     });
@@ -336,7 +357,7 @@ async function applyDelistSideEffects(opts: {
   }
 
   // For other target types (release, developer) we just log the decision
-  // without the additional DB mutation here. Those flows land in dedicated
+  // without an additional DB mutation here. Those flows land in dedicated
   // endpoints (release rollback, developer suspend) when we ship them.
   await appendTransparencyEvent({
     eventType: `${report.targetType}_action`,
@@ -412,7 +433,7 @@ async function notifyDeveloperOfTakedown(opts: {
         appealUrl: `https://dev.openmarket.app/apps/${app.id}/appeal`,
         effectiveAt: new Date().toISOString().slice(0, 10),
       },
-      idempotencyKey: `takedown_${app.id}_${Date.now()}`,
+      idempotencyKey: `takedown_${app.id}`,
       tags: [{ name: "category", value: "trust-safety" }],
     });
   } catch (err) {

@@ -239,12 +239,18 @@ categoriesRouter.post(
   ),
   async (c) => {
     const body = c.req.valid("json");
-    for (const p of body.positions) {
-      await db
-        .update(categories)
-        .set({ position: p.position, updatedAt: new Date() })
-        .where(eq(categories.slug, p.slug));
-    }
+    // Wrap in a transaction so a connection error mid-loop can't leave
+    // the storefront with a partial reorder. Concurrent admin drags
+    // serialize through the txn instead of interleaving.
+    await db.transaction(async (tx) => {
+      const now = new Date();
+      for (const p of body.positions) {
+        await tx
+          .update(categories)
+          .set({ position: p.position, updatedAt: now })
+          .where(eq(categories.slug, p.slug));
+      }
+    });
     return c.json({ success: true, updatedCount: body.positions.length });
   },
 );

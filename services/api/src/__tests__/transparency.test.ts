@@ -40,7 +40,11 @@ vi.mock("../lib/db", () => {
     })),
   }));
 
-  return { db: { select, insert } };
+  // appendTransparencyEvent now wraps select+insert in db.transaction —
+  // the mock just runs the callback with itself as the tx handle.
+  const dbHandle: any = { select, insert };
+  dbHandle.transaction = vi.fn(async (cb: (tx: any) => any) => cb(dbHandle));
+  return { db: dbHandle };
 });
 
 import {

@@ -11,22 +11,24 @@ vi.mock("../lib/db", () => {
     orderBy: vi.fn().mockResolvedValue([]),
     limit: vi.fn().mockResolvedValue([]),
   }));
-  return {
-    db: {
-      select,
-      insert: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      query: {
-        categories: { findFirst: vi.fn(), findMany: vi.fn() },
-      },
+  const dbHandle: any = {
+    select,
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    query: {
+      categories: { findFirst: vi.fn(), findMany: vi.fn() },
     },
   };
+  // Reorder now wraps the bulk update in a txn — the mock just runs the
+  // callback against itself.
+  dbHandle.transaction = vi.fn(async (cb: (tx: any) => any) => cb(dbHandle));
+  return { db: dbHandle };
 });
 
 vi.mock("../middleware/admin", () => ({
   requireAdmin: vi.fn(async (c: any, next: any) => {
-    c.set("user", { id: "auth-admin", email: "admin@test.com" });
+    c.set("user", { id: "auth-admin", email: "admin@test.com", emailVerified: true });
     c.set("session", { id: "sess-admin" });
     await next();
   }),

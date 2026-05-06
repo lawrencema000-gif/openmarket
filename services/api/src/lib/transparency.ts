@@ -61,6 +61,11 @@ function sha256Hex(input: string): string {
  * Append a row. Returns the persisted row (with id, contentHash, etc.).
  * Caller is responsible for any other side-effects (delisting an app,
  * sending the takedown email, etc.) — this just writes the public record.
+ *
+ * Concurrency: read-latest + insert run inside a SERIALIZABLE transaction
+ * so two simultaneous appends cannot both link off the same `previousHash`
+ * and fork the chain. Postgres serializable raises a 40001 on conflict;
+ * the higher-level moderation handler retries by re-issuing its action.
  */
 export async function appendTransparencyEvent(
   input: TransparencyEventInput,
@@ -68,52 +73,50 @@ export async function appendTransparencyEvent(
   const ruleVersion = input.ruleVersion ?? CURRENT_CONTENT_POLICY_VERSION;
   const targetId = input.targetId ?? null;
 
-  // Lock-free chain: read latest row's contentHash. If two writers race
-  // they'll see the same previousHash; both rows are still valid in the
-  // chain because they each link forward consistently. For higher-volume
-  // moderation we'll wrap this in a serializable txn at P2 scale.
-  const [latest] = await db
-    .select()
-    .from(transparencyEvents)
-    .orderBy(desc(transparencyEvents.createdAt))
-    .limit(1);
+  return db.transaction(async (tx) => {
+    const [latest] = await tx
+      .select()
+      .from(transparencyEvents)
+      .orderBy(desc(transparencyEvents.createdAt))
+      .limit(1);
 
-  const previousHash = latest?.contentHash ?? "";
+    const previousHash = latest?.contentHash ?? "";
 
-  // Fix createdAt at write time so contentHash is computed over the same
-  // timestamp the DB will store.
-  const createdAt = new Date();
+    // Fix createdAt at write time so contentHash is computed over the same
+    // timestamp the DB will store.
+    const createdAt = new Date();
 
-  const contentHash = sha256Hex(
-    previousHash +
-      ":" +
-      canonicalPayload({
+    const contentHash = sha256Hex(
+      previousHash +
+        ":" +
+        canonicalPayload({
+          eventType: input.eventType,
+          targetType: input.targetType,
+          targetId,
+          reason: input.reason,
+          ruleVersion,
+          createdAt: createdAt.toISOString(),
+        }),
+    );
+
+    const [row] = await tx
+      .insert(transparencyEvents)
+      .values({
         eventType: input.eventType,
         targetType: input.targetType,
         targetId,
         reason: input.reason,
         ruleVersion,
-        createdAt: createdAt.toISOString(),
-      }),
-  );
+        previousHash,
+        contentHash,
+        sourceReportId: input.sourceReportId ?? null,
+        sourceAppealId: input.sourceAppealId ?? null,
+        createdAt,
+      })
+      .returning();
 
-  const [row] = await db
-    .insert(transparencyEvents)
-    .values({
-      eventType: input.eventType,
-      targetType: input.targetType,
-      targetId,
-      reason: input.reason,
-      ruleVersion,
-      previousHash,
-      contentHash,
-      sourceReportId: input.sourceReportId ?? null,
-      sourceAppealId: input.sourceAppealId ?? null,
-      createdAt,
-    })
-    .returning();
-
-  return row!;
+    return row!;
+  }, { isolationLevel: "serializable" });
 }
 
 /**
