@@ -13,6 +13,7 @@ import {
 } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
+import { rateLimit } from "../middleware/rate-limit";
 import { enqueueEmail } from "../lib/email";
 import {
   CURRENT_CONTENT_POLICY_VERSION,
@@ -87,6 +88,10 @@ async function findOrCreateProfile(authUserId: string, email: string) {
 reportsRouter.post(
   "/reports",
   requireAuth,
+  // 5 reports / hour / signed-in user. Reports are mostly low-volume +
+  // moderator-time-expensive; a tight cap deters abuse without
+  // affecting honest users.
+  rateLimit({ windowSec: 3600, max: 5, by: "user", bucket: "reports" }),
   zValidator("json", createReportSchema),
   async (c) => {
     const authUser = c.get("user");

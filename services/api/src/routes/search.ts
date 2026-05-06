@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { MeiliSearch } from "meilisearch";
 import { searchQuerySchema } from "@openmarket/contracts/search";
+import { rateLimit } from "../middleware/rate-limit";
 
 export const searchRouter = new Hono();
 
@@ -16,6 +17,10 @@ const meiliClient = new MeiliSearch({
 
 searchRouter.get(
   "/search",
+  // 60 searches / minute / IP. Honest users send a few per session; this
+  // is generous-but-finite. Higher limit than reports/reviews because
+  // search is read-only and idempotent.
+  rateLimit({ windowSec: 60, max: 60, by: "ip", bucket: "search" }),
   zValidator("query", searchQuerySchema),
   async (c) => {
     const { q, category, trustTier, page, limit } = c.req.valid("query");

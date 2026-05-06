@@ -23,6 +23,7 @@
     "dotenv": "^16.4.0",
     "drizzle-orm": "^0.39.0",
     "hono": "^4.7.0",
+    "ioredis": "5.10.1",
     "meilisearch": "^0.46.0",
     "zod": "^3.24.0"
   },

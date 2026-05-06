@@ -15,6 +15,7 @@ import {
   users,
 } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
+import { rateLimit } from "../middleware/rate-limit";
 import { paginationSchema } from "@openmarket/contracts/common";
 import { enqueueEmail } from "../lib/email";
 import { auth } from "../lib/auth";
@@ -241,6 +242,10 @@ reviewsRouter.get(
 reviewsRouter.post(
   "/apps/:appId/reviews",
   requireAuth,
+  // 30 review submissions / hour / user. Combined with the 24h hold-back
+  // and the install-required gate, this stops mass-bombing at three
+  // independent layers.
+  rateLimit({ windowSec: 3600, max: 30, by: "user", bucket: "reviews" }),
   zValidator("json", createReviewSchema),
   async (c) => {
     const authUser = c.get("user");
