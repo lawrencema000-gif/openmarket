@@ -139,12 +139,35 @@ export const transparencyEvents = pgTable(
      */
     sourceReportId: uuid("source_report_id"),
     sourceAppealId: uuid("source_appeal_id"),
+    /**
+     * DSA-shaped fields (Digital Services Act, EU). The DSA + Apple's
+     * 2024 transparency report set the bar for what a content platform's
+     * transparency log must capture. We populate these even before the
+     * 50M-MAU threshold triggers DSA jurisdiction so the schema is in
+     * place when it does — and so users can audit our jurisdictional
+     * exposure today.
+     *
+     * - jurisdiction: ISO 3166-1 alpha-2 country code or "EU" or "global"
+     *   for actions taken under our own ToS regardless of jurisdiction.
+     * - legalBasis: free-text citation of the rule applied —
+     *   "DSA Art. 16", "DMCA 17 USC 512", "ToS §3.4", "court order CV-2026-001".
+     * - responseTimeMs: ms between report/appeal creation and this
+     *   action (only set when the event is the *first* action on a
+     *   reported target, so percentile aggregations are clean).
+     *
+     * NOT included in the hash chain to keep older rows valid as we
+     * backfill jurisdiction/legalBasis on legacy events.
+     */
+    jurisdiction: text("jurisdiction"),
+    legalBasis: text("legal_basis"),
+    responseTimeMs: integer("response_time_ms"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
     index("transparency_events_event_type_idx").on(t.eventType),
     index("transparency_events_target_idx").on(t.targetType, t.targetId),
     index("transparency_events_created_at_idx").on(t.createdAt),
+    index("transparency_events_jurisdiction_idx").on(t.jurisdiction),
   ],
 );
 

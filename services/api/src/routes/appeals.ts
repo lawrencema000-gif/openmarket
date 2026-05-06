@@ -290,6 +290,10 @@ async function applyAcceptance(opts: {
   notes: string;
 }) {
   const { appeal, notes } = opts;
+  const responseTimeMs =
+    appeal.createdAt instanceof Date
+      ? Date.now() - appeal.createdAt.getTime()
+      : null;
 
   if (appeal.targetType === "app_delisting") {
     const app = await db.query.apps.findFirst({
@@ -311,6 +315,7 @@ async function applyAcceptance(opts: {
       targetId: appeal.targetId,
       reason: `Reinstated on appeal: ${notes}`,
       sourceAppealId: appeal.id,
+      responseTimeMs,
     });
   } else if (appeal.targetType === "review_removal") {
     await db
@@ -323,6 +328,7 @@ async function applyAcceptance(opts: {
       targetId: appeal.targetId,
       reason: `Restored on appeal: ${notes}`,
       sourceAppealId: appeal.id,
+      responseTimeMs,
     });
   } else if (appeal.targetType === "developer_ban") {
     // Developer suspension flag isn't wired into the developers schema
@@ -334,6 +340,7 @@ async function applyAcceptance(opts: {
       targetId: appeal.targetId,
       reason: `Reinstated on appeal: ${notes}`,
       sourceAppealId: appeal.id,
+      responseTimeMs,
     });
   }
 
@@ -350,6 +357,10 @@ async function applyRejection(opts: {
   notes: string;
 }) {
   const { appeal, notes } = opts;
+  const responseTimeMs =
+    appeal.createdAt instanceof Date
+      ? Date.now() - appeal.createdAt.getTime()
+      : null;
 
   // Per §2 principle 3: rejected appeals get a public transparency
   // entry too — "we considered this and stand by the original decision".
@@ -364,6 +375,7 @@ async function applyRejection(opts: {
     targetId: appeal.targetId,
     reason: `Appeal denied: ${notes}`,
     sourceAppealId: appeal.id,
+    responseTimeMs,
   });
 
   await notifyDeveloperOfAppealOutcome({

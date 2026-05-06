@@ -243,6 +243,10 @@ reportsRouter.post(
         adminEmail: adminUser.email,
         delistedAppId,
         removedReviewId,
+        responseTimeMs:
+          report.createdAt instanceof Date
+            ? Date.now() - report.createdAt.getTime()
+            : undefined,
       });
     } else if (body.resolution === "warn") {
       await applyWarnSideEffects({ report, notes: reasonText });
@@ -342,8 +346,9 @@ async function applyDelistSideEffects(opts: {
   adminEmail: string;
   delistedAppId: string | null;
   removedReviewId: string | null;
+  responseTimeMs?: number;
 }) {
-  const { report, notes, adminEmail, delistedAppId, removedReviewId } = opts;
+  const { report, notes, adminEmail, delistedAppId, removedReviewId, responseTimeMs } = opts;
   const reasonGiven = notes;
 
   if (report.targetType === "app") {
@@ -357,6 +362,7 @@ async function applyDelistSideEffects(opts: {
         reason: reasonGiven + " (target app no longer found at resolution time)",
         ruleVersion: CURRENT_CONTENT_POLICY_VERSION,
         sourceReportId: report.id,
+        responseTimeMs,
       });
       return;
     }
@@ -367,6 +373,7 @@ async function applyDelistSideEffects(opts: {
       targetId: delistedAppId,
       reason: reasonGiven,
       sourceReportId: report.id,
+      responseTimeMs,
     });
 
     await Promise.allSettled([
@@ -383,6 +390,7 @@ async function applyDelistSideEffects(opts: {
       targetId: removedReviewId ?? report.targetId,
       reason: reasonGiven,
       sourceReportId: report.id,
+      responseTimeMs,
     });
 
     await notifyReporter({ report, resolution: "delisted", notes: reasonGiven });
@@ -398,6 +406,7 @@ async function applyDelistSideEffects(opts: {
     targetId: report.targetId,
     reason: reasonGiven,
     sourceReportId: report.id,
+    responseTimeMs,
   });
   await notifyReporter({ report, resolution: "delisted", notes: reasonGiven });
 }
@@ -512,6 +521,125 @@ reportsRouter.get(
     const total = Number(countRows[0]?.count ?? 0);
 
     return c.json({ items, page, limit, total });
+  },
+);
+
+/**
+ * GET /transparency-summary?since=YYYY-MM-DD
+ *
+ * Public DSA-shaped aggregate panel. Returns:
+ *   - totals by eventType
+ *   - takedowns by jurisdiction
+ *   - appeals filed vs overturned
+ *   - response-time percentiles (p50, p95, max — ms)
+ *
+ * Default window: last 90 days. The public transparency report page
+ * renders this as the headline dashboard above the event feed.
+ */
+reportsRouter.get(
+  "/transparency-summary",
+  zValidator(
+    "query",
+    z.object({
+      since: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
+        .optional(),
+    }),
+  ),
+  async (c) => {
+    const { since } = c.req.valid("query");
+    const sinceDate = since
+      ? new Date(`${since}T00:00:00Z`)
+      : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+    const { transparencyEvents } = await import("@openmarket/db/schema");
+
+    const windowFilter = sql`${transparencyEvents.createdAt} >= ${sinceDate}`;
+
+    // Totals by eventType
+    const byEventType = await db
+      .select({
+        eventType: transparencyEvents.eventType,
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(transparencyEvents)
+      .where(windowFilter)
+      .groupBy(transparencyEvents.eventType)
+      .orderBy(desc(sql`count(*)`));
+
+    // Takedowns by jurisdiction (only delisting / removal events count)
+    const byJurisdiction = await db
+      .select({
+        jurisdiction: transparencyEvents.jurisdiction,
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(transparencyEvents)
+      .where(
+        sql`${transparencyEvents.createdAt} >= ${sinceDate} AND ${transparencyEvents.eventType} IN ('app_delisted','review_removed','developer_suspended')`,
+      )
+      .groupBy(transparencyEvents.jurisdiction)
+      .orderBy(desc(sql`count(*)`));
+
+    // Appeals filed vs overturned
+    const [appealsAgg] = await db
+      .select({
+        filed: sql<number>`count(*) FILTER (WHERE ${transparencyEvents.eventType} IN ('app_relisted','review_restored','developer_reinstated','appeal_rejected'))`.as(
+          "filed",
+        ),
+        accepted: sql<number>`count(*) FILTER (WHERE ${transparencyEvents.eventType} IN ('app_relisted','review_restored','developer_reinstated'))`.as(
+          "accepted",
+        ),
+        rejected: sql<number>`count(*) FILTER (WHERE ${transparencyEvents.eventType} = 'appeal_rejected')`.as(
+          "rejected",
+        ),
+      })
+      .from(transparencyEvents)
+      .where(windowFilter);
+
+    // Response-time percentiles. Postgres percentile_cont over the
+    // populated subset only — older events without responseTimeMs are
+    // ignored so percentiles don't get dragged toward zero.
+    const [latency] = await db
+      .select({
+        p50: sql<number | null>`percentile_cont(0.5) WITHIN GROUP (ORDER BY ${transparencyEvents.responseTimeMs})`.as(
+          "p50",
+        ),
+        p95: sql<number | null>`percentile_cont(0.95) WITHIN GROUP (ORDER BY ${transparencyEvents.responseTimeMs})`.as(
+          "p95",
+        ),
+        max: sql<number | null>`max(${transparencyEvents.responseTimeMs})`.as(
+          "max",
+        ),
+        n: sql<number>`count(${transparencyEvents.responseTimeMs})`.as("n"),
+      })
+      .from(transparencyEvents)
+      .where(
+        sql`${transparencyEvents.createdAt} >= ${sinceDate} AND ${transparencyEvents.responseTimeMs} IS NOT NULL`,
+      );
+
+    return c.json({
+      since: sinceDate.toISOString(),
+      byEventType: byEventType.map((r) => ({
+        eventType: r.eventType,
+        count: Number(r.count),
+      })),
+      byJurisdiction: byJurisdiction.map((r) => ({
+        jurisdiction: r.jurisdiction ?? "unknown",
+        count: Number(r.count),
+      })),
+      appeals: {
+        total: Number(appealsAgg?.filed ?? 0),
+        accepted: Number(appealsAgg?.accepted ?? 0),
+        rejected: Number(appealsAgg?.rejected ?? 0),
+      },
+      responseTimeMs: {
+        p50: latency?.p50 == null ? null : Number(latency.p50),
+        p95: latency?.p95 == null ? null : Number(latency.p95),
+        max: latency?.max == null ? null : Number(latency.max),
+        sampleSize: Number(latency?.n ?? 0),
+      },
+    });
   },
 );
 

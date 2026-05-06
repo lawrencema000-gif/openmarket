@@ -18,7 +18,23 @@ interface TransparencyEvent {
   ruleVersion: string;
   contentHash: string;
   previousHash: string;
+  jurisdiction: string | null;
+  legalBasis: string | null;
+  responseTimeMs: number | null;
   createdAt: string;
+}
+
+interface TransparencySummary {
+  since: string;
+  byEventType: { eventType: string; count: number }[];
+  byJurisdiction: { jurisdiction: string; count: number }[];
+  appeals: { total: number; accepted: number; rejected: number };
+  responseTimeMs: {
+    p50: number | null;
+    p95: number | null;
+    max: number | null;
+    sampleSize: number;
+  };
 }
 
 async function getEvents(): Promise<{
@@ -37,6 +53,23 @@ async function getEvents(): Promise<{
     }
     return { items: [], total: 0, unavailable: false };
   }
+}
+
+async function getSummary(): Promise<TransparencySummary | null> {
+  try {
+    return await apiFetch<TransparencySummary>("/api/transparency-summary");
+  } catch {
+    return null;
+  }
+}
+
+function fmtMs(ms: number | null): string {
+  if (ms == null) return "—";
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)} s`;
+  if (ms < 3_600_000) return `${(ms / 60_000).toFixed(1)} min`;
+  if (ms < 86_400_000) return `${(ms / 3_600_000).toFixed(1)} h`;
+  return `${(ms / 86_400_000).toFixed(1)} d`;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -62,7 +95,10 @@ function fmtDate(iso: string): string {
 }
 
 export default async function TransparencyReportPage() {
-  const { items, total, unavailable } = await getEvents();
+  const [{ items, total, unavailable }, summary] = await Promise.all([
+    getEvents(),
+    getSummary(),
+  ]);
 
   return (
     <LegalLayout
@@ -74,6 +110,50 @@ export default async function TransparencyReportPage() {
         Every moderation decision, account action, and policy change on
         OpenMarket goes here. We hold ourselves accountable to this document.
       </p>
+
+      {summary && (
+        <div className="my-8 not-prose grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Headline counts cards. The window is 90 days by default. */}
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Total events (90d)</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {summary.byEventType
+                .reduce((acc, e) => acc + e.count, 0)
+                .toLocaleString()}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Appeals filed</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {summary.appeals.total.toLocaleString()}
+            </p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              {summary.appeals.accepted} accepted · {summary.appeals.rejected} rejected
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Response time p50</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {fmtMs(summary.responseTimeMs.p50)}
+            </p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              p95: {fmtMs(summary.responseTimeMs.p95)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Jurisdictions</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">
+              {summary.byJurisdiction.length}
+            </p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              {summary.byJurisdiction
+                .slice(0, 3)
+                .map((j) => `${j.jurisdiction}: ${j.count}`)
+                .join(" · ") || "—"}
+            </p>
+          </div>
+        </div>
+      )}
 
       {unavailable ? (
         <div className="my-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -121,6 +201,23 @@ export default async function TransparencyReportPage() {
                 <p className="mt-2 text-gray-800 whitespace-pre-wrap">
                   {e.reason}
                 </p>
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                  {e.jurisdiction && e.jurisdiction !== "global" && (
+                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700 font-medium">
+                      jurisdiction · {e.jurisdiction}
+                    </span>
+                  )}
+                  {e.legalBasis && (
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">
+                      basis · {e.legalBasis}
+                    </span>
+                  )}
+                  {e.responseTimeMs != null && (
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
+                      response · {fmtMs(e.responseTimeMs)}
+                    </span>
+                  )}
+                </div>
                 <details className="mt-2 text-[11px] text-gray-500">
                   <summary className="cursor-pointer hover:text-gray-700">
                     Audit hash
@@ -188,34 +285,15 @@ export default async function TransparencyReportPage() {
         </li>
       </ul>
 
-      <h2>Aggregate counts (last 12 months)</h2>
+      <h2>Aggregate counts</h2>
       <p>
-        We will publish quarterly aggregate counts here, broken down by event
-        type and category. Until we have at least one quarter of data, this
-        section will read "no data."
+        Headline counts at the top of this page show the last 90 days, broken
+        down by event type, jurisdiction, and response-time percentiles —
+        DSA-shaped so the same panel keeps working as we cross the 50M-MAU
+        threshold that triggers EU Digital Services Act obligations. Older
+        events are queryable via the per-event feed below; quarterly archives
+        will be published here as they accumulate.
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Quarter</th>
-            <th>Takedowns</th>
-            <th>Account actions</th>
-            <th>DMCA notices</th>
-            <th>Government requests</th>
-            <th>Policy changes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>2026 Q2</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>1 (initial publication)</td>
-          </tr>
-        </tbody>
-      </table>
 
       <h2>Government requests</h2>
       <p>

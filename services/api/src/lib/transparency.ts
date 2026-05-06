@@ -28,6 +28,22 @@ export interface TransparencyEventInput {
   ruleVersion?: string;
   sourceReportId?: string | null;
   sourceAppealId?: string | null;
+  /**
+   * DSA-shaped fields. Optional now (legacy callers don't yet set them);
+   * defaults populated below — jurisdiction defaults to "global" and
+   * legalBasis defaults to citing our own content policy version.
+   *
+   * NOT part of the hash chain canonicalization so adding/backfilling
+   * these later doesn't invalidate prior rows.
+   */
+  jurisdiction?: string | null;
+  legalBasis?: string | null;
+  /**
+   * Time-from-trigger-to-action in ms. Caller should pass
+   * `Date.now() - source.createdAt.getTime()` when known. We use it for
+   * the public aggregate panel's response-time percentiles.
+   */
+  responseTimeMs?: number | null;
 }
 
 /**
@@ -111,6 +127,9 @@ export async function appendTransparencyEvent(
         contentHash,
         sourceReportId: input.sourceReportId ?? null,
         sourceAppealId: input.sourceAppealId ?? null,
+        jurisdiction: input.jurisdiction ?? "global",
+        legalBasis: input.legalBasis ?? `Content Policy ${ruleVersion}`,
+        responseTimeMs: input.responseTimeMs ?? null,
         createdAt,
       })
       .returning();
