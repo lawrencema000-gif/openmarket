@@ -165,10 +165,38 @@ export const releaseChannels = pgTable(
   ]
 );
 
+/**
+ * Category taxonomy for the marketplace storefront.
+ *
+ * Editorially curated — admins can create / rename / re-sort / feature
+ * categories. Apps reference categories by slug via app_listings.category.
+ *
+ * `icon` is a unicode emoji shortcut (good for fast lazy renders, used
+ * as a fallback in the home grid). `iconUrl` is a full PNG/SVG hosted
+ * on the media bucket, used for the canonical category page header.
+ *
+ * `isFeatured` puts the category in the home page "Browse by category"
+ * grid (vs the long tail of niche categories that only show on /search).
+ *
+ * `position` (preferred over the legacy `sortOrder`) is the display
+ * order within the featured set. Both columns kept for backwards-compat
+ * during transition.
+ */
 export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").unique().notNull(),
   name: text("name").notNull(),
+  description: text("description"),
+  /** Emoji or short unicode glyph rendered as a fast fallback. */
   icon: text("icon"),
+  /** Full URL to a PNG/SVG icon (canonical category-page header). */
+  iconUrl: text("icon_url"),
+  /** Display order within the featured grid. Lower = earlier. */
+  position: integer("position").default(0).notNull(),
+  /** Legacy sort order — superseded by `position`. Kept for back-compat. */
   sortOrder: integer("sort_order").default(0).notNull(),
+  /** True = appears in the home page categories grid. */
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -6,43 +6,27 @@ interface Category {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
+  icon?: string | null;
+  iconUrl?: string | null;
   appCount?: number;
+  isFeatured?: boolean;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  productivity: "⚡",
-  tools: "🔧",
-  communication: "💬",
-  media: "🎬",
-  games: "🎮",
-  finance: "💰",
-  health: "❤️",
-  education: "📚",
-  security: "🔒",
-  utilities: "🛠️",
-  social: "👥",
-  travel: "✈️",
-};
-
-const FEATURED_CHIPS = [
-  { label: "Productivity", slug: "productivity" },
-  { label: "Tools", slug: "tools" },
-  { label: "Communication", slug: "communication" },
-  { label: "Media", slug: "media" },
-  { label: "Games", slug: "games" },
-  { label: "Security", slug: "security" },
-];
-
-async function getCategories(): Promise<Category[]> {
+/**
+ * Featured categories drive the home page grid. We fetch with
+ * ?featured=true so the curated 12 come back ordered by `position`.
+ */
+async function getFeaturedCategories(): Promise<Category[]> {
   try {
-    return await apiFetch<Category[]>("/api/categories");
+    return await apiFetch<Category[]>("/api/categories?featured=true");
   } catch {
     return [];
   }
 }
 
 export default async function HomePage() {
-  const categories = await getCategories();
+  const categories = await getFeaturedCategories();
 
   return (
     <div>
@@ -73,28 +57,30 @@ export default async function HomePage() {
               />
             </div>
 
-            {/* Category chips */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-              {FEATURED_CHIPS.map((chip) => (
+            {/* Category chips — top 6 featured categories driven by the API. */}
+            {categories.length > 0 ? (
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                {categories.slice(0, 6).map((cat) => (
+                  <Link
+                    key={cat.slug}
+                    href={`/categories/${cat.slug}`}
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-sm text-gray-600 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 transition-all duration-150 shadow-sm"
+                  >
+                    <span>{cat.icon ?? "📦"}</span>
+                    {cat.name}
+                  </Link>
+                ))}
                 <Link
-                  key={chip.slug}
-                  href={`/search?category=${chip.slug}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-sm text-gray-600 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 transition-all duration-150 shadow-sm"
+                  href="/search"
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-all duration-150 shadow-sm"
                 >
-                  <span>{CATEGORY_ICONS[chip.slug] ?? "📦"}</span>
-                  {chip.label}
+                  All categories
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
                 </Link>
-              ))}
-              <Link
-                href="/search"
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-all duration-150 shadow-sm"
-              >
-                All categories
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                </svg>
-              </Link>
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
@@ -123,17 +109,19 @@ export default async function HomePage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
               {categories.map((cat) => (
-                <Link key={cat.id} href={`/search?category=${cat.slug}`}>
+                <Link key={cat.id} href={`/categories/${cat.slug}`}>
                   <div className="group flex flex-col items-center gap-3 p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-center">
                     <span className="text-2xl" role="img" aria-label={cat.name}>
-                      {CATEGORY_ICONS[cat.slug] ?? "📦"}
+                      {cat.icon ?? "📦"}
                     </span>
                     <div>
                       <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight">
                         {cat.name}
                       </p>
-                      {cat.appCount !== undefined && (
-                        <p className="text-xs text-gray-400 mt-0.5">{cat.appCount} apps</p>
+                      {cat.appCount !== undefined && cat.appCount > 0 && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {cat.appCount} {cat.appCount === 1 ? "app" : "apps"}
+                        </p>
                       )}
                     </div>
                   </div>
