@@ -22,7 +22,9 @@ vi.mock("../lib/db", () => ({
         }),
       }),
     }),
+    execute: vi.fn().mockResolvedValue({ rowCount: 0 }),
     query: {
+      apps: { findFirst: vi.fn() },
       developers: { findFirst: vi.fn() },
       releases: { findMany: vi.fn(), findFirst: vi.fn() },
       scanResults: { findFirst: vi.fn() },
@@ -68,5 +70,78 @@ describe("GET /api/admin/audit-log", () => {
     vi.mocked(db.query.moderationActions.findMany).mockResolvedValueOnce([]);
     const res = await app.request("/api/admin/audit-log");
     expect(res.status).toBe(200);
+  });
+});
+
+describe("Review hold-back: POST /api/admin/reviews/promote-due", () => {
+  it("calls UPDATE reviews with the correct WHERE clause and returns the rowCount", async () => {
+    vi.mocked(db.execute).mockResolvedValueOnce({ rowCount: 7 } as never);
+    const res = await app.request("/api/admin/reviews/promote-due", {
+      method: "POST",
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { success: boolean; promoted: number };
+    expect(body.success).toBe(true);
+    expect(body.promoted).toBe(7);
+
+    // Confirm the SQL fragment includes the freeze exclusion + 24h cool-off.
+    const callArg = vi.mocked(db.execute).mock.calls[0]?.[0] as
+      | { queryChunks?: unknown[] }
+      | undefined;
+    expect(callArg).toBeDefined();
+    const sqlText = JSON.stringify(callArg);
+    expect(sqlText).toMatch(/published_at IS NULL/i);
+    expect(sqlText).toMatch(/is_flagged = false/);
+    expect(sqlText).toMatch(/review_freeze = true/);
+  });
+
+  it("returns 0 when no rowCount is reported (unknown driver)", async () => {
+    vi.mocked(db.execute).mockResolvedValueOnce({} as never);
+    const res = await app.request("/api/admin/reviews/promote-due", {
+      method: "POST",
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { promoted: number };
+    expect(body.promoted).toBe(0);
+  });
+});
+
+describe("Review hold-back: PATCH /api/admin/apps/:id/review-freeze", () => {
+  it("404s when the app does not exist", async () => {
+    vi.mocked(db.query.apps.findFirst).mockResolvedValueOnce(undefined as never);
+    const res = await app.request("/api/admin/apps/nope/review-freeze", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frozen: true }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it("flips the freeze flag and returns the new state", async () => {
+    vi.mocked(db.query.apps.findFirst).mockResolvedValueOnce({
+      id: "app-1",
+      reviewFreeze: false,
+    } as never);
+    // Override the default update chain for this case so .returning gives us
+    // back the apps-shaped row with reviewFreeze.
+    vi.mocked(db.update).mockReturnValueOnce({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          returning: vi
+            .fn()
+            .mockResolvedValue([{ id: "app-1", reviewFreeze: true }]),
+        }),
+      }),
+    } as never);
+
+    const res = await app.request("/api/admin/apps/app-1/review-freeze", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frozen: true, reason: "Coordinated brigading detected" }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { id: string; reviewFreeze: boolean };
+    expect(body.id).toBe("app-1");
+    expect(body.reviewFreeze).toBe(true);
   });
 });

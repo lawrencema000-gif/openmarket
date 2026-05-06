@@ -61,6 +61,13 @@ export const apps = pgTable("apps", {
   isPublished: boolean("is_published").default(false).notNull(),
   isDelisted: boolean("is_delisted").default(false).notNull(),
   delistReason: text("delist_reason"),
+  /**
+   * Suspicious-activity review freeze. When true, the review-promotion
+   * job skips this app's pending reviews — they stay in `publishedAt =
+   * NULL` until a moderator clears the freeze. Used during coordinated
+   * review-bombing investigations.
+   */
+  reviewFreeze: boolean("review_freeze").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

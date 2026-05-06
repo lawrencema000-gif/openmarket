@@ -210,11 +210,24 @@ export const reviews = pgTable(
     versionCodeReviewed: integer("version_code_reviewed").notNull(),
     helpfulCount: integer("helpful_count").default(0).notNull(),
     isFlagged: boolean("is_flagged").default(false).notNull(),
+    /**
+     * Review hold-back: every new review enters the queue with
+     * publishedAt = NULL. A scheduled promotion job (POST
+     * /admin/reviews/promote-due) flips this to NOW() once the review
+     * has aged past the cool-off (24h) AND the app is not under
+     * suspicious-activity freeze. Public review queries must filter on
+     * `publishedAt IS NOT NULL AND publishedAt <= NOW()`.
+     *
+     * Lets the platform absorb coordinated review-bombing without
+     * taking out legitimate reviews.
+     */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("reviews_app_user_idx").on(table.appId, table.userId),
+    index("reviews_published_at_idx").on(table.publishedAt),
   ]
 );
 

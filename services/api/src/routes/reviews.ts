@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, and, desc, asc, isNull, sql } from "drizzle-orm";
+import { eq, and, desc, asc, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../lib/db";
@@ -95,9 +95,15 @@ reviewsRouter.get(
     const app = await db.query.apps.findFirst({ where: eq(apps.id, appId) });
     if (!app) throw new HTTPException(404, { message: "App not found" });
 
+    // Hold-back: a review is publicly visible only when publishedAt
+    // is set AND <= now(). New reviews start at NULL; the promotion
+    // job (POST /admin/reviews/promote-due) flips them after a 24h
+    // cool-off, except for apps under suspicious-activity freeze.
     const baseWhere = and(
       eq(reviews.appId, appId),
       eq(reviews.isFlagged, false),
+      isNotNull(reviews.publishedAt),
+      lte(reviews.publishedAt, sql`now()`),
       ...(rating !== undefined ? [eq(reviews.rating, rating)] : []),
     );
 
@@ -139,7 +145,14 @@ reviewsRouter.get(
         count: sql<number>`count(*)`.as("count"),
       })
       .from(reviews)
-      .where(and(eq(reviews.appId, appId), eq(reviews.isFlagged, false)))
+      .where(
+        and(
+          eq(reviews.appId, appId),
+          eq(reviews.isFlagged, false),
+          isNotNull(reviews.publishedAt),
+          lte(reviews.publishedAt, sql`now()`),
+        ),
+      )
       .groupBy(reviews.rating);
 
     const distribution: Record<1 | 2 | 3 | 4 | 5, number> = {

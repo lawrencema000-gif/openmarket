@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../lib/db";
 import {
+  apps,
   releases,
+  reviews,
   developers,
   moderationActions,
   releaseArtifacts,
@@ -391,5 +393,75 @@ adminRouter.post(
     });
 
     return c.json({ success: true, jobId: result.jobId, template, to });
+  },
+);
+
+// ───────── Review hold-back (anti-review-bombing) ─────────
+
+/**
+ * POST /admin/reviews/promote-due
+ *
+ * Idempotent. Promotes all reviews that:
+ *   - have `publishedAt IS NULL` (still in cool-off)
+ *   - are older than 24h
+ *   - are not flagged
+ *   - belong to apps that are NOT under review-freeze
+ *
+ * Designed for a periodic cron (Vercel cron + this admin endpoint, or a
+ * worker tick). Returns the number of rows that flipped to published.
+ *
+ * The 24h hold-back gives the platform a window to detect coordinated
+ * bombing or spam waves before any of those reviews become public —
+ * with zero impact on the legitimate review experience.
+ */
+adminRouter.post("/admin/reviews/promote-due", requireAdmin, async (c) => {
+  const now = new Date();
+  const result = await db.execute(sql`
+    UPDATE reviews
+       SET published_at = ${now}, updated_at = ${now}
+     WHERE published_at IS NULL
+       AND is_flagged = false
+       AND created_at <= ${new Date(now.getTime() - 24 * 60 * 60 * 1000)}
+       AND app_id NOT IN (SELECT id FROM apps WHERE review_freeze = true)
+  `);
+  // Drizzle's NodePg execute returns { rowCount }; pg-bun-driver doesn't —
+  // best-effort coerce.
+  const promoted =
+    (result as { rowCount?: number | null }).rowCount ??
+    (result as { rowsAffected?: number }).rowsAffected ??
+    0;
+  return c.json({ success: true, promoted });
+});
+
+const freezeToggleSchema = z.object({
+  frozen: z.boolean(),
+  /** Optional moderator note kept on the apps row's delistReason for audit trail. */
+  reason: z.string().max(500).optional(),
+});
+
+/**
+ * PATCH /admin/apps/:id/review-freeze
+ *
+ * Sets `apps.reviewFreeze`. While true, the promote-due job skips this
+ * app's reviews — they remain invisible to the public. Used during
+ * coordinated review-bombing investigations.
+ */
+adminRouter.patch(
+  "/admin/apps/:id/review-freeze",
+  requireAdmin,
+  zValidator("json", freezeToggleSchema),
+  async (c) => {
+    const appId = c.req.param("id") as string;
+    const body = c.req.valid("json");
+
+    const app = await db.query.apps.findFirst({ where: eq(apps.id, appId) });
+    if (!app) throw new HTTPException(404, { message: "App not found" });
+
+    const [updated] = await db
+      .update(apps)
+      .set({ reviewFreeze: body.frozen, updatedAt: new Date() })
+      .where(eq(apps.id, appId))
+      .returning();
+    return c.json({ id: updated!.id, reviewFreeze: updated!.reviewFreeze });
   },
 );
