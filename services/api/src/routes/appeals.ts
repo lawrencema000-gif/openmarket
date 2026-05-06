@@ -14,6 +14,7 @@ import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
 import { enqueueEmail } from "../lib/email";
 import { appendTransparencyEvent } from "../lib/transparency";
+import { recordAdminAction } from "../lib/audit";
 import type { Variables } from "../lib/types";
 
 export const appealsRouter = new Hono<{ Variables: Variables }>();
@@ -259,6 +260,19 @@ appealsRouter.post(
     } else {
       await applyRejection({ appeal, notes: body.notes });
     }
+
+    await recordAdminAction({
+      c,
+      action: `appeal.resolve.${body.resolution}`,
+      targetType: "appeal",
+      targetId: id,
+      metadata: {
+        resolution: body.resolution,
+        appealTargetType: appeal.targetType,
+        appealTargetId: appeal.targetId,
+        appealDeveloperId: appeal.developerId,
+      },
+    });
 
     return c.json({
       success: true,

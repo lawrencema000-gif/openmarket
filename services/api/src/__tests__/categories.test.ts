@@ -30,6 +30,7 @@ vi.mock("../middleware/admin", () => ({
   requireAdmin: vi.fn(async (c: any, next: any) => {
     c.set("user", { id: "auth-admin", email: "admin@test.com", emailVerified: true });
     c.set("session", { id: "sess-admin" });
+    c.set("admin", { id: "admin-dev-id", email: "admin@test.com", isAdmin: true });
     await next();
   }),
 }));

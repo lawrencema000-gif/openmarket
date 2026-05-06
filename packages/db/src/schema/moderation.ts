@@ -5,6 +5,7 @@ import {
   timestamp,
   boolean,
   integer,
+  jsonb,
   pgEnum,
   uniqueIndex,
   index,
@@ -144,6 +145,73 @@ export const transparencyEvents = pgTable(
     index("transparency_events_event_type_idx").on(t.eventType),
     index("transparency_events_target_idx").on(t.targetType, t.targetId),
     index("transparency_events_created_at_idx").on(t.createdAt),
+  ],
+);
+
+/**
+ * Internal admin audit log. Every mutating admin endpoint writes one row
+ * here describing who did what to which target. This is the moderator-
+ * facing forensic trail — strictly internal (vs. transparency_events,
+ * which is public-facing).
+ *
+ * Why a separate table from moderation_actions: moderation_actions is
+ * domain-specific (warn / delist_release / suspend_developer enum). This
+ * table is generic — any admin mutation, including categories CRUD,
+ * review-freeze toggles, role changes, and email tests, lands here with
+ * a free-text `action` slug like "report.resolve.delist" or
+ * "category.create".
+ *
+ * Append-only by convention; we don't expose a delete or update path.
+ *
+ * Used by /admin/audit-log.
+ */
+export const adminActions = pgTable(
+  "admin_actions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** developers.id of the acting admin. */
+    actorId: uuid("actor_id").notNull(),
+    /** Denormalized for log readability when actor is later renamed/deleted. */
+    actorEmail: text("actor_email").notNull(),
+    /**
+     * Stable dotted slug. Convention: "<domain>.<verb>[.<resolution>]".
+     * Examples:
+     *   report.resolve.delist
+     *   report.resolve.warn
+     *   report.resolve.dismiss
+     *   appeal.resolve.accept
+     *   appeal.resolve.reject
+     *   category.create
+     *   category.update
+     *   category.delete
+     *   category.reorder
+     *   reviews.freeze
+     *   reviews.unfreeze
+     *   reviews.promote-due
+     */
+    action: text("action").notNull(),
+    /** "app" | "developer" | "review" | "report" | "appeal" | "category" | null */
+    targetType: text("target_type"),
+    /** Free-text id (slugs for categories, UUIDs for everything else). */
+    targetId: text("target_id"),
+    /** Original request path, kept for forensic correlation. */
+    requestPath: text("request_path"),
+    requestMethod: text("request_method"),
+    /** Optional diff: { before: {...}, after: {...} } for change-tracking. */
+    diff: jsonb("diff"),
+    /** Free-form additional context (resolution notes, redacted of PII). */
+    metadata: jsonb("metadata"),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("admin_actions_actor_idx").on(t.actorId),
+    index("admin_actions_created_at_idx").on(t.createdAt),
+    index("admin_actions_target_idx").on(t.targetType, t.targetId),
+    index("admin_actions_action_idx").on(t.action),
   ],
 );
 

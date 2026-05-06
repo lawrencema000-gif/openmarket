@@ -8,30 +8,43 @@ vi.mock("../lib/queue", () => ({
   notifyQueue: { add: vi.fn().mockResolvedValue(undefined) },
 }));
 
-vi.mock("../lib/db", () => ({
-  db: {
-    insert: vi.fn().mockReturnValue({
-      values: vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([{ id: "action-1" }]),
-      }),
-    }),
-    update: vi.fn().mockReturnValue({
-      set: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([{ id: "release-1", status: "published" }]),
+vi.mock("../lib/db", () => {
+  const select = vi.fn(() => ({
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    offset: vi.fn().mockResolvedValue([]),
+  }));
+  return {
+    db: {
+      select,
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: "action-1" }]),
         }),
       }),
-    }),
-    execute: vi.fn().mockResolvedValue({ rowCount: 0 }),
-    query: {
-      apps: { findFirst: vi.fn() },
-      developers: { findFirst: vi.fn() },
-      releases: { findMany: vi.fn(), findFirst: vi.fn() },
-      scanResults: { findFirst: vi.fn() },
-      moderationActions: { findMany: vi.fn() },
+      update: vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              { id: "release-1", status: "published" },
+            ]),
+          }),
+        }),
+      }),
+      execute: vi.fn().mockResolvedValue({ rowCount: 0 }),
+      query: {
+        apps: { findFirst: vi.fn() },
+        developers: { findFirst: vi.fn() },
+        releases: { findMany: vi.fn(), findFirst: vi.fn() },
+        scanResults: { findFirst: vi.fn() },
+        moderationActions: { findMany: vi.fn() },
+        adminActions: { findMany: vi.fn() },
+      },
     },
-  },
-}));
+  };
+});
 
 vi.mock("../middleware/admin", () => ({
   requireAdmin: vi.fn(async (c: any, next: any) => {
@@ -66,9 +79,18 @@ describe("GET /api/admin/risk-queue", () => {
 });
 
 describe("GET /api/admin/audit-log", () => {
-  it("returns moderation actions", async () => {
-    vi.mocked(db.query.moderationActions.findMany).mockResolvedValueOnce([]);
+  it("returns admin actions from the audit log table", async () => {
     const res = await app.request("/api/admin/audit-log");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: unknown[]; page: number };
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.page).toBe(1);
+  });
+
+  it("accepts ?action= and ?actorId= filters", async () => {
+    const res = await app.request(
+      "/api/admin/audit-log?action=report.resolve.delist&actorId=admin-1",
+    );
     expect(res.status).toBe(200);
   });
 });

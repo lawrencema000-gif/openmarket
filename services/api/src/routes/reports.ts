@@ -19,6 +19,7 @@ import {
   CURRENT_CONTENT_POLICY_VERSION,
   appendTransparencyEvent,
 } from "../lib/transparency";
+import { recordAdminAction } from "../lib/audit";
 import type { Variables } from "../lib/types";
 
 export const reportsRouter = new Hono<{ Variables: Variables }>();
@@ -254,6 +255,22 @@ reportsRouter.post(
       });
     }
 
+    await recordAdminAction({
+      c,
+      action: `report.resolve.${body.resolution}`,
+      targetType: "report",
+      targetId: reportId,
+      metadata: {
+        resolution: body.resolution,
+        reportTargetType: report.targetType,
+        reportTargetId: report.targetId,
+        // notes captured in moderation_actions / transparency separately;
+        // the audit row stores the slug for filtering, not the verbatim
+        // PII-bearing text.
+        notesProvided: reasonText.length > 0,
+      },
+    });
+
     return c.json({ success: true, reportId, resolution: body.resolution });
   },
 );
@@ -301,6 +318,17 @@ reportsRouter.post(
         // ignore per-report email failure
       }
     }
+
+    await recordAdminAction({
+      c,
+      action: "report.resolve.bulk-dismiss",
+      targetType: "report",
+      targetId: null,
+      metadata: {
+        reportIds: body.reportIds,
+        dismissedCount: targetReports.length,
+      },
+    });
 
     return c.json({ success: true, dismissedCount: targetReports.length });
   },

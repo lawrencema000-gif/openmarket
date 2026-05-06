@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, desc, asc, sql } from "drizzle-orm";
+import { and, eq, desc, asc, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../lib/db";
 import {
+  adminActions,
   apps,
   releases,
   reviews,
@@ -16,6 +17,7 @@ import {
 import { requireAdmin } from "../middleware/admin";
 import { notifyQueue } from "../lib/queue";
 import { enqueueEmail } from "../lib/email";
+import { recordAdminAction } from "../lib/audit";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
@@ -292,23 +294,43 @@ adminRouter.post(
   }
 );
 
-// GET /admin/audit-log — list moderation actions, paginated
+/**
+ * GET /admin/audit-log — admin-action forensic trail.
+ *
+ * Reads from `admin_actions` (every admin mutation lands there via
+ * `recordAdminAction`). The legacy `moderation_actions` table is kept
+ * for backwards compat but is no longer the source of truth — the
+ * report/appeal resolve handlers now write to `admin_actions` instead.
+ */
 adminRouter.get(
   "/admin/audit-log",
   requireAdmin,
-  zValidator("query", auditLogQuerySchema),
+  zValidator(
+    "query",
+    auditLogQuerySchema.extend({
+      action: z.string().optional(),
+      actorId: z.string().optional(),
+    }),
+  ),
   async (c) => {
-    const { page, limit } = c.req.valid("query");
+    const { page, limit, action, actorId } = c.req.valid("query");
     const offset = (page - 1) * limit;
 
-    const actions = await db.query.moderationActions.findMany({
-      orderBy: [desc(moderationActions.createdAt)],
-      limit,
-      offset,
-    });
+    const items = await db
+      .select()
+      .from(adminActions)
+      .where(
+        and(
+          ...(action ? [eq(adminActions.action, action)] : []),
+          ...(actorId ? [eq(adminActions.actorId, actorId)] : []),
+        ),
+      )
+      .orderBy(desc(adminActions.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    return c.json({ page, limit, data: actions });
-  }
+    return c.json({ page, limit, data: items });
+  },
 );
 
 // POST /admin/test-email — send a test email through the queue (any template)
@@ -430,6 +452,13 @@ adminRouter.post("/admin/reviews/promote-due", requireAdmin, async (c) => {
     (result as { rowCount?: number | null }).rowCount ??
     (result as { rowsAffected?: number }).rowsAffected ??
     0;
+  await recordAdminAction({
+    c,
+    action: "reviews.promote-due",
+    targetType: null,
+    targetId: null,
+    metadata: { promoted },
+  });
   return c.json({ success: true, promoted });
 });
 
@@ -462,6 +491,13 @@ adminRouter.patch(
       .set({ reviewFreeze: body.frozen, updatedAt: new Date() })
       .where(eq(apps.id, appId))
       .returning();
+    await recordAdminAction({
+      c,
+      action: body.frozen ? "reviews.freeze" : "reviews.unfreeze",
+      targetType: "app",
+      targetId: appId,
+      metadata: { reasonProvided: !!body.reason, reason: body.reason ?? null },
+    });
     return c.json({ id: updated!.id, reviewFreeze: updated!.reviewFreeze });
   },
 );

@@ -11,6 +11,7 @@ import {
   releases,
 } from "@openmarket/db/schema";
 import { requireAdmin } from "../middleware/admin";
+import { recordAdminAction } from "../lib/audit";
 import type { Variables } from "../lib/types";
 
 export const categoriesRouter = new Hono<{ Variables: Variables }>();
@@ -177,6 +178,13 @@ categoriesRouter.post(
         isFeatured: body.isFeatured ?? false,
       })
       .returning();
+    await recordAdminAction({
+      c,
+      action: "category.create",
+      targetType: "category",
+      targetId: body.slug,
+      diff: { after: created },
+    });
     return c.json(created, 201);
   },
 );
@@ -209,6 +217,13 @@ categoriesRouter.patch(
       })
       .where(eq(categories.slug, slug))
       .returning();
+    await recordAdminAction({
+      c,
+      action: "category.update",
+      targetType: "category",
+      targetId: slug,
+      diff: { before: existing, after: updated },
+    });
     return c.json(updated);
   },
 );
@@ -251,6 +266,13 @@ categoriesRouter.post(
           .where(eq(categories.slug, p.slug));
       }
     });
+    await recordAdminAction({
+      c,
+      action: "category.reorder",
+      targetType: "category",
+      targetId: null,
+      metadata: { positions: body.positions },
+    });
     return c.json({ success: true, updatedCount: body.positions.length });
   },
 );
@@ -281,6 +303,13 @@ categoriesRouter.delete(
     }
 
     await db.delete(categories).where(eq(categories.slug, slug));
+    await recordAdminAction({
+      c,
+      action: "category.delete",
+      targetType: "category",
+      targetId: slug,
+      diff: { before: existing },
+    });
     return c.json({ success: true, slug });
   },
 );
