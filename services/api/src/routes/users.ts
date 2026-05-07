@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, and, ne } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
-import { users } from "@openmarket/db/schema";
+import { authSession, users } from "@openmarket/db/schema";
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 import {
@@ -233,6 +233,88 @@ usersRouter.post(
     return c.json(toSelfProfile(updated!));
   },
 );
+
+/**
+ * POST /users/me/sessions/revoke-others
+ *
+ * "Sign out everywhere else." Deletes every auth_session row for the
+ * current user EXCEPT the one making the call, so the active browser
+ * stays signed in but every other device/tab/cookie is logged out.
+ *
+ * Common trigger: user reads a "new device signed in" email, recognizes
+ * it isn't them, hits the button. Pairs with the future "active sessions"
+ * dashboard surface.
+ *
+ * Returns the count of revoked rows for the toast UX.
+ */
+usersRouter.post("/users/me/sessions/revoke-others", requireAuth, async (c) => {
+  const user = c.get("user");
+  const session = c.get("session") as { id?: string } | undefined;
+  const currentSessionId = session?.id;
+
+  // Better Auth's session.userId is the auth_user.id (text). Our `user.id`
+  // from c.get("user") is the same value (Better Auth passes session.user
+  // straight through). Belt-and-braces guard so we never delete sessions
+  // that aren't this user's.
+  if (!user?.id) {
+    throw new HTTPException(401, { message: "Unauthenticated" });
+  }
+
+  const result = await db
+    .delete(authSession)
+    .where(
+      and(
+        eq(authSession.userId, user.id),
+        ...(currentSessionId
+          ? [ne(authSession.id, currentSessionId)]
+          : []),
+      ),
+    )
+    .returning({ id: authSession.id });
+
+  return c.json({
+    success: true,
+    revokedCount: result.length,
+    keptSessionId: currentSessionId ?? null,
+  });
+});
+
+/**
+ * POST /users/me/sessions/revoke-all
+ *
+ * "Sign out everywhere INCLUDING this device." Deletes every
+ * auth_session row for the current user. The response also clears
+ * Better Auth's session cookie so the calling browser is signed out
+ * immediately.
+ *
+ * Trigger: account-compromise response. The user wants every token
+ * gone, including this one — they'll re-authenticate from scratch.
+ */
+usersRouter.post("/users/me/sessions/revoke-all", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!user?.id) {
+    throw new HTTPException(401, { message: "Unauthenticated" });
+  }
+
+  const result = await db
+    .delete(authSession)
+    .where(eq(authSession.userId, user.id))
+    .returning({ id: authSession.id });
+
+  // Better Auth sets the session cookie via the `Set-Cookie` header on
+  // its own sign-out endpoint. We mimic the same pattern: write a
+  // Max-Age=0 cookie so the browser drops the token. The cookie name
+  // matches Better Auth's default ("better-auth.session_token").
+  c.header(
+    "Set-Cookie",
+    "better-auth.session_token=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly",
+  );
+
+  return c.json({
+    success: true,
+    revokedCount: result.length,
+  });
+});
 
 // GET /users/:id — public profile lookup (used in review threads, etc.).
 usersRouter.get("/users/:id", async (c) => {

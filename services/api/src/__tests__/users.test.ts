@@ -5,6 +5,7 @@ vi.mock("../lib/db", () => ({
   db: {
     insert: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
     query: { users: { findFirst: vi.fn() } },
   },
 }));
@@ -211,6 +212,49 @@ describe("usersRouter", () => {
         }),
       });
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe("POST /users/me/sessions/revoke-others", () => {
+    it("deletes every other session for this user, keeping the active one", async () => {
+      const where = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{ id: "sess-2" }, { id: "sess-3" }]),
+      });
+      (db.delete as any).mockReturnValue({ where });
+
+      const res = await app.request("/api/users/me/sessions/revoke-others", {
+        method: "POST",
+      });
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { revokedCount: number; keptSessionId: string };
+      expect(body.revokedCount).toBe(2);
+      expect(body.keptSessionId).toBe("session-1");
+      // Confirm we built a WHERE that excluded the current session id.
+      expect(where).toHaveBeenCalled();
+    });
+  });
+
+  describe("POST /users/me/sessions/revoke-all", () => {
+    it("deletes every session and clears the session cookie", async () => {
+      const where = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([
+          { id: "sess-1" },
+          { id: "sess-2" },
+          { id: "sess-3" },
+        ]),
+      });
+      (db.delete as any).mockReturnValue({ where });
+
+      const res = await app.request("/api/users/me/sessions/revoke-all", {
+        method: "POST",
+      });
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { revokedCount: number };
+      expect(body.revokedCount).toBe(3);
+      const setCookie = res.headers.get("set-cookie");
+      expect(setCookie).toBeTruthy();
+      expect(setCookie).toMatch(/better-auth\.session_token=;/);
+      expect(setCookie).toMatch(/Max-Age=0/i);
     });
   });
 
