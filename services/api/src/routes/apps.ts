@@ -13,8 +13,15 @@ import {
   releases,
 } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
+import { requireAdmin } from "../middleware/admin";
+import { recordAdminAction } from "../lib/audit";
 import { createAppSchema } from "@openmarket/contracts/apps";
 import { paginationSchema } from "@openmarket/contracts/common";
+import {
+  developerAntiFeatureAttestationSchema,
+  adminAntiFeatureOverrideSchema,
+  DEVELOPER_ATTESTABLE_SLUGS,
+} from "@openmarket/contracts/anti-features";
 import {
   abisToArchitectures,
   formatBytes,
@@ -309,6 +316,108 @@ appsRouter.patch("/apps/:id", requireAuth, async (c) => {
 
   return c.json({ success: true });
 });
+
+/**
+ * PATCH /apps/:id/anti-features
+ *
+ * Developer self-attestation of the developer-source anti-feature
+ * labels (nonFreeNet, nonFreeAdd, nonFreeAssets, nonFreeDep, nsfw).
+ *
+ * The body is a FULL REPLACEMENT SET of the developer-attestable labels
+ * — we union it with whatever scanner/moderator labels are currently
+ * attached to keep machine-derived labels intact across attestation
+ * updates.
+ *
+ * Honest self-disclosure is a load-bearing trust signal: a developer who
+ * truthfully marks their app as `nonFreeNet` builds more user trust than
+ * one who hides it and gets discovered later. The dev-portal surfaces
+ * this with a "be honest, users can filter on these" note.
+ */
+appsRouter.patch(
+  "/apps/:id/anti-features",
+  requireAuth,
+  zValidator("json", developerAntiFeatureAttestationSchema),
+  async (c) => {
+    const appId = c.req.param("id") as string;
+    const user = c.get("user");
+    const body = c.req.valid("json");
+
+    const developer = await db.query.developers.findFirst({
+      where: eq(developers.email, user.email),
+    });
+    if (!developer) throw new HTTPException(404, { message: "Developer not found" });
+
+    const app = await db.query.apps.findFirst({
+      where: and(eq(apps.id, appId), eq(apps.developerId, developer.id)),
+    });
+    if (!app) throw new HTTPException(404, { message: "App not found or not owned by you" });
+
+    // Preserve scanner + moderator labels — the dev only owns the
+    // developer-attestable subset.
+    const preserved = (app.antiFeatures ?? []).filter(
+      (slug) => !DEVELOPER_ATTESTABLE_SLUGS.includes(slug as never),
+    );
+    const next = Array.from(new Set([...preserved, ...body.antiFeatures]));
+
+    const [updated] = await db
+      .update(apps)
+      .set({ antiFeatures: next, updatedAt: new Date() })
+      .where(eq(apps.id, appId))
+      .returning();
+
+    return c.json({
+      id: updated!.id,
+      antiFeatures: updated!.antiFeatures,
+    });
+  },
+);
+
+/**
+ * PATCH /admin/apps/:id/anti-features
+ *
+ * Admin override. Replaces the entire anti-feature set with whatever the
+ * admin sends — including scanner-source labels (used as a stop-gap
+ * until automated SDK fingerprint extraction lands).
+ *
+ * Audit-logged. Admin must include a reason in the body for traceability.
+ */
+appsRouter.patch(
+  "/admin/apps/:id/anti-features",
+  requireAdmin,
+  zValidator(
+    "json",
+    adminAntiFeatureOverrideSchema.extend({ reason: z.string().min(5).max(500) }),
+  ),
+  async (c) => {
+    const appId = c.req.param("id") as string;
+    const body = c.req.valid("json");
+
+    const app = await db.query.apps.findFirst({ where: eq(apps.id, appId) });
+    if (!app) throw new HTTPException(404, { message: "App not found" });
+
+    const before = app.antiFeatures ?? [];
+    const next = Array.from(new Set(body.antiFeatures));
+    const [updated] = await db
+      .update(apps)
+      .set({ antiFeatures: next, updatedAt: new Date() })
+      .where(eq(apps.id, appId))
+      .returning();
+
+    await recordAdminAction({
+      c,
+      action: "app.anti-features.override",
+      targetType: "app",
+      targetId: appId,
+      diff: { before, after: next },
+      metadata: { reason: body.reason },
+    });
+
+    return c.json({
+      id: updated!.id,
+      antiFeatures: updated!.antiFeatures,
+    });
+  },
+);
 
 // Soft-delete app
 appsRouter.delete("/apps/:id", requireAuth, async (c) => {

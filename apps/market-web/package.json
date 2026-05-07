@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@openmarket/contracts": "workspace:*",
     "@openmarket/ui": "workspace:*",
     "@sentry/nextjs": "^10.0.0",
     "@tailwindcss/typography": "^0.5.15",

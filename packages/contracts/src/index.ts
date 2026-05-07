@@ -8,3 +8,4 @@ export * from "./reviews";
 export * from "./reports";
 export * from "./moderation";
 export * from "./email";
+export * from "./anti-features";

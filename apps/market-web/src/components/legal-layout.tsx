@@ -17,6 +17,7 @@ export interface LegalLayoutProps {
 const LEGAL_LINKS = [
   { href: "/about", label: "About" },
   { href: "/content-policy", label: "Content Policy" },
+  { href: "/anti-features", label: "Anti-Features" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
   { href: "/dmca", label: "DMCA" },

@@ -68,6 +68,23 @@ export const apps = pgTable("apps", {
    * review-bombing investigations.
    */
   reviewFreeze: boolean("review_freeze").default(false).notNull(),
+  /**
+   * Anti-features taxonomy. Machine-checkable trust labels users can
+   * filter on. Borrowed from F-Droid's model — the strongest single
+   * differentiator vs. closed app stores. See
+   * `@openmarket/contracts/anti-features` for the canonical enum +
+   * label / description registry. Populated by:
+   *   - developer self-attestation (PATCH /apps/:id/anti-features) for
+   *     nonFreeNet, nonFreeAdd, nonFreeAssets, nonFreeDep, nsfw
+   *   - moderator override (admin endpoint) for noSourceSince,
+   *     upstreamNonFree, disabledAlgorithm
+   *   - scanner-derived (deferred — when SDK fingerprint extraction
+   *     lands) for tracking, ads, knownVuln
+   *
+   * Reserved future value: "reproducible:verified" — set by the
+   * reproducible-builds verifier worker (Phase 2).
+   */
+  antiFeatures: text("anti_features").array().default([]).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -13,6 +13,7 @@ import { LibraryButton } from "@/components/library-button";
 import { WishlistHeart } from "@/components/wishlist-heart";
 import { ReleaseNotes } from "@/components/release-notes";
 import { ReviewsSection } from "@/components/reviews-section";
+import { AntiFeaturesBlock } from "@/components/anti-features-block";
 
 interface Developer {
   id: string;
@@ -51,6 +52,7 @@ interface AppDetail {
   permissions?: string[];
   dangerousPermissions?: string[];
   trustBadges?: TrustBadgeType[];
+  antiFeatures?: string[];
   version?: string;
   packageName?: string;
   apkUrl?: string;
@@ -335,6 +337,13 @@ export default async function AppDetailPage({
               )}
             </div>
           </div>
+
+          {/* Anti-features disclosure block — only shown when present.
+              Lives BETWEEN the app header and the download action bar so
+              the user sees the disclosure before they install. */}
+          {app.antiFeatures && app.antiFeatures.length > 0 && (
+            <AntiFeaturesBlock slugs={app.antiFeatures} />
+          )}
 
           {/* Download action bar */}
           <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100">

@@ -8,6 +8,16 @@ import {
   EmptyState,
   Badge,
 } from "@openmarket/ui";
+import { ANTI_FEATURES } from "@openmarket/contracts/anti-features";
+
+// Storefront filter UX: only the labels users typically want to *exclude*.
+// The full taxonomy is on /anti-features.
+const EXCLUDABLE_FILTERS: Array<{ slug: string; label: string }> = [
+  { slug: "tracking", label: "Tracking" },
+  { slug: "ads", label: "Ads" },
+  { slug: "knownVuln", label: "Vulnerable" },
+  { slug: "nonFreeNet", label: "Closed network" },
+];
 
 interface AppListing {
   id: string;
@@ -82,17 +92,31 @@ export default async function SearchPage({
   const q = params.q ?? "";
   const category = params.category ?? "";
   const trustTier = params.trustTier ?? "";
+  const excludeAntiFeature = params.excludeAntiFeature ?? "";
   const page = params.page ?? "1";
+
+  const excludedSet = new Set(
+    excludeAntiFeature
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
 
   const baseParams = {
     ...(q && { q }),
     ...(category && { category }),
     ...(trustTier && { trustTier }),
+    ...(excludeAntiFeature && { excludeAntiFeature }),
   };
 
+  // The search route requires a non-empty `q`, so when no query is given
+  // we skip the API call and just render the empty-state. Filtering still
+  // works via category + anti-feature URL params.
   const [categories, searchResult] = await Promise.allSettled([
     getCategories(),
-    searchApps({ ...baseParams, page, limit: "21" }),
+    q
+      ? searchApps({ ...baseParams, page, limit: "21" })
+      : Promise.resolve({ apps: [], total: 0, page: 1, limit: 21 } as SearchResult),
   ]);
 
   const cats = categories.status === "fulfilled" ? categories.value : [];
@@ -170,6 +194,46 @@ export default async function SearchPage({
               {tier.label}
             </Link>
           ))}
+        </div>
+
+        {/* Hide-by-anti-feature chips. NSFW is excluded by default at the
+            API layer; surface the four common opt-outs here. Click toggles
+            the slug in/out of the excludeAntiFeature comma list. */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">
+            Hide:
+          </span>
+          {EXCLUDABLE_FILTERS.map((f) => {
+            const active = excludedSet.has(f.slug);
+            const next = active
+              ? [...excludedSet].filter((s) => s !== f.slug)
+              : [...excludedSet, f.slug];
+            const meta = ANTI_FEATURES[f.slug];
+            return (
+              <Link
+                key={f.slug}
+                href={buildSearchUrl(baseParams, {
+                  excludeAntiFeature: next.join(","),
+                  page: "",
+                })}
+                title={meta?.description ?? f.label}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+                  active
+                    ? "bg-rose-600 text-white border-rose-600 shadow-sm"
+                    : "bg-white text-gray-600 border-gray-200 hover:border-rose-300 hover:text-rose-700"
+                }`}
+              >
+                {active ? "✓ " : ""}
+                {f.label}
+              </Link>
+            );
+          })}
+          <Link
+            href="/anti-features"
+            className="ml-1 text-xs text-blue-600 hover:text-blue-700"
+          >
+            What's this?
+          </Link>
         </div>
       </div>
 

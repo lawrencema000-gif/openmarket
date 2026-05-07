@@ -23,7 +23,8 @@ searchRouter.get(
   rateLimit({ windowSec: 60, max: 60, by: "ip", bucket: "search" }),
   zValidator("query", searchQuerySchema),
   async (c) => {
-    const { q, category, trustTier, page, limit } = c.req.valid("query");
+    const { q, category, trustTier, antiFeature, excludeAntiFeature, page, limit } =
+      c.req.valid("query");
 
     const filters: string[] = ["isPublished = true"];
 
@@ -35,6 +36,31 @@ searchRouter.get(
     if (trustTier) {
       const sanitized = trustTier.replace(/["\\]/g, "");
       filters.push(`trustTier = "${sanitized}"`);
+    }
+
+    // antiFeature: comma-separated REQUIRE list — every label must be
+    // present on the app. (`antiFeatures = "tracking" AND antiFeatures
+    // = "ads"`).
+    if (antiFeature) {
+      for (const slug of antiFeature.split(",").map((s) => s.trim()).filter(Boolean)) {
+        const sanitized = slug.replace(/["\\]/g, "");
+        filters.push(`antiFeatures = "${sanitized}"`);
+      }
+    }
+
+    // excludeAntiFeature: comma-separated EXCLUDE list — none of these
+    // labels may be present. (`antiFeatures != "tracking" AND ...`).
+    // NSFW is opt-in only — if the caller doesn't say "include nsfw"
+    // explicitly via antiFeature, it stays out.
+    const excludes = excludeAntiFeature
+      ? excludeAntiFeature.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+    if (!antiFeature?.includes("nsfw") && !excludes.includes("nsfw")) {
+      excludes.push("nsfw");
+    }
+    for (const slug of excludes) {
+      const sanitized = slug.replace(/["\\]/g, "");
+      filters.push(`antiFeatures != "${sanitized}"`);
     }
 
     const filter = filters.join(" AND ");

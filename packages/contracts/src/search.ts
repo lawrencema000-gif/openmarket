@@ -4,6 +4,19 @@ export const searchQuerySchema = z.object({
   q: z.string().min(1).max(200),
   category: z.string().optional(),
   trustTier: z.enum(["standard", "enhanced", "experimental"]).optional(),
+  /**
+   * Anti-features filter: REQUIRE the listed labels (comma-separated, e.g.,
+   * "tracking,ads"). Useful as positive filtering — "show me apps that
+   * have a known vulnerability." For exclusion (the more common case),
+   * pair with `excludeAntiFeature`.
+   */
+  antiFeature: z.string().optional(),
+  /**
+   * Anti-features exclusion filter (comma-separated). The common UX:
+   * "hide tracking + ads + nsfw apps from my search." NSFW is excluded
+   * by default at the storefront level, but other labels are opt-in.
+   */
+  excludeAntiFeature: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });

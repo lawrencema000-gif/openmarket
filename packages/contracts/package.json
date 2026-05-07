@@ -13,7 +13,9 @@
     "./search": "./src/search.ts",
     "./reviews": "./src/reviews.ts",
     "./reports": "./src/reports.ts",
-    "./moderation": "./src/moderation.ts"
+    "./moderation": "./src/moderation.ts",
+    "./anti-features": "./src/anti-features.ts",
+    "./email": "./src/email.ts"
   },
   "scripts": {
     "test": "vitest run",

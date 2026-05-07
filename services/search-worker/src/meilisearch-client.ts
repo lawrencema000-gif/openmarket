@@ -23,6 +23,8 @@ export interface AppDocument {
   trustTier: string;
   isExperimental: boolean;
   isPublished: boolean;
+  /** Anti-features taxonomy slugs. Indexed as a filterable array. */
+  antiFeatures: string[];
   createdAt: number; // unix timestamp
 }
 
@@ -49,6 +51,7 @@ export async function ensureIndex(): Promise<void> {
     "trustTier",
     "isExperimental",
     "isPublished",
+    "antiFeatures",
   ]);
 
   await index.updateSortableAttributes(["createdAt"]);
