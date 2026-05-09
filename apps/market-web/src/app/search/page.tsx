@@ -67,6 +67,23 @@ async function getCategories(): Promise<Category[]> {
   }
 }
 
+interface PopularQuery {
+  query: string;
+  hits: number;
+  lastResultCount: number | null;
+}
+
+async function getPopularQueries(): Promise<PopularQuery[]> {
+  try {
+    const r = await apiFetch<{ items: PopularQuery[] }>(
+      "/api/search/popular?window=24h&limit=12",
+    );
+    return r.items;
+  } catch {
+    return [];
+  }
+}
+
 function buildSearchUrl(base: Record<string, string>, overrides: Record<string, string>) {
   const merged = { ...base, ...overrides };
   // Remove empty strings
@@ -112,14 +129,17 @@ export default async function SearchPage({
   // The search route requires a non-empty `q`, so when no query is given
   // we skip the API call and just render the empty-state. Filtering still
   // works via category + anti-feature URL params.
-  const [categories, searchResult] = await Promise.allSettled([
+  const [categories, searchResult, popularQueries] = await Promise.allSettled([
     getCategories(),
     q
       ? searchApps({ ...baseParams, page, limit: "21" })
       : Promise.resolve({ apps: [], total: 0, page: 1, limit: 21 } as SearchResult),
+    !q ? getPopularQueries() : Promise.resolve([] as PopularQuery[]),
   ]);
 
   const cats = categories.status === "fulfilled" ? categories.value : [];
+  const popular =
+    popularQueries.status === "fulfilled" ? popularQueries.value : [];
   const result = searchResult.status === "fulfilled" ? searchResult.value : null;
   const apps = result?.apps ?? [];
   const total = result?.total ?? 0;
@@ -268,27 +288,62 @@ export default async function SearchPage({
           ))}
         </div>
       ) : searchResult.status === "fulfilled" ? (
-        <EmptyState
-          icon={
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-            </svg>
-          }
-          title="No apps found"
-          description={
-            q
-              ? `No results for "${q}". Try a different search term or remove filters.`
-              : "No apps match the current filters. Try adjusting your selection."
-          }
-          action={
-            <Link
-              href="/search"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Clear all filters
-            </Link>
-          }
-        />
+        <>
+          <EmptyState
+            icon={
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            }
+            title="No apps found"
+            description={
+              q
+                ? `No results for "${q}". Try a different search term or remove filters.`
+                : "No apps match the current filters. Try adjusting your selection."
+            }
+            action={
+              <Link
+                href="/search"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Clear all filters
+              </Link>
+            }
+          />
+
+          {/* Popular queries panel — only shown on the bare empty state
+              (no q in URL) so we don't push it on a user who's
+              actively searching for something. Privacy floor: queries
+              with fewer than 3 distinct submitters are filtered out
+              server-side, so a one-off accidental PII string never
+              surfaces here. */}
+          {!q && popular.length > 0 && (
+            <div className="mt-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">
+                What others are searching for
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {popular.map((p) => (
+                  <Link
+                    key={p.query}
+                    href={`/search?q=${encodeURIComponent(p.query)}`}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                  >
+                    <span>{p.query}</span>
+                    {p.lastResultCount != null && (
+                      <span className="text-xs text-gray-400">
+                        {p.lastResultCount} result{p.lastResultCount === 1 ? "" : "s"}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Last 24 hours · only queries with multiple submitters appear
+              </p>
+            </div>
+          )}
+        </>
       ) : null}
 
       {/* Pagination */}

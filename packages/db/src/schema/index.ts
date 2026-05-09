@@ -4,4 +4,5 @@ export * from "./apps";
 export * from "./security";
 export * from "./users";
 export * from "./moderation";
+export * from "./search";
 export * from "./relations";

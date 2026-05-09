@@ -8,6 +8,13 @@
       "when": 1778367004387,
       "tag": "0000_crazy_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778367353182,
+      "tag": "0001_ordinary_eternals",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { MeiliSearch } from "meilisearch";
+import { sql } from "drizzle-orm";
 import { searchQuerySchema } from "@openmarket/contracts/search";
+import { searchQueries } from "@openmarket/db/schema";
+import { db } from "../lib/db";
 import { rateLimit } from "../middleware/rate-limit";
 
 export const searchRouter = new Hono();
@@ -73,6 +76,24 @@ searchRouter.get(
       offset,
     });
 
+    // Best-effort query log. Only on the first page so multi-page
+    // pagination doesn't multi-count a single user-intent search.
+    if (page === 1) {
+      const normalized = q.toLowerCase().normalize("NFC").trim().slice(0, 200);
+      if (normalized.length > 0) {
+        try {
+          await db.insert(searchQueries).values({
+            query: normalized,
+            resultCount: result.estimatedTotalHits ?? result.hits.length,
+          });
+        } catch (err) {
+          // Log-and-move-on: a search must never fail because we
+          // couldn't write to the query-log table.
+          console.warn("[search] query-log write failed:", err);
+        }
+      }
+    }
+
     return c.json({
       hits: result.hits,
       totalHits: result.estimatedTotalHits ?? result.hits.length,
@@ -82,3 +103,66 @@ searchRouter.get(
     });
   }
 );
+
+/**
+ * GET /search/popular?window=24h&limit=12
+ *
+ * Returns the top distinct queries from the search-query log within the
+ * given time window. Surfaced on the storefront's empty-state /search
+ * page so users without a query in mind see what others are looking for.
+ *
+ * Privacy floor: a query must have ≥3 distinct submitters to appear.
+ * That keeps a single user typing their own name (or a one-off
+ * accidental PII string) from ever showing up in the public panel.
+ *
+ * Anonymous searches don't have a user_id, so the "distinct submitters"
+ * count uses the day-bucket of the row's created_at as a proxy when
+ * user_id is null. This is an approximation and intentional — we'd
+ * rather under-surface than ever surface a single-source query.
+ */
+searchRouter.get("/search/popular", async (c) => {
+  const limitRaw = c.req.query("limit");
+  const limit = Math.min(50, Math.max(1, parseInt(limitRaw ?? "12", 10)));
+
+  const windowParam = c.req.query("window") ?? "24h";
+  const sinceMs =
+    windowParam === "7d"
+      ? 7 * 24 * 60 * 60 * 1000
+      : windowParam === "1h"
+        ? 60 * 60 * 1000
+        : 24 * 60 * 60 * 1000;
+  const since = new Date(Date.now() - sinceMs);
+
+  // distinct_submitters proxy: distinct user_id where present, else
+  // distinct day-bucket of created_at. count_distinct on COALESCE keeps
+  // the SQL simple.
+  const rows = await db
+    .select({
+      query: searchQueries.query,
+      hits: sql<number>`count(*)`.as("hits"),
+      distinctSubmitters: sql<number>`count(distinct coalesce(${searchQueries.userId}::text, date_trunc('day', ${searchQueries.createdAt})::text))`.as(
+        "distinct_submitters",
+      ),
+      lastResultCount: sql<number>`max(${searchQueries.resultCount})`.as(
+        "last_result_count",
+      ),
+    })
+    .from(searchQueries)
+    .where(sql`${searchQueries.createdAt} >= ${since}`)
+    .groupBy(searchQueries.query)
+    .having(
+      sql`count(distinct coalesce(${searchQueries.userId}::text, date_trunc('day', ${searchQueries.createdAt})::text)) >= 3`,
+    )
+    .orderBy(sql`count(*) desc`)
+    .limit(limit);
+
+  return c.json({
+    window: windowParam,
+    items: rows.map((r) => ({
+      query: r.query,
+      hits: Number(r.hits),
+      lastResultCount:
+        r.lastResultCount == null ? null : Number(r.lastResultCount),
+    })),
+  });
+});
