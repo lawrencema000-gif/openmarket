@@ -76,22 +76,29 @@ These exclusions are load-bearing. They turn "we are smaller than the Play Store
 
 ### 2.2 What is shipped in code but NOT usable end-to-end (the honest gap)
 
-This is the load-bearing section. These are bugs, not features.
+This is the load-bearing section. These are bugs, not features. **Updated 2026-05-07 after Blocks 1, 1.5, and 2 shipped.**
 
-| Gap | Severity | Where |
-|---|---|---|
-| **Admin app does not consume the new moderation APIs.** `/reports` calls public `GET /reports` (which doesn't exist as a list) and a status-only updater that doesn't match the new `resolve` flow. | 🔴 P1-stopper | `apps/admin/src/app/reports/page.tsx`, `ReportStatusUpdater.tsx` |
-| **No admin appeals queue.** Backend at `services/api/src/routes/appeals.ts` exposes `GET /admin/appeals` with status counts; admin app has no `/appeals` route. Moderators cannot triage appeals. | 🔴 P1-stopper | `apps/admin/src/app/` (no `appeals/`) |
-| **No admin categories editor.** Backend supports CRUD + reorder + featured-toggle; admin app has no `/categories` route. Editorial control lives only in the seed file. | 🟠 P1-incomplete | `apps/admin/src/app/` (no `categories/`) |
-| **Dev-portal upload happy path not wired to new ingest pipeline.** P0-C scaffolded presigned URL flow; P1-I built the worker; the dev-portal upload form does not yet call `POST /releases/:id/artifacts/upload-url` and the post-upload `finalize`. | 🟠 P1-incomplete | `apps/dev-portal/src/app/.../release/upload` |
-| **No rate limiting in front of public endpoints.** P1-S unbuilt. Anyone can flood `/reports`, `/reviews`, `/search`. | 🟠 abuse risk |  |
-| **No audit-log middleware on admin mutations.** P1-R unbuilt. `audit_log` table exists; nothing writes to it automatically. | 🟠 governance hole |  |
-| **No sitemap / OG cards / structured data.** P1-Q unbuilt. Storefront is invisible to search and unshareable. | 🟡 reach hole |  |
-| **No backup runbook beyond Neon defaults.** P1-T unbuilt. R2 buckets have no scheduled cross-region mirror. | 🟡 DR hole |  |
-| **Better Auth hardening incomplete.** P1-O unbuilt. No sign-in rate limit, no "sign out everywhere," no 2FA, no Google OAuth on storefront. | 🟡 trust hole |  |
-| **Search is scaffolded but not hardened.** P1-M unbuilt. Synonyms, ranking boosts, top-queries panel missing. | 🟡 polish hole |  |
+| Gap | Severity | Where | Status |
+|---|---|---|---|
+| Admin moderation surfaces (reports / appeals / categories / audit log) | 🔴 was P1-stopper | `apps/admin/src/app/{reports,appeals,categories,audit-log}` | ✅ shipped Block 1 (`fb04dd0`) + Block 2B (`beb802b`) |
+| Review hold-back + freeze | 🟠 was abuse risk | `services/api/src/routes/admin.ts` + schema | ✅ shipped Block 1.5 (`fb04dd0`) |
+| Anti-Features taxonomy + storefront chips + public doc | 🔴 was differentiation gap | `apps/market-web` + `packages/contracts/anti-features` | ✅ shipped Block 1.5 (`8cccc39`) |
+| Rate limiting (P1-S) | 🟠 was abuse risk | `services/api/src/middleware/rate-limit.ts` | ✅ shipped Block 2A (`0bac36e`) |
+| Admin audit log middleware (P1-R) | 🟠 was governance hole | `services/api/src/lib/audit.ts` + backfilled handlers | ✅ shipped Block 2B (`beb802b`) |
+| DSA-shape transparency (jurisdiction, legal basis, response time) | 🟠 was compliance gap | `transparency_events` schema + `/transparency-summary` | ✅ shipped Block 2C (`27c766c`) |
+| Sitemap / robots / JSON-LD / OG cards (P1-Q) | 🟡 was reach hole | `apps/market-web/src/app/{sitemap.ts,robots.ts}` + app detail | ✅ shipped Block 2D (`85744b2`) |
+| Sign-out-everywhere (P1-O subset) | 🟡 was trust hole | `services/api/src/routes/users.ts` | ✅ shipped Block 2E (`30baec7`) |
+| **Dev-portal upload happy path** | 🔴 P1-stopper | `apps/dev-portal/src/app/.../release/upload` | ⏳ **Block 3** |
+| **End-to-end verification** (Playwright + DoD smoke) | 🔴 P1-stopper | `apps/*/tests/e2e/` (none exist) | ⏳ **Block 3B** |
+| Backups + DR runbook (P1-T) | 🟡 DR hole | `docs/runbooks/disaster-recovery.md` (TODO) | ⏳ Block 4 |
+| CDN + image optimization (P1-P) | 🟡 perf hole | ingest-worker variant generation; CF in front of bucket | ⏳ Block 4 |
+| Search hardening (P1-M) | 🟡 polish hole | Meilisearch synonyms / ranking config | ⏳ Block 4 |
+| 2FA + Google/GitHub storefront OAuth + account-merge (P1-O remainder) | 🟡 trust hole | `services/api/src/lib/auth.ts` config | ⏳ Block 4 (auth follow-ups) |
+| Drizzle migration baseline | 🟡 carried from audit | `packages/db/drizzle/` (empty) | ⏳ Block 4 (audit follow-up) |
+| `promote-due` test asserts SQL fragments not semantics | 🟡 carried from audit | `services/api/src/__tests__/admin.test.ts:88-95` | ⏳ Block 4 (audit follow-up) |
+| Sentry doesn't scrub `notes` / appeal `body` PII | 🟡 carried from audit | `services/api/src/lib/sentry.ts` | ⏳ Block 4 (audit follow-up) |
 
-The pattern is clear: **the back-of-house is real; the front-of-house for moderators is not, and the public-internet hardening is not**.
+The pattern: **back-of-house and public hardening are done. The remaining P1-stopper is the developer publish flow + automated proof that the whole chain works.**
 
 ### 2.3 What is *deferred and acknowledged*, not "missing"
 
@@ -140,20 +147,38 @@ Goal: hostile internet doesn't break us, search engines find us, browsers and Sl
 4. **P1-O auth hardening (subset)** — sign-in rate limit (3/min/IP, 10/hr/email), "sign out everywhere," account-merge by verified email. 2FA + OAuth deferred to a follow-up since they don't unblock the launch bar.
 5. **C6. DSA-shape transparency** — schema additions: `transparencyEvents.jurisdiction` (ISO country code), `legalBasis` (free text — "DSA Art. 16", "DMCA 17 USC 512", "ToS §3.4", etc.), `responseTimeMs`. Public report adds aggregate panel: takedowns by jurisdiction, appeals filed/overturned counts, p50/p95 response times.
 
-#### Block 3 — **Phase 1 close-out: dev-portal upload happy path**
+#### Block 3 — **Phase 1 close-out: dev-portal upload happy path** + E2E verification
 
-Goal: a developer can publish a release end-to-end.
+Goal: a developer can publish a release end-to-end, and we have automated proof that the whole chain works.
 
-1. Wire the dev-portal upload form to the presigned-URL flow.
-2. Show ingest + scan progress (poll `/releases/:id` every 3s, render the band + findings).
-3. On `block` band, show the rejection reason with a deep link to the policy section that triggered it.
-4. On `auto_pass`, show "Ready to publish" CTA.
+1. **3A — Upload + ingest + scan UI.**
+   - Wire the dev-portal upload form to the presigned-URL flow (`POST /releases/:id/artifacts/upload-url` → browser PUT to R2 → `POST /artifacts/:id/finalize`).
+   - Compute SHA256 client-side via Web Crypto API, send with finalize.
+   - Show ingest + scan progress (poll `/releases/:id` every 3s; render band + findings).
+   - On `block` band, show the rejection reason with a deep link to the policy section that triggered it.
+   - On `auto_pass`, show "Ready to publish" CTA.
+   - Anti-Features developer-attestation form on the same page (consumes Block 1.5's `PATCH /apps/:id/anti-features`).
+2. **3B — Phase 1 DoD verification.**
+   - Playwright smoke tests for: sign-up flow, upload happy path, report-and-resolve flow. Runs on PR + nightly.
+   - Verify §3.3 checklist green against a populated dev DB:
+     - End-to-end smoke (signup → install → review → report → resolve → appeal → relist) passes with 0 500s
+     - Sitemap renders all published apps; OG cards validate in the Meta debugger
+     - `/search` 429s after the configured rate-limit threshold under load
+     - Every admin mutation appears in `/admin/audit-log`
 
-#### Block 4 — **Quality + DR + observability tightening**
+#### Block 4 — **Quality + DR + observability tightening** + open audit follow-ups
 
 1. **P1-T backups** — runbook + cron mirror to a second R2 region. Monthly restore drill (documented, not yet automated).
 2. **P1-P CDN + image optimization** — Cloudflare in front of public bucket; ingest-worker generates 64/192/512 icon variants + 320x568 / 1080x1920 screenshots; Next.js `<Image>` with custom loader.
 3. **P1-M search hardening** — synonyms, ranking boosts, popular-queries panel, typo tolerance verification.
+4. **Audit follow-ups** (carried over from the self-audit on Block 1):
+   - 🟡 **Drizzle migration baseline.** Every schema change since Block 1 has been applied via `db:push`. Run `pnpm db:generate` to lock a migration history before the next prod incident — without it, point-in-time restore is a recipe for code-vs-DB drift.
+   - 🟡 **`promote-due` test asserts SQL fragments, not promotion semantics.** `services/api/src/__tests__/admin.test.ts:88-95` only string-matches the SQL. Hit a real Postgres in an integration test that inserts a flagged-vs-frozen mix of reviews and asserts the right rows flip.
+   - 🟡 **Sentry doesn't scrub `notes` / appeal `body` PII.** `services/api/src/lib/sentry.ts` sets `sendDefaultPii: false` but does no field-level scrubbing. Add a `beforeSend` rule that strips `request.data.notes` and `request.data.body` from captured events on moderation routes.
+5. **Auth follow-ups** deferred from P1-O (Block 2 shipped a subset only):
+   - 2FA via TOTP for developer accounts (required for publishing in v2, optional in v1).
+   - Google + GitHub OAuth on the storefront (not just dev-portal).
+   - Account-merge by verified email (one user record across providers).
 
 ### 3.2 Sequencing rationale
 
@@ -164,17 +189,35 @@ Goal: a developer can publish a release end-to-end.
 
 ### 3.3 What "Phase 1 done" means after this sequence
 
-A clean checklist, lifted and sharpened from §12 of IMPLEMENTATION-PLAN:
+A clean checklist, lifted and sharpened from §12 of IMPLEMENTATION-PLAN. Updated 2026-05-07 with current verification status.
 
-- [ ] User signs up → email verifies → installs an app → reviews it.
-- [ ] Developer signs up → uploads an APK → it lands → ingest parses it → scan runs → it shows up on the storefront.
-- [ ] User reports the app → moderator resolves with `delist` → developer gets an email + appeal link → developer appeals → moderator accepts → app is relisted → the public transparency report shows both events with intact hash chain.
-- [ ] All five surfaces (storefront, dev-portal, admin) pass an end-to-end smoke test with zero 500s.
-- [ ] Sitemap renders all published apps; OG cards render; structured data validates against Schema.org.
-- [ ] Hitting `/search` 200 times in 60s gets a 429.
-- [ ] Every admin mutation appears in `/admin/audit-log`.
+Code-level (verified by tests + commits):
+- [x] Storefront accounts: sign-up / sign-in / library / wishlist (`38d0dd3`, `9176321`, `1b5914b`)
+- [x] App metadata, What's New, reviews, dev responses (`3354ba6`, `5d31875`)
+- [x] Real APK ingest pipeline (`60f2991`)
+- [x] 6-scanner security pipeline (`6500211`)
+- [x] Reports → resolve → public hash-chained transparency log (`c4619bf`)
+- [x] Developer appeals → accept/reject → public record either way (`364032a`)
+- [x] Categories curation + admin CRUD (`3a94c9a`)
+- [x] **Admin moderation surfaces** — reports, appeals, categories, audit log all wired and usable (`fb04dd0` + `beb802b`)
+- [x] **Review hold-back** — 24h cool-off + freeze toggle (`fb04dd0`)
+- [x] **Anti-Features taxonomy** — 11 labels, dev attest + admin override + storefront chips + public doc (`8cccc39`)
+- [x] **Rate limiting** on `/reports`, `/reviews`, `/search`, `/auth/sign-{in,up}` (`0bac36e`)
+- [x] **Audit log middleware** on every admin mutation (`beb802b`)
+- [x] **DSA-shape transparency** — jurisdiction, legal basis, response-time percentiles (`27c766c`)
+- [x] **Sitemap + robots + JSON-LD + OG cards** (`85744b2`)
+- [x] **Sign-out-everywhere** endpoints (`30baec7`)
 
-Until that checklist is green, we are not Phase 2-ready, and adding Phase 2 features is debt.
+End-to-end (still red — Block 3B verification work):
+- [ ] User signs up → email verifies → installs an app → reviews it (run live, not just unit-tested)
+- [ ] Developer signs up → uploads an APK → it lands → ingest parses it → scan runs → it shows up on the storefront ⏳ Block 3A
+- [ ] User reports the app → moderator resolves with `delist` → developer gets an email + appeal link → developer appeals → moderator accepts → app is relisted → public transparency report shows both events with intact hash chain
+- [ ] All three surfaces (storefront, dev-portal, admin) pass an end-to-end smoke test with zero 500s
+- [ ] Sitemap renders all published apps; OG cards render; structured data validates against Schema.org
+- [ ] Hitting `/search` 200 times in 60s actually returns 429 in prod (verified, not just unit-tested)
+- [ ] Every admin mutation appears in `/admin/audit-log` (verified by Playwright walk-through)
+
+**Until that checklist is green end-to-end, we are not Phase 2-ready, and adding Phase 2 features is debt.**
 
 ---
 

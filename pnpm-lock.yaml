@@ -75,6 +75,9 @@ importers:
 
   apps/dev-portal:
     dependencies:
+      '@openmarket/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@openmarket/ui':
         specifier: workspace:*
         version: link:../../packages/ui
