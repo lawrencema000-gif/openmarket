@@ -116,3 +116,46 @@ pnpm --filter @openmarket/api test -- src/__tests__/storage.test.ts
 ```
 
 Live tests are skipped automatically if MinIO isn't reachable on `localhost:9000`.
+
+---
+
+## Image variants (P1-P)
+
+The storefront expects three icon variants per app, content-hashed for cache immutability. Convention:
+
+```
+apps/<appId>/icon/<sha256-hex>@64.webp
+apps/<appId>/icon/<sha256-hex>@192.webp
+apps/<appId>/icon/<sha256-hex>@512.webp
+```
+
+The same convention applies to screenshots (`apps/<appId>/screenshot/<sha>@<width>.webp`) and feature graphics. The `@<width>` suffix is the load-bearing pattern — it lets the storefront request a specific size by URL without needing a runtime resizer to be online.
+
+### Storefront consumption — already shipped
+
+- [`apps/market-web/next.config.ts`](../../apps/market-web/next.config.ts) declares the variant widths via `deviceSizes` + `imageSizes` and points images at a custom loader.
+- [`apps/market-web/src/lib/image-loader.ts`](../../apps/market-web/src/lib/image-loader.ts) implements the loader. For URLs that already encode a variant size in the path (`<sha>@512.webp`), it passes through. For URLs that point at the OpenMarket media bucket without a variant suffix, it appends `?w=<width>` so a future Cloudflare Image Transformations endpoint (or our own resizer worker) can serve a width-specific variant.
+- [`packages/ui/src/components/app-card.tsx`](../../packages/ui/src/components/app-card.tsx) renders icons with native `width`/`height` (no CLS), `loading="lazy"`, and `decoding="async"`.
+
+The loader is **safe to ship before the resizer is deployed** — today the `?w=<n>` query parameter is a no-op the bucket ignores; tomorrow when a worker is on `cdn.openmarket.app` it reads it.
+
+### Producer side — deferred
+
+Generating the actual `@64`, `@192`, `@512` icon files is the ingest-worker's job: when the developer uploads an icon to the listing, the worker decodes the source, resizes to each target width with `sharp`, and PUTs the variants under the deterministic key. That requires:
+
+1. `sharp` as a dep on `services/ingest-worker` (native binary; ships with prebuilt artifacts for arm64/x64 Linux which covers Fly.io's runtime).
+2. A new `processIconUpload` job type in `notify-worker`/`ingest-worker` triggered by the listing PATCH that sets a new `iconUrl`.
+3. Atomicity: only update `appListings.iconUrl` to the variant URL after every variant has landed in the bucket. A partial write would leave the storefront pointing at a missing variant.
+
+Tracked as a Phase-2 producer-side task. Until it lands, the storefront serves the original icon at every requested width — no perf regression vs. the prior plain-`<img>` baseline; we're just paying the byte cost of the largest icon at every render size.
+
+### Cloudflare configuration (production only)
+
+When the CDN sits in front of `openmarket-media`:
+
+1. Bind a custom domain `cdn.openmarket.app` to the bucket.
+2. Enable [Cloudflare Image Transformations](https://developers.cloudflare.com/images/transform-images/) on the zone.
+3. The loader's `?w=<width>` query parameter is the standard CF Transformations input — no further config needed once the feature is on.
+4. Set the bucket's `Cache-Control` on object PUT to `public, max-age=31536000, immutable` — variants are content-hashed so they can be cached forever without invalidation.
+
+In dev, the loader passes through to the unmodified MinIO URL — Cloudflare Transformations isn't available locally and isn't needed because dev traffic is small.

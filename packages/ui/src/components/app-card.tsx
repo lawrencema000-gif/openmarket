@@ -35,6 +35,10 @@ export function AppCard({
             src={iconUrl}
             alt={`${title} icon`}
             className="w-14 h-14 rounded-2xl object-cover shadow-sm"
+            width={56}
+            height={56}
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' fill='%23e2e8f0'%3E%3Crect width='56' height='56' rx='16'/%3E%3C/svg%3E";
             }}
@@ -81,6 +85,10 @@ export function AppCard({
         src={iconUrl}
         alt={`${title} icon`}
         className="w-12 h-12 rounded-xl object-cover shadow-sm flex-shrink-0"
+        width={48}
+        height={48}
+        loading="lazy"
+        decoding="async"
         onError={(e) => {
           (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='%23e2e8f0'%3E%3Crect width='48' height='48' rx='12'/%3E%3C/svg%3E";
         }}
