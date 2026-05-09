@@ -15,7 +15,12 @@
     "db:migrate": "pnpm --filter @openmarket/db migrate",
     "db:push": "pnpm --filter @openmarket/db push",
     "db:seed": "pnpm --filter @openmarket/db seed",
-    "db:studio": "pnpm --filter @openmarket/db studio"
+    "db:studio": "pnpm --filter @openmarket/db studio",
+    "smoke:rate-limit": "tsx scripts/smoke/rate-limit.ts",
+    "smoke:sitemap": "tsx scripts/smoke/sitemap.ts",
+    "smoke": "pnpm smoke:rate-limit && pnpm smoke:sitemap",
+    "e2e": "pnpm --filter @openmarket/e2e test",
+    "test:integration": "INTEGRATION_DB_URL=$DATABASE_URL pnpm --filter @openmarket/api test"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -23,6 +28,7 @@
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
     "next": "^15.3.0",
+    "tsx": "^4.19.0",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0"
   },
@@ -31,7 +37,9 @@
       "drizzle-orm": "0.39.3"
     },
     "peerDependencyRules": {
-      "ignoreMissing": ["@types/pg"]
+      "ignoreMissing": [
+        "@types/pg"
+      ]
     }
   }
 }
