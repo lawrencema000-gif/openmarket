@@ -59,6 +59,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
   }
 
+  async function withGithub() {
+    setError(null);
+    try {
+      await signIn.social({ provider: "github", callbackURL: "/account" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "GitHub sign-in failed");
+    }
+  }
+
   if (needsVerification) {
     return (
       <div className="space-y-4 text-center">
@@ -172,19 +181,31 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={withGoogle}
-        className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2"
-      >
-        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
-          <path fill="#4285F4" d="M22.5 12.27c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 0 1-2.2 3.32v2.76h3.55c2.08-1.92 3.27-4.74 3.27-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.55-2.76c-.99.66-2.25 1.05-3.73 1.05-2.87 0-5.3-1.94-6.16-4.55H2.18v2.85A11 11 0 0 0 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.08a6.6 6.6 0 0 1 0-4.16V7.07H2.18a11 11 0 0 0 0 9.86l3.66-2.85z"/>
-          <path fill="#EA4335" d="M12 5.5c1.62 0 3.07.56 4.21 1.65l3.15-3.15C17.45 2.16 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.85C6.7 7.44 9.13 5.5 12 5.5z"/>
-        </svg>
-        Continue with Google
-      </button>
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={withGoogle}
+          className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
+            <path fill="#4285F4" d="M22.5 12.27c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 0 1-2.2 3.32v2.76h3.55c2.08-1.92 3.27-4.74 3.27-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.55-2.76c-.99.66-2.25 1.05-3.73 1.05-2.87 0-5.3-1.94-6.16-4.55H2.18v2.85A11 11 0 0 0 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.08a6.6 6.6 0 0 1 0-4.16V7.07H2.18a11 11 0 0 0 0 9.86l3.66-2.85z"/>
+            <path fill="#EA4335" d="M12 5.5c1.62 0 3.07.56 4.21 1.65l3.15-3.15C17.45 2.16 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.85C6.7 7.44 9.13 5.5 12 5.5z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <button
+          type="button"
+          onClick={withGithub}
+          className="w-full rounded-md border border-gray-300 bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden fill="currentColor">
+            <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.05c-3.2.7-3.87-1.37-3.87-1.37-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.74 2.68 1.24 3.34.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.27-5.24-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.17a10.96 10.96 0 0 1 5.74 0c2.18-1.48 3.14-1.17 3.14-1.17.62 1.59.23 2.76.11 3.05.74.8 1.18 1.82 1.18 3.07 0 4.4-2.69 5.36-5.25 5.65.41.36.78 1.07.78 2.16v3.2c0 .31.21.66.8.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z" />
+          </svg>
+          Continue with GitHub
+        </button>
+      </div>
 
       <p className="text-center text-sm text-gray-600 mt-4">
         {isSignUp ? (

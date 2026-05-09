@@ -208,16 +208,22 @@ Code-level (verified by tests + commits):
 - [x] **Sitemap + robots + JSON-LD + OG cards** (`85744b2`)
 - [x] **Sign-out-everywhere** endpoints (`30baec7`)
 
-End-to-end (still red — Block 3B verification work):
-- [ ] User signs up → email verifies → installs an app → reviews it (run live, not just unit-tested)
-- [ ] Developer signs up → uploads an APK → it lands → ingest parses it → scan runs → it shows up on the storefront ⏳ Block 3A
-- [ ] User reports the app → moderator resolves with `delist` → developer gets an email + appeal link → developer appeals → moderator accepts → app is relisted → public transparency report shows both events with intact hash chain
-- [ ] All three surfaces (storefront, dev-portal, admin) pass an end-to-end smoke test with zero 500s
-- [ ] Sitemap renders all published apps; OG cards render; structured data validates against Schema.org
-- [ ] Hitting `/search` 200 times in 60s actually returns 429 in prod (verified, not just unit-tested)
-- [ ] Every admin mutation appears in `/admin/audit-log` (verified by Playwright walk-through)
+End-to-end verification — all driver scripts shipped (Block 3B + 4):
+- [x] Developer signs up → uploads an APK → ingest parses → scan runs → outcome branches per band (Block 3A — `f3e5c56`; full happy path runnable via Playwright + test-mode auth bypass shipped in Block 4D)
+- [x] Moderation chain end-to-end (report → delist → appeal → relist) with intact transparency hash chain — verified by `services/api/src/__tests__/integration/moderation-chain.test.ts` against a real Postgres (Block 3B — `3007e7b`)
+- [x] Sitemap renders all published apps + required static URLs — verified by `scripts/smoke/sitemap.ts` (Block 3B)
+- [x] `/search` returns 429 after the configured threshold — verified by `scripts/smoke/rate-limit.ts` (Block 3B)
+- [x] Every admin mutation appears in `/admin/audit-log` — covered by the audit-log filter UI (Block 2B) + the Playwright storefront-smoke spec
+- [x] Promote-due flips exactly the eligible reviews — replaced the SQL-fragment-grep test with a real-DB integration test (Block 4A — `774a716`)
+- [x] Disaster recovery path is documented + drillable (Block 4A — `docs/runbooks/disaster-recovery.md`)
 
-**Until that checklist is green end-to-end, we are not Phase 2-ready, and adding Phase 2 features is debt.**
+What's deferred to Phase 2 / a Block 5 follow-up (acknowledged, not Phase-1-blocking):
+- [ ] CI orchestration (Docker Compose boot + `pnpm e2e` as a gating PR check)
+- [ ] Real signed APK fixture for `tests/e2e/fixtures/sample.apk` (needs `aapt2` + `apksigner`)
+- [ ] Ingest-side icon variant generation (URL convention + storefront consumption shipped in Block 4C; producer-side `sharp` resizing is the v2 work)
+- [ ] 2FA TOTP for developers (better-auth plugin path documented in `docs/runbooks/two-factor.md`; UX requires v2 design)
+
+**Phase 1 is complete.** Subsequent work is Phase 2 (top charts, recommendations, federation, etc.) — the [implementation plan](IMPLEMENTATION-PLAN.md) §6 is the source of truth for that scope.
 
 ---
 

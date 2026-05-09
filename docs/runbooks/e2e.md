@@ -95,28 +95,50 @@ pnpm e2e
 
 The storefront-smoke spec is fully automated — it self-skips if the dev server isn't responding.
 
-The **upload-flow** spec needs an authenticated session because Better Auth's email-verification gating makes the login flow flaky in a smoke. To enable it:
+The **upload-flow** spec uses the API's test-mode auth bypass (Block 4D) so it doesn't need a real Better Auth session. To enable:
 
 ```bash
-# 1. Sign in to the dev-portal once at http://localhost:3002 with a
-#    verified developer account. Make sure that account already owns
-#    at least one app.
-# 2. Save the storage state:
-npx playwright codegen --save-storage=tests/e2e/.auth/dev.json http://localhost:3002
-# 3. Run with the state file:
-PLAYWRIGHT_DEV_STATE=tests/e2e/.auth/dev.json pnpm e2e
+# 1. Boot the stack with test-mode on. The bypass refuses to engage
+#    when NODE_ENV=production, so this is safe to leave in your dev
+#    .env.local but never in production env.
+OPENMARKET_TEST_MODE=1 NODE_ENV=test pnpm dev
+
+# 2. Pick a real auth_user.id + email from your dev DB (must own at
+#    least one app). Drizzle Studio makes this easy:
+pnpm db:studio   # → auth_user table → copy id + email
+# Or via psql:
+#   select id, email from auth_user limit 5;
+
+# 3. Run the spec with the env vars set:
+OPENMARKET_TEST_USER_ID=<paste-id> \
+OPENMARKET_TEST_USER_EMAIL=<paste-email> \
+  pnpm e2e
 ```
 
-The `.auth/` directory is gitignored — the state file contains a valid session cookie and must never be committed.
+The bypass is a single-purpose hatch: requests that carry both
+`x-test-user-id` and `x-test-user-email` headers are accepted as that
+user without a Better Auth session lookup. It is gated by
+`OPENMARKET_TEST_MODE=1` on the API process AND a non-production
+`NODE_ENV`. Production deploys run with `NODE_ENV=production` and
+`OPENMARKET_TEST_MODE` unset; the code path is dead in prod.
 
-### Block 3B follow-up — auth bypass
+For end-to-end coverage of the OAuth + email-verification login UI
+itself (which the bypass intentionally skips), use the storage-state
+pattern:
 
-The upload-flow spec is currently a structure-only test (asserts the form renders with the new step machine). To exercise the full happy path (file pick → hash → upload → poll → outcome) we need:
+```bash
+# Sign in once manually, then save the cookie jar:
+npx playwright codegen --save-storage=tests/e2e/.auth/dev.json http://localhost:3002
+# Then in a separate spec, use storageState: "tests/e2e/.auth/dev.json"
+```
 
-1. A small `services/api` test-mode auth bypass that accepts an `x-test-user-id` header when `NODE_ENV=test`. Trivially gated; ships with Block 4.
-2. A fixture APK at `tests/e2e/fixtures/sample.apk` — minimal valid APK signed with a test key. Generation script: `tools/make-test-apk.sh` (TODO).
+The `.auth/` directory is gitignored.
 
-Until both land, the upload spec asserts the form structure only. The new flow is also covered indirectly by the API integration test above.
+### What's still deferred
+
+1. A fixture APK at `tests/e2e/fixtures/sample.apk` — minimal valid APK signed with a test key. Without one, the upload-flow spec only verifies the form structure renders with the new step machine; it doesn't drive the file picker through to a complete upload. Generating a real APK requires `aapt2` + `apksigner` from the Android build-tools — a Block 5 chore.
+
+2. CI orchestration that boots Docker Compose + the dev stack and runs `pnpm e2e` as a gating check on every PR. Today the spec is a developer-facing smoke; the runbook is the contract for how to drive it locally.
 
 ---
 

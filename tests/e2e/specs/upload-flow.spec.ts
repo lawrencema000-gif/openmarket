@@ -5,36 +5,44 @@ import { test, expect } from "@playwright/test";
  * walks through every progress stage: form → hashing (with %) →
  * uploading → finalizing → polling → outcome.
  *
- * IMPORTANT: this test EXPECTS to be authenticated — it doesn't run
- * the real Better Auth sign-in flow because email-verification gating
- * makes that flaky in a smoke. The test self-skips if the developer's
- * API session cookie isn't already in the browser context.
+ * Authentication path: the API supports a test-mode bypass (Block 4D)
+ * gated on OPENMARKET_TEST_MODE=1 + non-prod NODE_ENV. This spec sets
+ * x-test-user-id + x-test-user-email on every API request via an
+ * extraHTTPHeaders fixture. The dev-portal still loads pages
+ * normally; only API calls that go through requireAuth see the
+ * bypass headers. To run:
  *
- * To run locally:
- *   1. `pnpm dev` (boots api + dev-portal)
- *   2. Sign in to dev-portal at :3002 manually with a verified test
- *      developer account
- *   3. Save the storage state once:
- *        npx playwright codegen --save-storage=.auth/dev.json \
- *          http://localhost:3002
- *   4. PLAYWRIGHT_DEV_STATE=.auth/dev.json pnpm --filter @openmarket/e2e test
+ *   OPENMARKET_TEST_MODE=1 NODE_ENV=test pnpm dev
+ *   OPENMARKET_TEST_USER_ID=<a-real-developer-auth-id> \
+ *   OPENMARKET_TEST_USER_EMAIL=<that-developer-s-email> \
+ *     pnpm --filter @openmarket/e2e test
  *
- * Block 3B-followup: a small test-mode auth bypass on the API would
- * remove the manual sign-in step. Tracked in `docs/runbooks/e2e.md`.
+ * Self-skips when the bypass env vars aren't set, so this spec is a
+ * no-op for engineers who haven't opted in.
+ *
+ * For end-to-end coverage of the OAuth + email-verification login UI
+ * itself, use the storage-state pattern (see runbook).
  */
 
 const DEV_PORTAL_URL = process.env.DEV_PORTAL_URL ?? "http://localhost:3002";
-const STATE_FILE = process.env.PLAYWRIGHT_DEV_STATE;
+const TEST_USER_ID = process.env.OPENMARKET_TEST_USER_ID;
+const TEST_USER_EMAIL = process.env.OPENMARKET_TEST_USER_EMAIL;
 
 test.use({
-  storageState: STATE_FILE,
   baseURL: DEV_PORTAL_URL,
+  extraHTTPHeaders:
+    TEST_USER_ID && TEST_USER_EMAIL
+      ? {
+          "x-test-user-id": TEST_USER_ID,
+          "x-test-user-email": TEST_USER_EMAIL,
+        }
+      : {},
 });
 
 test.describe("dev-portal: upload flow smoke", () => {
   test.skip(
-    !STATE_FILE,
-    "PLAYWRIGHT_DEV_STATE not set — see test header for setup steps.",
+    !TEST_USER_ID || !TEST_USER_EMAIL,
+    "OPENMARKET_TEST_USER_ID + OPENMARKET_TEST_USER_EMAIL not set — see test header.",
   );
 
   test.beforeEach(async ({ page, baseURL }) => {
