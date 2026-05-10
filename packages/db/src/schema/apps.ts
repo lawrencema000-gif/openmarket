@@ -9,6 +9,7 @@ import {
   jsonb,
   pgEnum,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { developers } from "./developers";
 
@@ -113,6 +114,31 @@ export const appListings = pgTable("app_listings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/**
+ * Rollout state machine — independent of release.status. While a
+ * release is `published`, its rollout can be:
+ *   - "live"      — rolling out at the configured percentage (default
+ *                   100% means everyone gets it on update check)
+ *   - "paused"    — staying at the current percentage; no auto-ramp
+ *                   (we don't auto-ramp in v1, but this lets us add
+ *                   a scheduled-ramp cron later without a state
+ *                   machine change)
+ *   - "halted"    — distribution stopped; the update-check returns
+ *                   the previous stable release for non-cohort users
+ *                   AND for new install attempts even from in-cohort
+ *                   users. The halt is reversible (back to live).
+ *   - "completed" — terminal: release reached 100% and we won't ramp
+ *                   further. Equivalent to "live + 100%" for the
+ *                   update-check, but distinct so the dashboard can
+ *                   stop showing the rollout slider.
+ */
+export const rolloutStatusEnum = pgEnum("rollout_status", [
+  "live",
+  "paused",
+  "halted",
+  "completed",
+]);
+
 export const releases = pgTable(
   "releases",
   {
@@ -125,6 +151,7 @@ export const releases = pgTable(
     channel: releaseChannelEnum("channel").default("stable").notNull(),
     status: releaseStatusEnum("status").default("draft").notNull(),
     rolloutPercentage: integer("rollout_percentage").default(100),
+    rolloutStatus: rolloutStatusEnum("rollout_status").default("live").notNull(),
     releaseNotes: text("release_notes"),
     reviewedBy: uuid("reviewed_by").references(() => developers.id),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
@@ -135,6 +162,39 @@ export const releases = pgTable(
   (table) => [
     uniqueIndex("releases_app_version_idx").on(table.appId, table.versionCode),
   ]
+);
+
+/**
+ * Per-release rollout history. Every percentage change + status flip
+ * appends one row; the dashboard renders this as the rollout timeline.
+ *
+ * Why a separate table from `release_events`:
+ *   - release_events is freeform (any event with details JSON)
+ *   - this is structured + heavily queried (dashboard charts)
+ *
+ * Authored-by: developerId of the actor (or null when set by the
+ * scheduled-ramp cron in a future v3).
+ */
+export const releaseRollouts = pgTable(
+  "release_rollouts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    releaseId: uuid("release_id")
+      .references(() => releases.id, { onDelete: "cascade" })
+      .notNull(),
+    percentage: integer("percentage").notNull(),
+    status: rolloutStatusEnum("status").notNull(),
+    /** Reason for the change — populated on halts; optional on ramps. */
+    reason: text("reason"),
+    /** developerId of the actor; null when set by an automated ramp. */
+    actorId: uuid("actor_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("release_rollouts_release_idx").on(t.releaseId, t.createdAt),
+  ],
 );
 
 export const releaseArtifacts = pgTable("release_artifacts", {

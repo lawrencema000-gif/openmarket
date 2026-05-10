@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
+import { RolloutControls } from "@/components/rollout-controls";
 
 interface App {
   id: string;
@@ -21,6 +22,8 @@ interface Release {
   versionCode: number;
   channel: string;
   status: string;
+  rolloutPercentage?: number | null;
+  rolloutStatus?: "live" | "paused" | "halted" | "completed";
   createdAt: string;
 }
 
@@ -133,22 +136,48 @@ export default function AppDetailPage({
             {releases.map((release) => (
               <li
                 key={release.id}
-                className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center justify-between"
+                className="bg-white rounded-xl border border-gray-200 px-5 py-4"
               >
-                <div>
-                  <p className="font-medium text-sm text-gray-900">
-                    v{release.versionName}{" "}
-                    <span className="text-xs text-gray-400">
-                      (code {release.versionCode})
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5 capitalize">
-                    {release.channel} · {release.status}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-sm text-gray-900">
+                      v{release.versionName}{" "}
+                      <span className="text-xs text-gray-400">
+                        (code {release.versionCode})
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5 capitalize">
+                      {release.channel} · {release.status}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-400 shrink-0">
+                    {new Date(release.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <p className="text-xs text-gray-400">
-                  {new Date(release.createdAt).toLocaleDateString()}
-                </p>
+
+                <RolloutControls
+                  releaseId={release.id}
+                  initialPercentage={release.rolloutPercentage ?? 100}
+                  initialStatus={release.rolloutStatus ?? "live"}
+                  enabled={
+                    release.status === "published" ||
+                    release.status === "staged_rollout"
+                  }
+                  onUpdated={(next) => {
+                    setReleases((prev) =>
+                      prev.map((r) =>
+                        r.id === release.id
+                          ? {
+                              ...r,
+                              rolloutPercentage: next.percentage,
+                              rolloutStatus:
+                                next.status as Release["rolloutStatus"],
+                            }
+                          : r,
+                      ),
+                    );
+                  }}
+                />
               </li>
             ))}
           </ul>

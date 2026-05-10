@@ -9,6 +9,7 @@ import {
   releases,
   releaseArtifacts,
   releaseEvents,
+  releaseRollouts,
   developers,
   scanResults,
 } from "@openmarket/db/schema";
@@ -416,3 +417,151 @@ releasesRouter.delete("/releases/:id", requireAuth, async (c) => {
 
   return c.json({ success: true });
 });
+
+// ───────── Staged rollouts (P2-E + scrape C4) ─────────
+
+const rolloutPatchSchema = z.object({
+  /** Target percentage 1–100. Use halt for emergency stop. */
+  percentage: z.number().int().min(1).max(100).optional(),
+  /** State transitions. omit to leave the status alone. */
+  status: z.enum(["live", "paused", "halted", "completed"]).optional(),
+  reason: z.string().max(500).optional(),
+});
+
+/**
+ * Shared core for the dev-portal + CLI rollout endpoints. Handles the
+ * ownership check, validates the transition, applies the rollout
+ * change, and appends a `release_rollouts` row.
+ *
+ * Caller passes the developer + an optional source ("session" | "cli")
+ * for the audit metadata.
+ */
+async function applyRolloutChange(opts: {
+  releaseId: string;
+  developerId: string;
+  patch: { percentage?: number; status?: "live" | "paused" | "halted" | "completed"; reason?: string };
+}) {
+  const { releaseId, developerId, patch } = opts;
+
+  const release = await db.query.releases.findFirst({
+    where: eq(releases.id, releaseId),
+    with: { app: true },
+  });
+  if (!release) {
+    throw new HTTPException(404, { message: "Release not found" });
+  }
+  if ((release.app as { developerId: string }).developerId !== developerId) {
+    throw new HTTPException(403, {
+      message: "Release is not owned by this developer",
+    });
+  }
+
+  // Rollouts only make sense for published releases. Don't let a
+  // developer "pause" a draft (no-op + confusing).
+  if (release.status !== "published" && release.status !== "staged_rollout") {
+    throw new HTTPException(409, {
+      message: `Release status is "${release.status}" — only published / staged_rollout releases support rollout changes.`,
+    });
+  }
+
+  // halt is a one-way reversible flip; reason is required so we have
+  // a paper trail of WHY the rollout was killed.
+  if (patch.status === "halted" && !patch.reason) {
+    throw new HTTPException(400, {
+      message: "Halting a rollout requires a `reason` (will be visible in the rollout timeline).",
+    });
+  }
+
+  const nextPercentage =
+    patch.percentage ?? release.rolloutPercentage ?? 100;
+  const nextStatus = patch.status ?? release.rolloutStatus;
+
+  // 100% with status="live" is the same end-state as "completed" — fold
+  // the synonym so the dashboard doesn't show a stale "Resume rollout"
+  // button on a fully-rolled-out release.
+  const finalStatus =
+    nextStatus === "live" && nextPercentage >= 100 ? "completed" : nextStatus;
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(releases)
+      .set({
+        rolloutPercentage: nextPercentage,
+        rolloutStatus: finalStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(releases.id, releaseId));
+
+    await tx.insert(releaseRollouts).values({
+      releaseId,
+      percentage: nextPercentage,
+      status: finalStatus,
+      reason: patch.reason ?? null,
+      actorId: developerId,
+    });
+  });
+
+  return {
+    id: releaseId,
+    rolloutPercentage: nextPercentage,
+    rolloutStatus: finalStatus,
+  };
+}
+
+/**
+ * PATCH /releases/:id/rollout
+ *
+ * Dev-portal-session-authenticated rollout control. Body:
+ *   { percentage?, status?, reason? }
+ *
+ * Either field is optional — to ramp from 10 to 25, send
+ * `{ percentage: 25 }`. To halt mid-rollout, send
+ * `{ status: "halted", reason: "Crashes in v3.2" }`.
+ *
+ * The CLI variant on /api/cli/releases/:id/rollout has identical
+ * semantics; it lives on the cli router so token scope enforcement
+ * applies cleanly.
+ */
+releasesRouter.patch(
+  "/releases/:id/rollout",
+  requireAuth,
+  zValidator("json", rolloutPatchSchema),
+  async (c) => {
+    const releaseId = c.req.param("id") as string;
+    const user = c.get("user");
+    const patch = c.req.valid("json");
+
+    const developer = await db.query.developers.findFirst({
+      where: eq(developers.email, user.email),
+    });
+    if (!developer) {
+      throw new HTTPException(404, { message: "Developer not found" });
+    }
+
+    const result = await applyRolloutChange({
+      releaseId,
+      developerId: developer.id,
+      patch,
+    });
+    return c.json(result);
+  },
+);
+
+/**
+ * GET /releases/:id/rollouts
+ *
+ * Public read of the rollout timeline for a release. Used by the
+ * dev-portal release detail page to render the timeline.
+ */
+releasesRouter.get("/releases/:id/rollouts", async (c) => {
+  const releaseId = c.req.param("id") as string;
+  const items = await db
+    .select()
+    .from(releaseRollouts)
+    .where(eq(releaseRollouts.releaseId, releaseId))
+    .orderBy(desc(releaseRollouts.createdAt))
+    .limit(100);
+  return c.json({ items });
+});
+
+export { applyRolloutChange };

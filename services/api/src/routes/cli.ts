@@ -14,6 +14,7 @@ import {
   headObject,
 } from "../lib/storage";
 import { ingestQueue } from "../lib/queue";
+import { applyRolloutChange } from "./releases";
 import type { Variables } from "../lib/types";
 
 export const cliRouter = new Hono<{ Variables: Variables }>();
@@ -277,5 +278,48 @@ cliRouter.post(
       // for the band + findings outcome.
       pollUrl: `/api/releases/${releaseId}`,
     });
+  },
+);
+
+/**
+ * PATCH /api/cli/releases/:id/rollout
+ *
+ * CI-driven rollout control. Same semantics as
+ * /releases/:id/rollout (dev-portal) — different auth path.
+ *
+ * Common usage from a CI runner:
+ *   1. Pipeline kicks a new release at percentage=10
+ *   2. Synthetic monitoring observes for 30 min, asserts crash-free
+ *   3. Pipeline ramps to 50, then 100
+ *   4. If a SEV-1 fires anywhere in the chain, the same pipeline
+ *      hits this endpoint with { status: "halted", reason: "..." }
+ *
+ * The `halt` path is the load-bearing one — it's why scrape C4 made
+ * "halt-rollout-via-API" a top-5 priority gap. Without it, ops teams
+ * are stuck doing emergency rollouts via the dashboard at 3am.
+ */
+cliRouter.patch(
+  "/cli/releases/:id/rollout",
+  requireApiToken,
+  requireScope("releases:write"),
+  zValidator(
+    "json",
+    z.object({
+      percentage: z.number().int().min(1).max(100).optional(),
+      status: z.enum(["live", "paused", "halted", "completed"]).optional(),
+      reason: z.string().max(500).optional(),
+    }),
+  ),
+  async (c) => {
+    const releaseId = c.req.param("id") as string;
+    const body = c.req.valid("json");
+    const developer = c.get("developer") as { id: string };
+
+    const result = await applyRolloutChange({
+      releaseId,
+      developerId: developer.id,
+      patch: body,
+    });
+    return c.json(result);
   },
 );
