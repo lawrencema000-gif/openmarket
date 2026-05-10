@@ -15,6 +15,13 @@
       "when": 1778367353182,
       "tag": "0001_ordinary_eternals",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778380056254,
+      "tag": "0002_wide_roxanne_simpson",
+      "breakpoints": true
     }
   ]
 }

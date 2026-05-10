@@ -14,6 +14,7 @@ import { WishlistHeart } from "@/components/wishlist-heart";
 import { ReleaseNotes } from "@/components/release-notes";
 import { ReviewsSection } from "@/components/reviews-section";
 import { AntiFeaturesBlock } from "@/components/anti-features-block";
+import { SimilarAppsRail } from "@/components/similar-apps-rail";
 
 interface Developer {
   id: string;
@@ -538,6 +539,11 @@ export default async function AppDetailPage({
 
             {/* Reviews — full P1-G surface (histogram, sort, filter, helpful, report, write) */}
             <ReviewsSection appId={app.id} />
+
+            {/* Similar apps — content-based recommendations driven by
+                category + anti-feature overlap. Reproducible from the
+                app's own metadata (no opaque ML). */}
+            <SimilarAppsRail appId={app.id} />
           </div>
         </div>
 

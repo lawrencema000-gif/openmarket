@@ -26,6 +26,7 @@ import { categoriesRouter } from "./routes/categories";
 import { reviewsRouter } from "./routes/reviews";
 import { reportsRouter } from "./routes/reports";
 import { appealsRouter } from "./routes/appeals";
+import { chartsRouter } from "./routes/charts";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -80,6 +81,7 @@ app.route("/api", categoriesRouter);
 app.route("/api", reviewsRouter);
 app.route("/api", reportsRouter);
 app.route("/api", appealsRouter);
+app.route("/api", chartsRouter);
 app.route("/api", adminRouter);
 
 export default app;

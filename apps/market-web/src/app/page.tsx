@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { SearchForm } from "@/components/search-form";
+import { ChartRail } from "@/components/chart-rail";
 
 interface Category {
   id: string;
@@ -25,8 +26,35 @@ async function getFeaturedCategories(): Promise<Category[]> {
   }
 }
 
+interface ChartItem {
+  position: number;
+  deltaPosition: number | null;
+  appId: string;
+  packageName: string;
+  trustTier: string;
+  title: string;
+  shortDescription: string;
+  category: string;
+  iconUrl: string | null;
+}
+
+async function getChart(slug: string, window: string, limit: number): Promise<ChartItem[]> {
+  try {
+    const r = await apiFetch<{ items: ChartItem[] }>(
+      `/api/charts/${slug}?window=${window}&limit=${limit}`,
+    );
+    return r.items;
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const categories = await getFeaturedCategories();
+  const [categories, trending, topNew] = await Promise.all([
+    getFeaturedCategories(),
+    getChart("top-trending", "7d", 6),
+    getChart("top-new", "30d", 6),
+  ]);
 
   return (
     <div>
@@ -129,6 +157,29 @@ export default async function HomePage() {
               ))}
             </div>
           </section>
+        )}
+
+        {/* Top trending — formulaic ranking driven by install velocity
+            over the last 7 days. NOT editorial. The page heading
+            spells this out so users know the order is reproducible. */}
+        {trending.length > 0 && (
+          <ChartRail
+            title="Top trending this week"
+            subtitle="Ranked by install velocity over the last 7 days · refreshed hourly"
+            items={trending}
+            href="/charts/top-trending"
+          />
+        )}
+
+        {/* Top new — apps whose first stable release landed inside the
+            last 30 days. */}
+        {topNew.length > 0 && (
+          <ChartRail
+            title="New on OpenMarket"
+            subtitle="First stable release in the last 30 days"
+            items={topNew}
+            href="/charts/top-new"
+          />
         )}
 
         {/* Developer CTA — shown instead of placeholder grids */}
