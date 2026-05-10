@@ -501,3 +501,64 @@ adminRouter.patch(
     return c.json({ id: updated!.id, reviewFreeze: updated!.reviewFreeze });
   },
 );
+
+/**
+ * POST /admin/reviews/detect-bombs
+ *
+ * Scans every app for review-bomb signatures (>=25 reviews ≤2★ in
+ * the last 60min combined with a ≥1.0 drop in rolling average vs the
+ * prior 30 days). Auto-freezes any app that newly matches and
+ * records an admin_actions row per freeze for moderator review.
+ *
+ * Idempotent — safe to schedule every 5–10 minutes. Already-frozen
+ * apps that match are NOT re-recorded (we'd flood the audit log).
+ *
+ * Returns the verdicts so the admin dashboard can surface
+ * the offending apps alongside the count + drop signal.
+ */
+adminRouter.post("/admin/reviews/detect-bombs", requireAdmin, async (c) => {
+  const { runBombDetectionAndFreeze } = await import("../lib/review-moderation");
+  const frozen = await runBombDetectionAndFreeze();
+  for (const v of frozen) {
+    await recordAdminAction({
+      c,
+      action: "reviews.auto-freeze",
+      targetType: "app",
+      targetId: v.appId,
+      metadata: {
+        recentLowStarCount: v.recentLowStarCount,
+        recentAvg: Number(v.recentAvg.toFixed(2)),
+        baselineAvg: Number(v.baselineAvg.toFixed(2)),
+        drop: Number(v.drop.toFixed(2)),
+      },
+    });
+  }
+  return c.json({
+    success: true,
+    frozenCount: frozen.length,
+    frozen,
+  });
+});
+
+/**
+ * GET /admin/reviews/bomb-signals
+ *
+ * Read-only dashboard surface. Returns the same verdicts the
+ * detector uses, but doesn't flip anything. Used by the admin app's
+ * "Watch list" panel so moderators can see emerging signals before
+ * the auto-freeze threshold trips.
+ */
+adminRouter.get("/admin/reviews/bomb-signals", requireAdmin, async (c) => {
+  const { findReviewBombs, DEFAULT_BOMB_CONFIG } = await import(
+    "../lib/review-moderation"
+  );
+  // Surface anything with at least HALF the bomb threshold so the
+  // dashboard shows early-warning signals.
+  const watchConfig = {
+    ...DEFAULT_BOMB_CONFIG,
+    minLowStarCount: Math.floor(DEFAULT_BOMB_CONFIG.minLowStarCount / 2),
+    minAverageDrop: 0.5,
+  };
+  const verdicts = await findReviewBombs(watchConfig);
+  return c.json({ items: verdicts });
+});

@@ -17,6 +17,7 @@ import {
 import { requireAuth } from "../middleware/auth";
 import { rateLimit } from "../middleware/rate-limit";
 import { paginationSchema } from "@openmarket/contracts/common";
+import { evaluateReviewOnSubmit } from "../lib/review-moderation";
 import { enqueueEmail } from "../lib/email";
 import { auth } from "../lib/auth";
 import type { Variables } from "../lib/types";
@@ -43,6 +44,8 @@ const listQuerySchema = paginationSchema.extend({
     .enum(["true", "false"])
     .optional()
     .transform((v) => v === "true"),
+  /** Filter to reviews on a specific app version (versionCodeReviewed). */
+  version: z.coerce.number().int().positive().optional(),
 });
 
 const responseBodySchema = z.object({
@@ -90,7 +93,7 @@ reviewsRouter.get(
   zValidator("query", listQuerySchema),
   async (c) => {
     const appId = c.req.param("appId") as string;
-    const { page, limit, sort, rating, with_response } = c.req.valid("query");
+    const { page, limit, sort, rating, with_response, version } = c.req.valid("query");
     const offset = (page - 1) * limit;
 
     const app = await db.query.apps.findFirst({ where: eq(apps.id, appId) });
@@ -106,6 +109,9 @@ reviewsRouter.get(
       isNotNull(reviews.publishedAt),
       lte(reviews.publishedAt, sql`now()`),
       ...(rating !== undefined ? [eq(reviews.rating, rating)] : []),
+      ...(version !== undefined
+        ? [eq(reviews.versionCodeReviewed, version)]
+        : []),
     );
 
     const orderBy =
@@ -285,6 +291,19 @@ reviewsRouter.post(
       });
     }
 
+    // Synchronous spam pre-check. Verdicts:
+    //   - pass → write the row normally; promote-due will publish in 24h
+    //   - flag → write the row with isFlagged=true; never promoted,
+    //            sent straight to the moderator queue via reports
+    //            workflow + admin audit
+    const preCheck = await evaluateReviewOnSubmit({
+      appId,
+      userId: profile.id,
+      rating: body.rating,
+      title: body.title,
+      body: body.body,
+    });
+
     const [review] = await db
       .insert(reviews)
       .values({
@@ -294,10 +313,23 @@ reviewsRouter.post(
         title: body.title,
         body: body.body,
         versionCodeReviewed: libraryEntry.installedVersionCode ?? 0,
+        isFlagged: preCheck.verdict === "flag",
       })
       .returning();
 
-    return c.json(review, 201);
+    return c.json(
+      {
+        ...review,
+        // The client doesn't need to know the auto-mod reasons (those
+        // are moderator-only) but DOES need to know whether their
+        // review will go live so the dev-portal can show
+        // "Your review will be reviewed by a moderator" vs the
+        // standard "will go live within 24 hours" copy.
+        autoModeration:
+          preCheck.verdict === "flag" ? "pending_moderator" : "scheduled",
+      },
+      201,
+    );
   },
 );
 

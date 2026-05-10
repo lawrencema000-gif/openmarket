@@ -1,21 +1,31 @@
 import { PageHeader, Stat, StatusBadge, Card, CardHeader, CardTitle, CardContent } from "@openmarket/ui";
 import { API_URL } from "@/lib/api";
 
+interface BombSignal {
+  appId: string;
+  recentLowStarCount: number;
+  recentAvg: number;
+  baselineAvg: number;
+  drop: number;
+}
+
 async function getDashboardData() {
   try {
-    const [queueRes, reportsRes, auditRes] = await Promise.all([
+    const [queueRes, reportsRes, auditRes, bombRes] = await Promise.all([
       fetch(`${API_URL}/api/admin/risk-queue`, { credentials: "include", cache: "no-store" }),
       fetch(`${API_URL}/api/reports`, { credentials: "include", cache: "no-store" }),
       fetch(`${API_URL}/api/admin/audit-log`, { credentials: "include", cache: "no-store" }),
+      fetch(`${API_URL}/api/admin/reviews/bomb-signals`, { credentials: "include", cache: "no-store" }),
     ]);
 
     const queue = queueRes.ok ? await queueRes.json() : [];
     const reports = reportsRes.ok ? await reportsRes.json() : [];
     const audit = auditRes.ok ? await auditRes.json() : [];
+    const bombSignals = bombRes.ok ? await bombRes.json() : { items: [] };
 
-    return { queue, reports, audit };
+    return { queue, reports, audit, bombSignals };
   } catch {
-    return { queue: [], reports: [], audit: [] };
+    return { queue: [], reports: [], audit: [], bombSignals: { items: [] } };
   }
 }
 
@@ -46,11 +56,12 @@ interface AuditEntry {
 }
 
 export default async function DashboardPage() {
-  const { queue, reports, audit } = await getDashboardData();
+  const { queue, reports, audit, bombSignals } = await getDashboardData();
 
   const queueList: ReleaseEntry[] = Array.isArray(queue) ? queue : (queue?.data ?? []);
   const reportsList: { status?: string }[] = Array.isArray(reports) ? reports : (reports?.data ?? []);
   const auditList: AuditEntry[] = Array.isArray(audit) ? audit : (audit?.data ?? []);
+  const bombList: BombSignal[] = bombSignals?.items ?? [];
 
   const queueCount = queueList.length;
   const openReports = reportsList.filter((r) => r.status === "open").length;
@@ -110,6 +121,52 @@ export default async function DashboardPage() {
           }
         />
       </div>
+
+      {/* Review-bomb watch list — only shown when something is on it.
+          Early-warning signals (half the auto-freeze threshold + ≥0.5
+          average drop). The auto-freezer flips at the full threshold;
+          this is the "look at me before I trip" panel. */}
+      {bombList.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Review-bomb watch list
+              <span className="ml-2 text-xs font-normal text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                {bombList.length}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-y divide-gray-50">
+              {bombList.map((b) => (
+                <li
+                  key={b.appId}
+                  className="px-6 py-3.5 flex items-center justify-between"
+                >
+                  <div>
+                    <p className="font-mono text-xs text-gray-700">
+                      app · {b.appId.slice(0, 8)}…
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {b.recentLowStarCount} low-star reviews in the last hour
+                      · avg {b.recentAvg.toFixed(2)} (was {b.baselineAvg.toFixed(2)})
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs font-mono px-2 py-0.5 rounded-full ${
+                      b.drop >= 1.5
+                        ? "bg-rose-100 text-rose-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    ▼ {b.drop.toFixed(2)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* High Priority */}

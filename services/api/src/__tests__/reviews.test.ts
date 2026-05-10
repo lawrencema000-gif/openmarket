@@ -113,6 +113,14 @@ describe("reviewsRouter", () => {
       queryMocks.libraryEntries.findFirst.mockResolvedValue(LIB_ENTRY);
       queryMocks.reviews.findFirst.mockResolvedValue(undefined);
 
+      // The pre-check's same-user duplicate query: returns empty so the
+      // verdict is "pass" (no duplicate body).
+      dbMock.select.mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([]),
+      } as never);
+
       const insertChain = {
         values: vi.fn().mockReturnThis(),
         returning: vi
@@ -124,6 +132,7 @@ describe("reviewsRouter", () => {
               userId: "profile-1",
               rating: 4,
               versionCodeReviewed: 10,
+              isFlagged: false,
             },
           ]),
       };
@@ -137,7 +146,51 @@ describe("reviewsRouter", () => {
       expect(res.status).toBe(201);
       // Confirms the gate uses the installed version, not a client-supplied one.
       expect(insertChain.values).toHaveBeenCalledWith(
-        expect.objectContaining({ versionCodeReviewed: 10 }),
+        expect.objectContaining({ versionCodeReviewed: 10, isFlagged: false }),
+      );
+      const body = (await res.json()) as { autoModeration: string };
+      expect(body.autoModeration).toBe("scheduled");
+    });
+
+    it("flags a low-rating short-body review and reports autoModeration=pending_moderator", async () => {
+      queryMocks.apps.findFirst.mockResolvedValue(APP);
+      queryMocks.users.findFirst.mockResolvedValue(PROFILE);
+      queryMocks.libraryEntries.findFirst.mockResolvedValue(LIB_ENTRY);
+      queryMocks.reviews.findFirst.mockResolvedValue(undefined);
+
+      // The duplicate-body select might or might not be called (a "bad"
+      // 5-char body is too short — but evaluateReviewOnSubmit still runs
+      // the dup check because body.length > 0). Return empty.
+      dbMock.select.mockReturnValueOnce({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([]),
+      } as never);
+
+      const insertChain = {
+        values: vi.fn().mockReturnThis(),
+        returning: vi.fn().mockResolvedValue([
+          {
+            id: "review-2",
+            appId: "app-1",
+            userId: "profile-1",
+            rating: 1,
+            isFlagged: true,
+          },
+        ]),
+      };
+      dbMock.insert.mockReturnValue(insertChain);
+
+      const res = await app.request("/api/apps/app-1/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: 1, body: "bad" }),
+      });
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as { autoModeration: string };
+      expect(body.autoModeration).toBe("pending_moderator");
+      expect(insertChain.values).toHaveBeenCalledWith(
+        expect.objectContaining({ isFlagged: true }),
       );
     });
 
