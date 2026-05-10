@@ -22,6 +22,13 @@
       "when": 1778380056254,
       "tag": "0002_wide_roxanne_simpson",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778380415204,
+      "tag": "0003_bitter_shape",
+      "breakpoints": true
     }
   ]
 }

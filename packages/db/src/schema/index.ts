@@ -6,4 +6,5 @@ export * from "./users";
 export * from "./moderation";
 export * from "./search";
 export * from "./charts";
+export * from "./api-tokens";
 export * from "./relations";
