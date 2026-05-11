@@ -1,5 +1,5 @@
-import { PageHeader, StatusBadge, EmptyState } from "@openmarket/ui";
-import { ReportResolveDrawer } from "./ReportResolveDrawer";
+import { PageHeader, EmptyState } from "@openmarket/ui";
+import { ReportsTable } from "./ReportsTable";
 import { API_URL } from "@/lib/api";
 
 type ReportStatus = "open" | "investigating" | "resolved" | "dismissed";
@@ -24,10 +24,16 @@ interface ReportsResponse {
   counts: Record<ReportStatus, number>;
 }
 
-async function getReports(status: string | undefined): Promise<ReportsResponse | null> {
+async function getReports(opts: {
+  status: string | undefined;
+  type: string | undefined;
+  targetType: string | undefined;
+}): Promise<ReportsResponse | null> {
   try {
     const qs = new URLSearchParams();
-    if (status && status !== "all") qs.set("status", status);
+    if (opts.status && opts.status !== "all") qs.set("status", opts.status);
+    if (opts.type) qs.set("type", opts.type);
+    if (opts.targetType) qs.set("targetType", opts.targetType);
     qs.set("limit", "50");
     const res = await fetch(`${API_URL}/api/admin/reports?${qs.toString()}`, {
       credentials: "include",
@@ -40,6 +46,44 @@ async function getReports(status: string | undefined): Promise<ReportsResponse |
   }
 }
 
+/**
+ * Saved-filter presets. URL-driven (no DB persistence in v1) — each
+ * preset is just a baked-in combination of (?status, ?type,
+ * ?targetType) the moderator can click instead of typing.
+ *
+ * Adding new presets is a code change (intentional — saved-filter
+ * literacy is the moderator workflow, not user-customizable
+ * per-account). When per-account customization lands in P3, this
+ * array becomes a default + per-moderator overrides.
+ */
+const SAVED_FILTERS: Array<{
+  slug: string;
+  label: string;
+  status?: string;
+  type?: string;
+  targetType?: string;
+}> = [
+  {
+    slug: "open-malware",
+    label: "Open malware",
+    status: "open",
+    type: "malware",
+  },
+  {
+    slug: "open-app-reports",
+    label: "Open app reports",
+    status: "open",
+    targetType: "app",
+  },
+  {
+    slug: "open-review-reports",
+    label: "Open review reports",
+    status: "open",
+    targetType: "review",
+  },
+  { slug: "investigating", label: "In investigation", status: "investigating" },
+];
+
 const STATUS_TABS: { value: ReportStatus | "all"; label: string }[] = [
   { value: "all", label: "All" },
   { value: "open", label: "Open" },
@@ -48,25 +92,25 @@ const STATUS_TABS: { value: ReportStatus | "all"; label: string }[] = [
   { value: "dismissed", label: "Dismissed" },
 ];
 
-function typeBadgeClass(type?: string): string {
-  switch (type?.toLowerCase()) {
-    case "malware": return "bg-red-100 text-red-700";
-    case "scam": return "bg-orange-100 text-orange-700";
-    case "impersonation": return "bg-fuchsia-100 text-fuchsia-700";
-    case "illegal": return "bg-rose-100 text-rose-700";
-    case "spam": return "bg-amber-100 text-amber-700";
-    case "broken": return "bg-blue-100 text-blue-700";
-    default: return "bg-gray-100 text-gray-600";
-  }
-}
-
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    type?: string;
+    targetType?: string;
+  }>;
 }) {
-  const { status: filterStatus } = await searchParams;
-  const data = await getReports(filterStatus);
+  const {
+    status: filterStatus,
+    type: filterType,
+    targetType: filterTargetType,
+  } = await searchParams;
+  const data = await getReports({
+    status: filterStatus,
+    type: filterType,
+    targetType: filterTargetType,
+  });
 
   if (!data) {
     return (
@@ -82,6 +126,12 @@ export default async function ReportsPage({
 
   const total = Object.values(data.counts).reduce((a, b) => a + b, 0);
   const counts: Record<string, number> = { all: total, ...data.counts };
+  const activePreset = SAVED_FILTERS.find(
+    (p) =>
+      (p.status ?? "") === (filterStatus ?? "") &&
+      (p.type ?? "") === (filterType ?? "") &&
+      (p.targetType ?? "") === (filterTargetType ?? ""),
+  );
 
   return (
     <div className="space-y-6">
@@ -90,19 +140,50 @@ export default async function ReportsPage({
         description={`${total} total · ${data.counts.open} open · ${data.counts.investigating} investigating`}
       />
 
+      {/* Status tabs */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
         {STATUS_TABS.map((tab) => {
-          const isActive = (!filterStatus && tab.value === "all") || filterStatus === tab.value;
+          const isActive =
+            (!filterStatus && tab.value === "all") || filterStatus === tab.value;
           return (
             <a
               key={tab.value}
               href={`/reports?status=${tab.value}`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                isActive ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                isActive
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               {tab.label}
               <span className="ml-1.5 opacity-60">{counts[tab.value] ?? 0}</span>
+            </a>
+          );
+        })}
+      </div>
+
+      {/* Saved filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+          Saved
+        </span>
+        {SAVED_FILTERS.map((preset) => {
+          const isActive = activePreset?.slug === preset.slug;
+          const qs = new URLSearchParams();
+          if (preset.status) qs.set("status", preset.status);
+          if (preset.type) qs.set("type", preset.type);
+          if (preset.targetType) qs.set("targetType", preset.targetType);
+          return (
+            <a
+              key={preset.slug}
+              href={`/reports?${qs.toString()}`}
+              className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
+                isActive
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-blue-200 hover:text-blue-700"
+              }`}
+            >
+              {preset.label}
             </a>
           );
         })}
@@ -114,63 +195,9 @@ export default async function ReportsPage({
           description="No reports match this filter."
         />
       ) : (
-        <div className="space-y-3">
-          {data.items.map((report) => {
-            const isResolved = report.status === "resolved" || report.status === "dismissed";
-            return (
-              <div
-                key={report.id}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:border-gray-300 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <StatusBadge status={report.status} />
-                      {report.reportType && (
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeBadgeClass(
-                            report.reportType,
-                          )}`}
-                        >
-                          {report.reportType}
-                        </span>
-                      )}
-                      {report.targetType && (
-                        <span className="text-xs text-gray-500">
-                          Target:{" "}
-                          <span className="font-medium text-gray-700">
-                            {report.targetType}
-                            {report.targetId ? ` · ${report.targetId.slice(0, 8)}` : ""}
-                          </span>
-                        </span>
-                      )}
-                    </div>
-                    {report.description && (
-                      <p className="text-sm text-gray-700 leading-relaxed mb-2 whitespace-pre-line">
-                        {report.description}
-                      </p>
-                    )}
-                    {report.resolutionNotes && (
-                      <p className="text-xs text-gray-500 mt-1 italic">
-                        Resolution: {report.resolutionNotes}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400">
-                      {report.createdAt
-                        ? new Date(report.createdAt).toLocaleString()
-                        : "—"}
-                      {report.resolvedAt && (
-                        <> &middot; resolved {new Date(report.resolvedAt).toLocaleString()}</>
-                      )}
-                    </p>
-                  </div>
-                  <ReportResolveDrawer reportId={report.id} disabled={isResolved} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <ReportsTable items={data.items} />
       )}
     </div>
   );
 }
+
