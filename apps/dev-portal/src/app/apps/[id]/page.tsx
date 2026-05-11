@@ -111,14 +111,22 @@ export default function AppDetailPage({
 
       {/* Releases */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <h2 className="text-sm font-semibold text-gray-700">Releases</h2>
-          <Link
-            href={`/apps/${id}/releases/new`}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg px-3 py-2 transition-colors"
-          >
-            Create Release
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/apps/${id}/statistics`}
+              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+            >
+              View statistics
+            </Link>
+            <Link
+              href={`/apps/${id}/releases/new`}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+            >
+              Create Release
+            </Link>
+          </div>
         </div>
 
         {releases.length === 0 ? (

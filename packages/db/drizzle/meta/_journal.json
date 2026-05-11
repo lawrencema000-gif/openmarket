@@ -36,6 +36,13 @@
       "when": 1778391156170,
       "tag": "0004_natural_marvel_zombies",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778513634816,
+      "tag": "0005_careful_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }
