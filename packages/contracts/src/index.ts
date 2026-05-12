@@ -11,3 +11,4 @@ export * from "./email";
 export * from "./anti-features";
 export * from "./data-safety";
 export * from "./i18n";
+export * from "./crashes";

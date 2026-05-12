@@ -12,4 +12,5 @@ export * from "./dmca";
 export * from "./team";
 export * from "./data-safety";
 export * from "./beta";
+export * from "./crashes";
 export * from "./relations";
