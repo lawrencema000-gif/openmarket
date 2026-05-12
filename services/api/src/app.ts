@@ -31,6 +31,7 @@ import { apiTokensRouter } from "./routes/api-tokens";
 import { cliRouter } from "./routes/cli";
 import { statisticsRouter } from "./routes/statistics";
 import { dmcaRouter } from "./routes/dmca";
+import { teamRouter } from "./routes/team";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -90,6 +91,7 @@ app.route("/api", apiTokensRouter);
 app.route("/api", cliRouter);
 app.route("/api", statisticsRouter);
 app.route("/api", dmcaRouter);
+app.route("/api", teamRouter);
 app.route("/api", adminRouter);
 
 export default app;

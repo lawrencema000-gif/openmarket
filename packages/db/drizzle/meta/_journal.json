@@ -50,6 +50,13 @@
       "when": 1778549024645,
       "tag": "0006_steep_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778549680152,
+      "tag": "0007_blushing_nextwave",
+      "breakpoints": true
     }
   ]
 }

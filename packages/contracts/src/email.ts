@@ -96,6 +96,18 @@ export interface DmcaTakedownNoticeProps {
   counterNoticeUrl: string;
 }
 
+/**
+ * Team invite — sent when an owner/admin invites a teammate.
+ */
+export interface TeamInviteProps {
+  inviterName: string;
+  developerName: string;
+  role: "owner" | "admin" | "developer" | "viewer";
+  acceptUrl: string;
+  /** Friendly expiry hint like "in 7 days". */
+  expiresIn: string;
+}
+
 export type EmailTemplateMap = {
   welcome: WelcomeEmailProps;
   "verify-email": VerifyEmailProps;
@@ -108,6 +120,7 @@ export type EmailTemplateMap = {
   "dmca-notice-received": DmcaNoticeReceivedProps;
   "dmca-notice-rejected": DmcaNoticeRejectedProps;
   "dmca-takedown-notice": DmcaTakedownNoticeProps;
+  "team-invite": TeamInviteProps;
 };
 
 export type EmailTemplate = keyof EmailTemplateMap;

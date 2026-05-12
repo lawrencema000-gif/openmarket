@@ -23,6 +23,7 @@ import { ReviewResponse } from "./review-response.js";
 import { DmcaNoticeReceived } from "./dmca-notice-received.js";
 import { DmcaNoticeRejected } from "./dmca-notice-rejected.js";
 import { DmcaTakedownNotice } from "./dmca-takedown-notice.js";
+import { TeamInvite } from "./team-invite.js";
 
 export type { EmailTemplate, EmailTemplateMap };
 
@@ -43,6 +44,7 @@ export const TEMPLATES: { [K in EmailTemplate]: TemplateModule<EmailTemplateMap[
   "dmca-notice-received": DmcaNoticeReceived,
   "dmca-notice-rejected": DmcaNoticeRejected,
   "dmca-takedown-notice": DmcaTakedownNotice,
+  "team-invite": TeamInvite,
 };
 
 export function getTemplate<K extends EmailTemplate>(
