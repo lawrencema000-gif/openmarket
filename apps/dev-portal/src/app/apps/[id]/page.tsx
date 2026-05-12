@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import { RolloutControls } from "@/components/rollout-controls";
+import { BetaToggle } from "@/components/beta-toggle";
 
 interface App {
   id: string;
@@ -14,6 +15,13 @@ interface App {
   trustTier: string;
   iconUrl?: string;
   websiteUrl?: string;
+  betaTrackEnabled?: boolean;
+}
+
+interface BetaInfo {
+  appId: string;
+  enabled: boolean;
+  testerCount: number;
 }
 
 interface Release {
@@ -35,18 +43,21 @@ export default function AppDetailPage({
   const { id } = use(params);
   const [app, setApp] = useState<App | null>(null);
   const [releases, setReleases] = useState<Release[]>([]);
+  const [beta, setBeta] = useState<BetaInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [appData, releaseData] = await Promise.all([
+        const [appData, releaseData, betaData] = await Promise.all([
           api.get<App>(`/api/apps/${id}`),
           api.get<Release[]>(`/api/apps/${id}/releases`).catch(() => []),
+          api.get<BetaInfo>(`/api/apps/${id}/beta`).catch(() => null),
         ]);
         setApp(appData);
         setReleases(releaseData);
+        setBeta(betaData);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Failed to load app");
       } finally {
@@ -108,6 +119,12 @@ export default function AppDetailPage({
           </a>
         )}
       </div>
+
+      <BetaToggle
+        appId={id}
+        initialEnabled={beta?.enabled ?? app.betaTrackEnabled ?? false}
+        testerCount={beta?.testerCount}
+      />
 
       {/* Releases */}
       <div className="space-y-3">

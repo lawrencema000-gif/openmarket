@@ -86,6 +86,17 @@ export const apps = pgTable("apps", {
    * reproducible-builds verifier worker (Phase 2).
    */
   antiFeatures: text("anti_features").array().default([]).notNull(),
+  /**
+   * Beta-tester program (P2-D). When true, users can opt into a
+   * beta-channel cohort via `POST /apps/:id/beta/join`; beta-channel
+   * releases become visible to those users on the storefront.
+   *
+   * When false, the storefront hides the "Join beta" CTA entirely
+   * even if the developer happens to have a published beta release.
+   * Useful for devs who want to publish beta builds privately (via
+   * API token + canary channel) before opening to public testers.
+   */
+  betaTrackEnabled: boolean("beta_track_enabled").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

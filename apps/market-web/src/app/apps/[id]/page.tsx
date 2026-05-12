@@ -16,6 +16,7 @@ import { ReviewsSection } from "@/components/reviews-section";
 import { AntiFeaturesBlock } from "@/components/anti-features-block";
 import { SimilarAppsRail } from "@/components/similar-apps-rail";
 import { DataSafetyBlock } from "@/components/data-safety-block";
+import { BetaJoinButton } from "@/components/beta-join-button";
 
 interface Developer {
   id: string;
@@ -352,6 +353,10 @@ export default async function AppDetailPage({
               internally. Pairs with anti-features as the two trust
               surfaces above the install button. */}
           <DataSafetyBlock appId={app.id} />
+
+          {/* Beta program join CTA. Renders nothing when the developer
+              hasn't enabled the program or there's no beta release yet. */}
+          <BetaJoinButton appId={app.id} />
 
           {/* Download action bar */}
           <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
