@@ -17,6 +17,7 @@ import { AntiFeaturesBlock } from "@/components/anti-features-block";
 import { SimilarAppsRail } from "@/components/similar-apps-rail";
 import { DataSafetyBlock } from "@/components/data-safety-block";
 import { BetaJoinButton } from "@/components/beta-join-button";
+import { LocalePicker } from "@/components/locale-picker";
 
 interface Developer {
   id: string;
@@ -70,6 +71,13 @@ interface AppDetail {
   compatibility?: { requiresAndroid: string; architectures: string[] } | null;
   recentReleases?: ReleaseSummary[];
   updatedAt?: string;
+  // P2-H localization
+  locale?: {
+    requested: string | null;
+    resolved: string;
+    defaultLocale: string;
+    available: string[];
+  };
 }
 
 
@@ -113,9 +121,10 @@ function flattenApp(raw: ApiAppResponse): AppDetail {
   };
 }
 
-async function getApp(id: string): Promise<AppFetchResult> {
+async function getApp(id: string, locale?: string): Promise<AppFetchResult> {
   try {
-    const raw = await apiFetch<ApiAppResponse>(`/api/apps/${id}`);
+    const query = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+    const raw = await apiFetch<ApiAppResponse>(`/api/apps/${id}${query}`);
     return { kind: "ok", app: flattenApp(raw) };
   } catch (err) {
     if (err instanceof ApiError && err.isUnreachable) {
@@ -203,11 +212,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function AppDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  const appResult = await getApp(id);
+  const search = (await searchParams) ?? {};
+  const locale = typeof search.locale === "string" ? search.locale : undefined;
+  const appResult = await getApp(id, locale);
 
   if (appResult.kind === "not-found") {
     notFound();
@@ -274,17 +287,26 @@ export default async function AppDetailPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-8">
-        <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
-        <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-        </svg>
-        <Link href="/search" className="hover:text-gray-900 transition-colors">Browse</Link>
-        <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-        </svg>
-        <span className="text-gray-900 font-medium truncate max-w-[200px]">{app.name}</span>
-      </nav>
+      <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
+        <nav className="flex items-center gap-1.5 text-sm text-gray-500">
+          <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
+          <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+          <Link href="/search" className="hover:text-gray-900 transition-colors">Browse</Link>
+          <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+          <span className="text-gray-900 font-medium truncate max-w-[200px]">{app.name}</span>
+        </nav>
+        {app.locale && app.locale.available.length > 0 && (
+          <LocalePicker
+            defaultLocale={app.locale.defaultLocale}
+            resolved={app.locale.resolved}
+            available={app.locale.available}
+          />
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
         {/* Main content */}

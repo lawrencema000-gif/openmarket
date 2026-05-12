@@ -34,6 +34,7 @@ import { dmcaRouter } from "./routes/dmca";
 import { teamRouter } from "./routes/team";
 import { dataSafetyRouter } from "./routes/data-safety";
 import { betaRouter } from "./routes/beta";
+import { translationsRouter } from "./routes/translations";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -96,6 +97,7 @@ app.route("/api", dmcaRouter);
 app.route("/api", teamRouter);
 app.route("/api", dataSafetyRouter);
 app.route("/api", betaRouter);
+app.route("/api", translationsRouter);
 app.route("/api", adminRouter);
 
 export default app;

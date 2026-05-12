@@ -7,11 +7,16 @@ import { db } from "../lib/db";
 import {
   apps,
   appListings,
+  appListingTranslations,
   artifactMetadata,
   developers,
   releaseArtifacts,
   releases,
 } from "@openmarket/db/schema";
+import {
+  parseAcceptLanguage,
+  pickBestTranslationLocale,
+} from "@openmarket/contracts/i18n";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
 import { recordAdminAction } from "../lib/audit";
@@ -276,10 +281,60 @@ appsRouter.get("/apps/:id", async (c) => {
   // Resolve currentListing convenience: the listing referenced by
   // app.currentListingId, or the most recent listing if currentListingId
   // isn't set yet.
-  const currentListing =
+  const baselineListing =
     app.listings?.find((l) => l.id === app.currentListingId) ??
     app.listings?.[app.listings.length - 1] ??
     null;
+
+  // Locale resolution (P2-H). Order of preference:
+  //   1. explicit `?locale=` query
+  //   2. Accept-Language header (q-sorted)
+  // We pull the translation set once and consult pickBestTranslationLocale
+  // for both inputs — the first that resolves wins.
+  const explicitLocale = c.req.query("locale");
+  const acceptLang = parseAcceptLanguage(c.req.header("accept-language"));
+
+  let translation: typeof appListingTranslations.$inferSelect | null = null;
+  let resolvedLocale: string | null = null;
+  const availableTranslations = baselineListing
+    ? await db
+        .select()
+        .from(appListingTranslations)
+        .where(eq(appListingTranslations.appId, id))
+    : [];
+  const availableLocales = availableTranslations.map((t) => t.locale);
+
+  const candidates = [
+    ...(explicitLocale ? [explicitLocale] : []),
+    ...acceptLang,
+  ];
+  for (const candidate of candidates) {
+    const pick = pickBestTranslationLocale(
+      candidate,
+      app.defaultLocale,
+      availableLocales,
+    );
+    if (pick) {
+      translation = availableTranslations.find((t) => t.locale === pick) ?? null;
+      resolvedLocale = pick;
+      break;
+    }
+  }
+
+  // Overlay translation fields onto the baseline. Null/undefined fields
+  // fall through to baseline values.
+  const currentListing = baselineListing
+    ? {
+        ...baselineListing,
+        title: translation?.title ?? baselineListing.title,
+        shortDescription:
+          translation?.shortDescription ?? baselineListing.shortDescription,
+        fullDescription:
+          translation?.fullDescription ?? baselineListing.fullDescription,
+        screenshots:
+          translation?.screenshots ?? baselineListing.screenshots,
+      }
+    : null;
 
   return c.json({
     ...app,
@@ -288,6 +343,14 @@ appsRouter.get("/apps/:id", async (c) => {
     latestArtifact,
     compatibility,
     recentReleases,
+    // Surface localization metadata so storefront language pickers
+    // can render available options + the resolved choice.
+    locale: {
+      requested: explicitLocale ?? acceptLang[0] ?? null,
+      resolved: resolvedLocale ?? app.defaultLocale,
+      defaultLocale: app.defaultLocale,
+      available: availableLocales,
+    },
   });
 });
 

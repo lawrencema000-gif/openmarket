@@ -3,6 +3,7 @@ import { developers, developerIdentities, developerVerificationEvidence, signing
 import {
   apps,
   appListings,
+  appListingTranslations,
   releases,
   releaseArtifacts,
   artifactMetadata,
@@ -50,6 +51,7 @@ export const appsRelations = relations(apps, ({ one, many }) => ({
     references: [appListings.id],
   }),
   listings: many(appListings),
+  translations: many(appListingTranslations),
   releases: many(releases),
   reviews: many(reviews),
   installEvents: many(installEvents),
@@ -62,6 +64,16 @@ export const appListingsRelations = relations(appListings, ({ one }) => ({
     references: [apps.id],
   }),
 }));
+
+export const appListingTranslationsRelations = relations(
+  appListingTranslations,
+  ({ one }) => ({
+    app: one(apps, {
+      fields: [appListingTranslations.appId],
+      references: [apps.id],
+    }),
+  }),
+);
 
 export const releasesRelations = relations(releases, ({ one, many }) => ({
   app: one(apps, {

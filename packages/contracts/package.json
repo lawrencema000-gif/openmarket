@@ -16,6 +16,7 @@
     "./moderation": "./src/moderation.ts",
     "./anti-features": "./src/anti-features.ts",
     "./data-safety": "./src/data-safety.ts",
+    "./i18n": "./src/i18n.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

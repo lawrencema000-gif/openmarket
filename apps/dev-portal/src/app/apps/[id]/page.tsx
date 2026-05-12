@@ -144,6 +144,12 @@ export default function AppDetailPage({
               Data safety
             </Link>
             <Link
+              href={`/apps/${id}/translations`}
+              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+            >
+              Translations
+            </Link>
+            <Link
               href={`/apps/${id}/releases/new`}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >

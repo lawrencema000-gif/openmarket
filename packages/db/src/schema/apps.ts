@@ -97,9 +97,56 @@ export const apps = pgTable("apps", {
    * API token + canary channel) before opening to public testers.
    */
   betaTrackEnabled: boolean("beta_track_enabled").default(false).notNull(),
+  /**
+   * Default locale (BCP 47) for the canonical `app_listings` row.
+   * Per-locale overrides live in `app_listing_translations`; missing
+   * translations fall back to this baseline. We store on the app
+   * itself (not the listing) so the value survives currentListing
+   * pointer churn.
+   */
+  defaultLocale: text("default_locale").default("en").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+/**
+ * Per-locale overrides for an app's storefront listing (P2-H).
+ *
+ * One row per (appId, locale). Each field is independently nullable —
+ * a partial translation (e.g. just the title) still works; missing
+ * fields fall through to the default-locale baseline stored in
+ * `app_listings`. We do NOT translate `category` or any taxonomy/
+ * boolean flag — only the user-facing free-text + screenshots.
+ *
+ * Locale codes are stored normalized lowercase ("en", "en-us",
+ * "pt-br"). The API normalizes on read + write.
+ *
+ * Resolution order for the storefront GET:
+ *   1. Exact locale match ("pt-br")
+ *   2. Language-only match ("pt") — when client asked "pt-br" but
+ *      only generic "pt" exists, or vice versa
+ *   3. Default-locale baseline from app_listings
+ */
+export const appListingTranslations = pgTable(
+  "app_listing_translations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appId: uuid("app_id")
+      .references(() => apps.id, { onDelete: "cascade" })
+      .notNull(),
+    locale: text("locale").notNull(),
+    title: text("title"),
+    shortDescription: text("short_description"),
+    fullDescription: text("full_description"),
+    /** When provided, overrides default-locale screenshots wholesale. */
+    screenshots: text("screenshots").array(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("app_listing_translations_app_locale_idx").on(t.appId, t.locale),
+  ],
+);
 
 export const appListings = pgTable("app_listings", {
   id: uuid("id").primaryKey().defaultRandom(),

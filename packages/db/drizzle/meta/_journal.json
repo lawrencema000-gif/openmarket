@@ -71,6 +71,13 @@
       "when": 1778553593305,
       "tag": "0009_spotty_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778603439801,
+      "tag": "0010_narrow_micromacro",
+      "breakpoints": true
     }
   ]
 }
