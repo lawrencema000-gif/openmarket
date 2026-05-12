@@ -20,6 +20,9 @@ import { ReleaseRejected } from "./release-rejected.js";
 import { ReportResolved } from "./report-resolved.js";
 import { DeveloperTakedown } from "./developer-takedown.js";
 import { ReviewResponse } from "./review-response.js";
+import { DmcaNoticeReceived } from "./dmca-notice-received.js";
+import { DmcaNoticeRejected } from "./dmca-notice-rejected.js";
+import { DmcaTakedownNotice } from "./dmca-takedown-notice.js";
 
 export type { EmailTemplate, EmailTemplateMap };
 
@@ -37,6 +40,9 @@ export const TEMPLATES: { [K in EmailTemplate]: TemplateModule<EmailTemplateMap[
   "report-resolved": ReportResolved,
   "developer-takedown": DeveloperTakedown,
   "review-response": ReviewResponse,
+  "dmca-notice-received": DmcaNoticeReceived,
+  "dmca-notice-rejected": DmcaNoticeRejected,
+  "dmca-takedown-notice": DmcaTakedownNotice,
 };
 
 export function getTemplate<K extends EmailTemplate>(

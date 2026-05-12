@@ -71,6 +71,31 @@ export interface ReviewResponseProps {
   reviewUrl: string;
 }
 
+/**
+ * DMCA emails (P2-L). Three transactional templates:
+ *   - dmca-notice-received: acknowledge to the claimant
+ *   - dmca-notice-rejected: notice did not satisfy 17 USC 512(c)(3)
+ *   - dmca-takedown-notice: the developer's notification (cc'd
+ *     copyrighted-work + counter-notice URL + their rights under
+ *     17 USC 512(g))
+ */
+export interface DmcaNoticeReceivedProps {
+  noticeNumber: string;
+  claimantName: string;
+}
+
+export interface DmcaNoticeRejectedProps {
+  noticeNumber: string;
+  reason: string;
+}
+
+export interface DmcaTakedownNoticeProps {
+  noticeNumber: string;
+  appName: string;
+  copyrightedWork: string;
+  counterNoticeUrl: string;
+}
+
 export type EmailTemplateMap = {
   welcome: WelcomeEmailProps;
   "verify-email": VerifyEmailProps;
@@ -80,6 +105,9 @@ export type EmailTemplateMap = {
   "report-resolved": ReportResolvedProps;
   "developer-takedown": DeveloperTakedownProps;
   "review-response": ReviewResponseProps;
+  "dmca-notice-received": DmcaNoticeReceivedProps;
+  "dmca-notice-rejected": DmcaNoticeRejectedProps;
+  "dmca-takedown-notice": DmcaTakedownNoticeProps;
 };
 
 export type EmailTemplate = keyof EmailTemplateMap;

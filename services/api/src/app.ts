@@ -30,6 +30,7 @@ import { chartsRouter } from "./routes/charts";
 import { apiTokensRouter } from "./routes/api-tokens";
 import { cliRouter } from "./routes/cli";
 import { statisticsRouter } from "./routes/statistics";
+import { dmcaRouter } from "./routes/dmca";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -88,6 +89,7 @@ app.route("/api", chartsRouter);
 app.route("/api", apiTokensRouter);
 app.route("/api", cliRouter);
 app.route("/api", statisticsRouter);
+app.route("/api", dmcaRouter);
 app.route("/api", adminRouter);
 
 export default app;

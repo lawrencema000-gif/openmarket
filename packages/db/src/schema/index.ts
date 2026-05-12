@@ -8,4 +8,5 @@ export * from "./search";
 export * from "./charts";
 export * from "./api-tokens";
 export * from "./statistics";
+export * from "./dmca";
 export * from "./relations";

@@ -43,6 +43,13 @@
       "when": 1778513634816,
       "tag": "0005_careful_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778549024645,
+      "tag": "0006_steep_songbird",
+      "breakpoints": true
     }
   ]
 }
