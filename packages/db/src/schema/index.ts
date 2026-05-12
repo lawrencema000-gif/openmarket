@@ -10,4 +10,5 @@ export * from "./api-tokens";
 export * from "./statistics";
 export * from "./dmca";
 export * from "./team";
+export * from "./data-safety";
 export * from "./relations";

@@ -32,6 +32,7 @@ import { cliRouter } from "./routes/cli";
 import { statisticsRouter } from "./routes/statistics";
 import { dmcaRouter } from "./routes/dmca";
 import { teamRouter } from "./routes/team";
+import { dataSafetyRouter } from "./routes/data-safety";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -92,6 +93,7 @@ app.route("/api", cliRouter);
 app.route("/api", statisticsRouter);
 app.route("/api", dmcaRouter);
 app.route("/api", teamRouter);
+app.route("/api", dataSafetyRouter);
 app.route("/api", adminRouter);
 
 export default app;

@@ -57,6 +57,13 @@
       "when": 1778549680152,
       "tag": "0007_blushing_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778550264119,
+      "tag": "0008_simple_paibok",
+      "breakpoints": true
     }
   ]
 }

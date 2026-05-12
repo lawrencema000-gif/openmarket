@@ -15,6 +15,7 @@ import { ReleaseNotes } from "@/components/release-notes";
 import { ReviewsSection } from "@/components/reviews-section";
 import { AntiFeaturesBlock } from "@/components/anti-features-block";
 import { SimilarAppsRail } from "@/components/similar-apps-rail";
+import { DataSafetyBlock } from "@/components/data-safety-block";
 
 interface Developer {
   id: string;
@@ -345,6 +346,12 @@ export default async function AppDetailPage({
           {app.antiFeatures && app.antiFeatures.length > 0 && (
             <AntiFeaturesBlock slugs={app.antiFeatures} />
           )}
+
+          {/* Data safety declaration. Always rendered — the component
+              handles "not yet declared" + "no data collected" states
+              internally. Pairs with anti-features as the two trust
+              surfaces above the install button. */}
+          <DataSafetyBlock appId={app.id} />
 
           {/* Download action bar */}
           <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
