@@ -21,6 +21,7 @@
     "./push": "./src/push.ts",
     "./preview-videos": "./src/preview-videos.ts",
     "./pre-registration": "./src/pre-registration.ts",
+    "./source-code": "./src/source-code.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

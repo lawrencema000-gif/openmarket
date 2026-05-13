@@ -88,6 +88,15 @@ interface AppDetail {
     label: string | null;
     durationSeconds: number | null;
   }>;
+  // P3-O source-code transparency
+  sourceCode?: {
+    url: string | null;
+    verified: boolean;
+    verifiedAt: string | null;
+    reproducibleVerified: boolean;
+    reproducibleVerifiedAt: string | null;
+    tier: "none" | "available" | "verified" | "reproducible";
+  };
 }
 
 
@@ -363,6 +372,15 @@ export default async function AppDetailPage({
                 {app.trustBadges && app.trustBadges.length > 0 && app.trustBadges.map((badge) => (
                   <TrustBadge key={badge} type={badge} />
                 ))}
+                {/* Source-code transparency tier (P3-O). Rendered alongside
+                    other trust badges. `available` (URL only) stays as a
+                    link in the App Info card and gets no badge here. */}
+                {app.sourceCode?.tier === "reproducible" && (
+                  <TrustBadge type="reproducible-build" />
+                )}
+                {app.sourceCode?.tier === "verified" && (
+                  <TrustBadge type="source-verified" />
+                )}
               </div>
 
               {(app.rating !== undefined) && (

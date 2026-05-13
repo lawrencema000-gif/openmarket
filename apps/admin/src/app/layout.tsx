@@ -54,6 +54,15 @@ const navLinks = [
     ),
   },
   {
+    href: "/source-code",
+    label: "Source code",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3-2.25-3-2.25v4.5Zm0 0v9a2.25 2.25 0 0 0 2.25 2.25h9m-13.5-9v-3a2.25 2.25 0 0 1 2.25-2.25H15M12.75 9l3-3m0 0 3 3m-3-3v12.75" />
+      </svg>
+    ),
+  },
+  {
     href: "/categories",
     label: "Categories",
     icon: (

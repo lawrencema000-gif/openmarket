@@ -9,7 +9,9 @@ export type TrustBadgeType =
   | "security-reviewed"
   | "high-risk"
   | "ads"
-  | "open-source";
+  | "open-source"
+  | "source-verified"
+  | "reproducible-build";
 
 export interface TrustBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   type: TrustBadgeType;
@@ -58,6 +60,16 @@ const trustBadgeConfig: Record<
     label: "Open Source",
     className:
       "bg-purple-100 text-purple-800 border-purple-200",
+  },
+  "source-verified": {
+    label: "Source Verified",
+    className:
+      "bg-emerald-100 text-emerald-800 border-emerald-200",
+  },
+  "reproducible-build": {
+    label: "Reproducible Build",
+    className:
+      "bg-teal-100 text-teal-800 border-teal-200",
   },
 };
 

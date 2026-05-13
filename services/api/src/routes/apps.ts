@@ -18,6 +18,7 @@ import {
   parseAcceptLanguage,
   pickBestTranslationLocale,
 } from "@openmarket/contracts/i18n";
+import { computeSourceCodeTier } from "@openmarket/contracts/source-code";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
 import { recordAdminAction } from "../lib/audit";
@@ -346,6 +347,22 @@ appsRouter.get("/apps/:id", async (c) => {
     .where(eq(appPreviewVideos.appId, id))
     .orderBy(asc(appPreviewVideos.sortOrder), asc(appPreviewVideos.createdAt));
 
+  // Source-code transparency block (P3-O). Combines the URL from the
+  // current listing with the admin-attested verification flags on the
+  // app row so the storefront can render a single badge tier.
+  const sourceCode = {
+    url: currentListing?.sourceCodeUrl ?? null,
+    verified: app.sourceCodeVerified,
+    verifiedAt: app.sourceCodeVerifiedAt,
+    reproducibleVerified: app.reproducibleVerified,
+    reproducibleVerifiedAt: app.reproducibleVerifiedAt,
+    tier: computeSourceCodeTier({
+      sourceCodeUrl: currentListing?.sourceCodeUrl,
+      sourceCodeVerified: app.sourceCodeVerified,
+      reproducibleVerified: app.reproducibleVerified,
+    }),
+  };
+
   return c.json({
     ...app,
     currentListing,
@@ -354,6 +371,7 @@ appsRouter.get("/apps/:id", async (c) => {
     compatibility,
     recentReleases,
     previewVideos,
+    sourceCode,
     // Surface localization metadata so storefront language pickers
     // can render available options + the resolved choice.
     locale: {

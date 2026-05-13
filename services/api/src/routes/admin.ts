@@ -7,6 +7,7 @@ import { db } from "../lib/db";
 import {
   adminActions,
   apps,
+  appListings,
   releases,
   reviews,
   developers,
@@ -20,6 +21,7 @@ import { enqueueEmail } from "../lib/email";
 import { recordAdminAction } from "../lib/audit";
 import { dispatchReleaseToLibrary } from "../lib/push";
 import { dispatchPreRegistrationLaunch } from "../lib/pre-registration";
+import { sourceCodeVerificationPatchSchema } from "@openmarket/contracts/source-code";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
@@ -219,6 +221,103 @@ adminRouter.post(
 
     return c.json(updated);
   }
+);
+
+/**
+ * GET /admin/apps/source-code (P3-O)
+ *
+ * Lists apps with a sourceCodeUrl set on their current listing, with
+ * the current verification flags. Drives the admin source-code-
+ * verification triage page. Newest-first.
+ */
+adminRouter.get("/admin/apps/source-code", requireAdmin, async (c) => {
+  const rows = await db
+    .select({
+      id: apps.id,
+      packageName: apps.packageName,
+      sourceCodeVerified: apps.sourceCodeVerified,
+      sourceCodeVerifiedAt: apps.sourceCodeVerifiedAt,
+      reproducibleVerified: apps.reproducibleVerified,
+      reproducibleVerifiedAt: apps.reproducibleVerifiedAt,
+      sourceCodeUrl: appListings.sourceCodeUrl,
+      currentListingId: apps.currentListingId,
+    })
+    .from(apps)
+    .leftJoin(
+      appListings,
+      and(
+        eq(appListings.appId, apps.id),
+        eq(appListings.id, apps.currentListingId),
+      ),
+    )
+    .where(sql`${appListings.sourceCodeUrl} IS NOT NULL`)
+    .orderBy(desc(apps.updatedAt))
+    .limit(200);
+
+  return c.json({ items: rows });
+});
+
+/**
+ * PATCH /admin/apps/:id/source-code-verification (P3-O)
+ *
+ * Toggles either or both of the source-code verification flags on
+ * the app row. Independently optional so an admin can flip one
+ * without touching the other.
+ *
+ * Setting a flag to true stamps `*_VerifiedAt`; clearing leaves the
+ * timestamp in place (audit trail of past verifications). The
+ * companion record on admin_actions captures who/when/why.
+ */
+adminRouter.patch(
+  "/admin/apps/:id/source-code-verification",
+  requireAdmin,
+  zValidator("json", sourceCodeVerificationPatchSchema),
+  async (c) => {
+    const authUser = c.get("user");
+    const appId = c.req.param("id");
+    const body = c.req.valid("json");
+
+    const app = await db.query.apps.findFirst({
+      where: eq(apps.id, appId),
+    });
+    if (!app) {
+      throw new HTTPException(404, { message: "App not found" });
+    }
+
+    const moderator = await db.query.developers.findFirst({
+      where: eq(developers.email, authUser.email),
+    });
+
+    const now = new Date();
+    const patch: Record<string, unknown> = { updatedAt: now };
+    if (body.sourceCodeVerified !== undefined) {
+      patch.sourceCodeVerified = body.sourceCodeVerified;
+      if (body.sourceCodeVerified) patch.sourceCodeVerifiedAt = now;
+    }
+    if (body.reproducibleVerified !== undefined) {
+      patch.reproducibleVerified = body.reproducibleVerified;
+      if (body.reproducibleVerified) patch.reproducibleVerifiedAt = now;
+    }
+
+    const [updated] = await db
+      .update(apps)
+      .set(patch)
+      .where(eq(apps.id, appId))
+      .returning();
+
+    await recordAdminAction({
+      c,
+      action: "app.source-code.verify",
+      targetType: "app",
+      targetId: appId,
+      metadata: {
+        sourceCodeVerified: body.sourceCodeVerified ?? null,
+        reproducibleVerified: body.reproducibleVerified ?? null,
+      },
+    });
+
+    return c.json(updated);
+  },
 );
 
 // POST /admin/developers/:id/suspend — suspend a developer

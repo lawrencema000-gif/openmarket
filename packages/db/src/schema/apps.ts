@@ -110,6 +110,35 @@ export const apps = pgTable("apps", {
     .default(false)
     .notNull(),
   /**
+   * Source-code transparency verification (P3-O).
+   *
+   * Two independent attestations, set by admins on the admin
+   * dashboard. We track both because they cover different trust
+   * claims:
+   *
+   *   sourceCodeVerified — an admin has eyeballed app_listings.sourceCodeUrl
+   *     and confirmed it hosts the actual source for the published
+   *     binary. Cheap signal; useful for "source available" badge.
+   *   reproducibleVerified — the reproducible-builds verifier worker
+   *     (future) rebuilt the source and matched SHA256 against the
+   *     stored APK artifact. Strong signal; useful for "reproducible
+   *     build" badge.
+   *
+   * Storing as denorm bool columns rather than a join table because
+   * we want every public app-detail render to surface these without
+   * an extra round-trip and the state changes infrequently.
+   */
+  sourceCodeVerified: boolean("source_code_verified").default(false).notNull(),
+  sourceCodeVerifiedAt: timestamp("source_code_verified_at", {
+    withTimezone: true,
+  }),
+  reproducibleVerified: boolean("reproducible_verified")
+    .default(false)
+    .notNull(),
+  reproducibleVerifiedAt: timestamp("reproducible_verified_at", {
+    withTimezone: true,
+  }),
+  /**
    * Default locale (BCP 47) for the canonical `app_listings` row.
    * Per-locale overrides live in `app_listing_translations`; missing
    * translations fall back to this baseline. We store on the app
