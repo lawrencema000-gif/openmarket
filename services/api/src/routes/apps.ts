@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, asc, desc } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../lib/db";
@@ -8,6 +8,7 @@ import {
   apps,
   appListings,
   appListingTranslations,
+  appPreviewVideos,
   artifactMetadata,
   developers,
   releaseArtifacts,
@@ -336,6 +337,15 @@ appsRouter.get("/apps/:id", async (c) => {
       }
     : null;
 
+  // Preview videos (P2-G) — surfaced inline alongside screenshots
+  // so the storefront app-detail render is a single round-trip.
+  // Ordered by sortOrder then createdAt.
+  const previewVideos = await db
+    .select()
+    .from(appPreviewVideos)
+    .where(eq(appPreviewVideos.appId, id))
+    .orderBy(asc(appPreviewVideos.sortOrder), asc(appPreviewVideos.createdAt));
+
   return c.json({
     ...app,
     currentListing,
@@ -343,6 +353,7 @@ appsRouter.get("/apps/:id", async (c) => {
     latestArtifact,
     compatibility,
     recentReleases,
+    previewVideos,
     // Surface localization metadata so storefront language pickers
     // can render available options + the resolved choice.
     locale: {

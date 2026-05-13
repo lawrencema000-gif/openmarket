@@ -18,6 +18,7 @@ import { SimilarAppsRail } from "@/components/similar-apps-rail";
 import { DataSafetyBlock } from "@/components/data-safety-block";
 import { BetaJoinButton } from "@/components/beta-join-button";
 import { LocalePicker } from "@/components/locale-picker";
+import { PreviewVideosRail } from "@/components/preview-videos-rail";
 
 interface Developer {
   id: string;
@@ -78,6 +79,14 @@ interface AppDetail {
     defaultLocale: string;
     available: string[];
   };
+  // P2-G preview videos
+  previewVideos?: Array<{
+    id: string;
+    videoUrl: string;
+    posterUrl: string | null;
+    label: string | null;
+    durationSeconds: number | null;
+  }>;
 }
 
 
@@ -408,6 +417,11 @@ export default async function AppDetailPage({
               <LibraryButton appId={app.id} />
             </div>
           </div>
+
+          {/* Preview videos — rendered above screenshots when present. */}
+          {app.previewVideos && app.previewVideos.length > 0 && (
+            <PreviewVideosRail videos={app.previewVideos} />
+          )}
 
           {/* Screenshots */}
           {app.screenshots && app.screenshots.length > 0 && (

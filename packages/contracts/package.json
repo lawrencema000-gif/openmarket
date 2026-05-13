@@ -19,6 +19,7 @@
     "./i18n": "./src/i18n.ts",
     "./crashes": "./src/crashes.ts",
     "./push": "./src/push.ts",
+    "./preview-videos": "./src/preview-videos.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {
