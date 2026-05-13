@@ -18,6 +18,7 @@ import { requireAdmin } from "../middleware/admin";
 import { notifyQueue } from "../lib/queue";
 import { enqueueEmail } from "../lib/email";
 import { recordAdminAction } from "../lib/audit";
+import { dispatchReleaseToLibrary } from "../lib/push";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
@@ -124,6 +125,30 @@ adminRouter.post(
       releaseId,
       appId: release.appId,
       moderatorId: moderator?.id ?? null,
+    });
+
+    // Fire-and-forget push fan-out (P2-P). Errors logged but don't
+    // block the approval response — the email path above is the
+    // user-facing critical-path channel.
+    const app = await db.query.apps.findFirst({
+      where: eq(apps.id, release.appId),
+      with: { listings: true },
+    });
+    const listing =
+      app?.listings?.find((l) => l.id === app.currentListingId) ??
+      app?.listings?.[app?.listings.length - 1];
+    void dispatchReleaseToLibrary(release.appId, {
+      title: listing?.title
+        ? `${listing.title} v${release.versionName} is available`
+        : `New release v${release.versionName}`,
+      body:
+        release.releaseNotes?.slice(0, 200) ??
+        "Open OpenMarket to install the latest version.",
+      url: `/apps/${release.appId}`,
+      type: "release_update",
+      tag: `release-${release.appId}`,
+    }).catch((err) => {
+      console.error("[admin] release-publish push fan-out failed", err);
     });
 
     return c.json(updated);

@@ -36,6 +36,7 @@ import { dataSafetyRouter } from "./routes/data-safety";
 import { betaRouter } from "./routes/beta";
 import { translationsRouter } from "./routes/translations";
 import { crashesRouter } from "./routes/crashes";
+import { pushRouter } from "./routes/push";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -100,6 +101,7 @@ app.route("/api", dataSafetyRouter);
 app.route("/api", betaRouter);
 app.route("/api", translationsRouter);
 app.route("/api", crashesRouter);
+app.route("/api", pushRouter);
 app.route("/api", adminRouter);
 
 export default app;

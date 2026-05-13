@@ -123,7 +123,7 @@ export default function AccountPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">
             Account settings
@@ -132,13 +132,21 @@ export default function AccountPage() {
             Signed in as <strong>{profile.email}</strong>.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onSignOut}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/account/notifications"
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Notifications
+          </Link>
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
