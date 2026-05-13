@@ -39,6 +39,7 @@ import { crashesRouter } from "./routes/crashes";
 import { pushRouter } from "./routes/push";
 import { previewVideosRouter } from "./routes/preview-videos";
 import { preRegistrationRouter } from "./routes/pre-registration";
+import { distributionRouter } from "./routes/distribution";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -106,6 +107,7 @@ app.route("/api", crashesRouter);
 app.route("/api", pushRouter);
 app.route("/api", previewVideosRouter);
 app.route("/api", preRegistrationRouter);
+app.route("/api", distributionRouter);
 app.route("/api", adminRouter);
 
 export default app;
