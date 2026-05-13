@@ -18,3 +18,4 @@ export * from "./pre-registration";
 export * from "./source-code";
 export * from "./distribution";
 export * from "./review-highlights";
+export * from "./promo-codes";

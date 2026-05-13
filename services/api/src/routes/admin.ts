@@ -588,10 +588,13 @@ adminRouter.post("/admin/reviews/promote-due", requireAdmin, async (c) => {
   // pg-node returns `{ rows, rowCount }`; some other drivers return
   // just the array; old test mocks use `{ rowCount }` alone. Coerce
   // defensively so a missing rows array still yields a sensible count.
+  const resultAsUnknown = result as unknown as {
+    rows?: Array<{ app_id: string }>;
+  };
   const promotedRows: Array<{ app_id: string }> = Array.isArray(
-    (result as { rows?: unknown }).rows,
+    resultAsUnknown.rows,
   )
-    ? ((result as { rows: Array<{ app_id: string }> }).rows ?? [])
+    ? resultAsUnknown.rows
     : Array.isArray(result)
       ? (result as unknown as Array<{ app_id: string }>)
       : [];
