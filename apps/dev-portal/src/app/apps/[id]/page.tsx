@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import { RolloutControls } from "@/components/rollout-controls";
 import { BetaToggle } from "@/components/beta-toggle";
+import { PreRegistrationToggle } from "@/components/pre-registration-toggle";
 
 interface App {
   id: string;
@@ -16,6 +17,7 @@ interface App {
   iconUrl?: string;
   websiteUrl?: string;
   betaTrackEnabled?: boolean;
+  preRegistrationEnabled?: boolean;
 }
 
 interface BetaInfo {
@@ -119,6 +121,11 @@ export default function AppDetailPage({
           </a>
         )}
       </div>
+
+      <PreRegistrationToggle
+        appId={id}
+        initialEnabled={app.preRegistrationEnabled ?? false}
+      />
 
       <BetaToggle
         appId={id}

@@ -19,6 +19,7 @@ import { notifyQueue } from "../lib/queue";
 import { enqueueEmail } from "../lib/email";
 import { recordAdminAction } from "../lib/audit";
 import { dispatchReleaseToLibrary } from "../lib/push";
+import { dispatchPreRegistrationLaunch } from "../lib/pre-registration";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
@@ -137,6 +138,15 @@ adminRouter.post(
     const listing =
       app?.listings?.find((l) => l.id === app.currentListingId) ??
       app?.listings?.[app?.listings.length - 1];
+    // P3-A: pre-registration fan-out. Fires once per app — the
+    // helper marks notifiedAt and is idempotent so a second invocation
+    // (e.g. re-approval after rollback) is a no-op.
+    void dispatchPreRegistrationLaunch(release.appId, release.versionName).catch(
+      (err) => {
+        console.error("[admin] pre-registration launch fan-out failed", err);
+      },
+    );
+
     void dispatchReleaseToLibrary(release.appId, {
       title: listing?.title
         ? `${listing.title} v${release.versionName} is available`

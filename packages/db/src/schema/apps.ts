@@ -98,6 +98,18 @@ export const apps = pgTable("apps", {
    */
   betaTrackEnabled: boolean("beta_track_enabled").default(false).notNull(),
   /**
+   * Pre-registration mode (P3-A). When true the storefront swaps the
+   * "Download APK" CTA for a "Pre-register" button; users tapping it
+   * land in `pre_registrations` and get notified on the first stable
+   * release. Defaults false (regular install flow).
+   *
+   * No automatic linkage to `isPublished` — devs can have an app
+   * accept pre-registrations even before any release is uploaded.
+   */
+  preRegistrationEnabled: boolean("pre_registration_enabled")
+    .default(false)
+    .notNull(),
+  /**
    * Default locale (BCP 47) for the canonical `app_listings` row.
    * Per-locale overrides live in `app_listing_translations`; missing
    * translations fall back to this baseline. We store on the app

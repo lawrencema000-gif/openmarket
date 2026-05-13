@@ -17,6 +17,7 @@ import { AntiFeaturesBlock } from "@/components/anti-features-block";
 import { SimilarAppsRail } from "@/components/similar-apps-rail";
 import { DataSafetyBlock } from "@/components/data-safety-block";
 import { BetaJoinButton } from "@/components/beta-join-button";
+import { PreRegisterButton } from "@/components/pre-register-button";
 import { LocalePicker } from "@/components/locale-picker";
 import { PreviewVideosRail } from "@/components/preview-videos-rail";
 
@@ -384,6 +385,11 @@ export default async function AppDetailPage({
               internally. Pairs with anti-features as the two trust
               surfaces above the install button. */}
           <DataSafetyBlock appId={app.id} />
+
+          {/* Pre-registration CTA — only when the developer has flipped
+              preRegistrationEnabled. Mutually exclusive with the regular
+              install bar in practice. */}
+          <PreRegisterButton appId={app.id} />
 
           {/* Beta program join CTA. Renders nothing when the developer
               hasn't enabled the program or there's no beta release yet. */}

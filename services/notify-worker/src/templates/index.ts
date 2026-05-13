@@ -24,6 +24,7 @@ import { DmcaNoticeReceived } from "./dmca-notice-received.js";
 import { DmcaNoticeRejected } from "./dmca-notice-rejected.js";
 import { DmcaTakedownNotice } from "./dmca-takedown-notice.js";
 import { TeamInvite } from "./team-invite.js";
+import { PreRegistrationLaunch } from "./pre-registration-launch.js";
 
 export type { EmailTemplate, EmailTemplateMap };
 
@@ -45,6 +46,7 @@ export const TEMPLATES: { [K in EmailTemplate]: TemplateModule<EmailTemplateMap[
   "dmca-notice-rejected": DmcaNoticeRejected,
   "dmca-takedown-notice": DmcaTakedownNotice,
   "team-invite": TeamInvite,
+  "pre-registration-launch": PreRegistrationLaunch,
 };
 
 export function getTemplate<K extends EmailTemplate>(

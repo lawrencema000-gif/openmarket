@@ -14,3 +14,4 @@ export * from "./i18n";
 export * from "./crashes";
 export * from "./push";
 export * from "./preview-videos";
+export * from "./pre-registration";

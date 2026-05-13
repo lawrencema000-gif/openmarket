@@ -20,6 +20,7 @@
     "./crashes": "./src/crashes.ts",
     "./push": "./src/push.ts",
     "./preview-videos": "./src/preview-videos.ts",
+    "./pre-registration": "./src/pre-registration.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

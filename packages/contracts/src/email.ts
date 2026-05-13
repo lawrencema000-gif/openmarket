@@ -108,6 +108,17 @@ export interface TeamInviteProps {
   expiresIn: string;
 }
 
+/**
+ * Pre-registration launch (P3-A) — sent to every pre-registrant the
+ * moment the first stable release ships. One per app per user; the
+ * dispatcher marks the row notifiedAt to guard against re-send.
+ */
+export interface PreRegistrationLaunchProps {
+  appTitle: string;
+  appId: string;
+  versionName: string;
+}
+
 export type EmailTemplateMap = {
   welcome: WelcomeEmailProps;
   "verify-email": VerifyEmailProps;
@@ -121,6 +132,7 @@ export type EmailTemplateMap = {
   "dmca-notice-rejected": DmcaNoticeRejectedProps;
   "dmca-takedown-notice": DmcaTakedownNoticeProps;
   "team-invite": TeamInviteProps;
+  "pre-registration-launch": PreRegistrationLaunchProps;
 };
 
 export type EmailTemplate = keyof EmailTemplateMap;
