@@ -21,6 +21,7 @@ import { enqueueEmail } from "../lib/email";
 import { recordAdminAction } from "../lib/audit";
 import { dispatchReleaseToLibrary } from "../lib/push";
 import { dispatchPreRegistrationLaunch } from "../lib/pre-registration";
+import { recomputeReviewHighlightsForApp } from "../lib/review-highlights";
 import { sourceCodeVerificationPatchSchema } from "@openmarket/contracts/source-code";
 import type { Variables } from "../lib/types";
 
@@ -572,6 +573,9 @@ adminRouter.post(
  */
 adminRouter.post("/admin/reviews/promote-due", requireAdmin, async (c) => {
   const now = new Date();
+  // RETURNING app_id so we know which apps to recompute review-highlights
+  // for. DISTINCT-collapse to a Set so each affected app is recomputed
+  // once even if 50 reviews promoted at the same tick.
   const result = await db.execute(sql`
     UPDATE reviews
        SET published_at = ${now}, updated_at = ${now}
@@ -579,21 +583,45 @@ adminRouter.post("/admin/reviews/promote-due", requireAdmin, async (c) => {
        AND is_flagged = false
        AND created_at <= ${new Date(now.getTime() - 24 * 60 * 60 * 1000)}
        AND app_id NOT IN (SELECT id FROM apps WHERE review_freeze = true)
+     RETURNING app_id
   `);
-  // Drizzle's NodePg execute returns { rowCount }; pg-bun-driver doesn't —
-  // best-effort coerce.
+  // pg-node returns `{ rows, rowCount }`; some other drivers return
+  // just the array; old test mocks use `{ rowCount }` alone. Coerce
+  // defensively so a missing rows array still yields a sensible count.
+  const promotedRows: Array<{ app_id: string }> = Array.isArray(
+    (result as { rows?: unknown }).rows,
+  )
+    ? ((result as { rows: Array<{ app_id: string }> }).rows ?? [])
+    : Array.isArray(result)
+      ? (result as unknown as Array<{ app_id: string }>)
+      : [];
+  const affectedApps = new Set(promotedRows.map((r) => r.app_id).filter(Boolean));
   const promoted =
     (result as { rowCount?: number | null }).rowCount ??
     (result as { rowsAffected?: number }).rowsAffected ??
-    0;
+    promotedRows.length;
+
+  // Fire-and-forget recompute per affected app. Errors are logged but
+  // don't block the cron response — the cache being stale by one tick
+  // is a soft failure.
+  for (const appId of affectedApps) {
+    void recomputeReviewHighlightsForApp(appId).catch((err) => {
+      console.error(
+        "[admin] review-highlights recompute failed",
+        { appId },
+        err,
+      );
+    });
+  }
+
   await recordAdminAction({
     c,
     action: "reviews.promote-due",
     targetType: null,
     targetId: null,
-    metadata: { promoted },
+    metadata: { promoted, affectedApps: affectedApps.size },
   });
-  return c.json({ success: true, promoted });
+  return c.json({ success: true, promoted, affectedApps: affectedApps.size });
 });
 
 const freezeToggleSchema = z.object({

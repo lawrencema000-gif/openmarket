@@ -13,6 +13,7 @@ import { LibraryButton } from "@/components/library-button";
 import { WishlistHeart } from "@/components/wishlist-heart";
 import { ReleaseNotes } from "@/components/release-notes";
 import { ReviewsSection } from "@/components/reviews-section";
+import { ReviewHighlights } from "@/components/review-highlights";
 import { AntiFeaturesBlock } from "@/components/anti-features-block";
 import { SimilarAppsRail } from "@/components/similar-apps-rail";
 import { DataSafetyBlock } from "@/components/data-safety-block";
@@ -608,6 +609,11 @@ export default async function AppDetailPage({
                 </div>
               </section>
             )}
+
+            {/* Review highlights (P3-D) — auto-extracted chips above
+                the full reviews surface. Renders nothing if there
+                aren't enough mentions to clear the threshold. */}
+            <ReviewHighlights appId={app.id} />
 
             {/* Reviews — full P1-G surface (histogram, sort, filter, helpful, report, write) */}
             <ReviewsSection appId={app.id} />

@@ -23,6 +23,7 @@
     "./pre-registration": "./src/pre-registration.ts",
     "./source-code": "./src/source-code.ts",
     "./distribution": "./src/distribution.ts",
+    "./review-highlights": "./src/review-highlights.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {
