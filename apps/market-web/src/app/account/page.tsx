@@ -139,6 +139,12 @@ export default function AccountPage() {
           >
             Notifications
           </Link>
+          <Link
+            href="/account/parental-controls"
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Parental controls
+          </Link>
           <button
             type="button"
             onClick={onSignOut}

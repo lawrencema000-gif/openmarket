@@ -20,6 +20,7 @@ import { DataSafetyBlock } from "@/components/data-safety-block";
 import { BetaJoinButton } from "@/components/beta-join-button";
 import { PreRegisterButton } from "@/components/pre-register-button";
 import { ExperimentEvents } from "@/components/experiment-events";
+import { InstallBar } from "@/components/install-bar";
 import { LocalePicker } from "@/components/locale-picker";
 import { PreviewVideosRail } from "@/components/preview-videos-rail";
 
@@ -104,6 +105,12 @@ interface AppDetail {
     experimentId: string;
     variantId: string;
     variantLabel: string;
+  } | null;
+  // P3-F parental controls (signed-in viewer only)
+  parental?: {
+    role: "child" | "parent";
+    maxContentRating: "everyone" | "teen" | "mature";
+    requiresPinUnlock: boolean;
   } | null;
 }
 
@@ -426,34 +433,21 @@ export default async function AppDetailPage({
               hasn't enabled the program or there's no beta release yet. */}
           <BetaJoinButton appId={app.id} />
 
-          {/* Download action bar */}
-          <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
-            <a
-              href={app.apkUrl ?? "#"}
-              download={app.apkUrl ? true : undefined}
-              className={`inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm text-sm ${!app.apkUrl ? "opacity-50 pointer-events-none" : ""}`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              Download APK
-            </a>
-            {app.sizeBytes && (
-              <span className="text-sm text-blue-600 font-medium">{formatBytes(app.sizeBytes)}</span>
-            )}
-            {app.packageName && (
-              <code className="text-xs text-blue-500 font-mono bg-blue-100/60 px-2 py-1 rounded-md">
-                {app.packageName}
-              </code>
-            )}
-            {!app.apkUrl && (
-              <span className="text-xs text-amber-600 font-medium">APK not yet available</span>
-            )}
+          {/* Download action bar — P3-F gates installs through a
+              parental PIN dialog when the API flags requiresPinUnlock. */}
+          <InstallBar
+            appId={app.id}
+            appTitle={app.name}
+            apkUrl={app.apkUrl}
+            sizeLabel={app.sizeBytes ? formatBytes(app.sizeBytes) : null}
+            packageName={app.packageName ?? null}
+            parental={app.parental ?? null}
+          >
             <div className="ml-auto flex items-center gap-2">
               <WishlistHeart appId={app.id} variant="labeled" />
               <LibraryButton appId={app.id} />
             </div>
-          </div>
+          </InstallBar>
 
           {/* Preview videos — rendered above screenshots when present. */}
           {app.previewVideos && app.previewVideos.length > 0 && (

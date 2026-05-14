@@ -11,14 +11,17 @@ import {
   appPreviewVideos,
   artifactMetadata,
   developers,
+  parentalControls,
   releaseArtifacts,
   releases,
+  users,
 } from "@openmarket/db/schema";
 import {
   parseAcceptLanguage,
   pickBestTranslationLocale,
 } from "@openmarket/contracts/i18n";
 import { computeSourceCodeTier } from "@openmarket/contracts/source-code";
+import { isInstallAllowedWithoutPin } from "@openmarket/contracts/parental-controls";
 import { resolveRunningExperiment } from "../lib/listing-experiments";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
@@ -402,6 +405,61 @@ appsRouter.get("/apps/:id", async (c) => {
     .where(eq(appPreviewVideos.appId, id))
     .orderBy(asc(appPreviewVideos.sortOrder), asc(appPreviewVideos.createdAt));
 
+  // P3-F: parental-controls block. If the signed-in viewer is a
+  // child account, surface their allowed rating + whether THIS app
+  // requires PIN unlock. Anonymous + parent viewers see null.
+  let parental:
+    | {
+        role: "child" | "parent";
+        maxContentRating: "everyone" | "teen" | "mature";
+        requiresPinUnlock: boolean;
+      }
+    | null = null;
+  try {
+    const { auth } = await import("../lib/auth");
+    const session = await auth.api
+      .getSession({ headers: c.req.raw.headers })
+      .catch(() => null);
+    if (session?.user?.email) {
+      const profile = await db.query.users.findFirst({
+        where: eq(users.email, session.user.email.toLowerCase()),
+      });
+      if (profile) {
+        const childRow = await db.query.parentalControls.findFirst({
+          where: eq(parentalControls.userId, profile.id),
+        });
+        if (childRow && childRow.role === "child" && childRow.parentUserId) {
+          // Pull the parent's row for the active maxContentRating —
+          // the parent is the source of truth, the child row may be
+          // stale if the parent recently tightened.
+          const parentRow = await db.query.parentalControls.findFirst({
+            where: eq(parentalControls.userId, childRow.parentUserId),
+          });
+          const max = parentRow?.maxContentRating ?? "everyone";
+          const rating =
+            (currentListing?.contentRating as
+              | "everyone"
+              | "teen"
+              | "mature"
+              | null) ?? null;
+          parental = {
+            role: "child",
+            maxContentRating: max,
+            requiresPinUnlock: !isInstallAllowedWithoutPin(rating, max),
+          };
+        } else if (childRow && childRow.role === "parent") {
+          parental = {
+            role: "parent",
+            maxContentRating: childRow.maxContentRating,
+            requiresPinUnlock: false,
+          };
+        }
+      }
+    }
+  } catch {
+    // Soft-fail — parental gate is non-critical for the page render.
+  }
+
   // Source-code transparency block (P3-O). Combines the URL from the
   // current listing with the admin-attested verification flags on the
   // app row so the storefront can render a single badge tier.
@@ -427,6 +485,8 @@ appsRouter.get("/apps/:id", async (c) => {
     recentReleases,
     previewVideos,
     sourceCode,
+    // P3-F: parental gate signal. Null for anonymous / unscoped viewers.
+    parental,
     // P3-B: variant identity for the storefront conversion event hook.
     // Null when no experiment is running.
     experiment: experimentBlock,

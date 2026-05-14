@@ -26,6 +26,7 @@
     "./review-highlights": "./src/review-highlights.ts",
     "./promo-codes": "./src/promo-codes.ts",
     "./listing-experiments": "./src/listing-experiments.ts",
+    "./parental-controls": "./src/parental-controls.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

@@ -20,3 +20,4 @@ export * from "./distribution";
 export * from "./review-highlights";
 export * from "./promo-codes";
 export * from "./listing-experiments";
+export * from "./parental-controls";
