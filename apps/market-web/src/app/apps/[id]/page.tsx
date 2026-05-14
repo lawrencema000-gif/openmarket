@@ -19,6 +19,7 @@ import { SimilarAppsRail } from "@/components/similar-apps-rail";
 import { DataSafetyBlock } from "@/components/data-safety-block";
 import { BetaJoinButton } from "@/components/beta-join-button";
 import { PreRegisterButton } from "@/components/pre-register-button";
+import { ExperimentEvents } from "@/components/experiment-events";
 import { LocalePicker } from "@/components/locale-picker";
 import { PreviewVideosRail } from "@/components/preview-videos-rail";
 
@@ -98,6 +99,12 @@ interface AppDetail {
     reproducibleVerifiedAt: string | null;
     tier: "none" | "available" | "verified" | "reproducible";
   };
+  // P3-B listing experiment
+  experiment?: {
+    experimentId: string;
+    variantId: string;
+    variantLabel: string;
+  } | null;
 }
 
 
@@ -306,6 +313,11 @@ export default async function AppDetailPage({
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* P3-B: experiment view-event hook. Renders nothing; fires
+          a POST on mount + sets the visitor cookie. */}
+      {app.experiment ? (
+        <ExperimentEvents appId={app.id} experiment={app.experiment} />
+      ) : null}
       {/* Breadcrumb */}
       <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
         <nav className="flex items-center gap-1.5 text-sm text-gray-500">

@@ -42,6 +42,7 @@ import { preRegistrationRouter } from "./routes/pre-registration";
 import { distributionRouter } from "./routes/distribution";
 import { reviewHighlightsRouter } from "./routes/review-highlights";
 import { promoCodesRouter } from "./routes/promo-codes";
+import { listingExperimentsRouter } from "./routes/listing-experiments";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -112,6 +113,7 @@ app.route("/api", preRegistrationRouter);
 app.route("/api", distributionRouter);
 app.route("/api", reviewHighlightsRouter);
 app.route("/api", promoCodesRouter);
+app.route("/api", listingExperimentsRouter);
 app.route("/api", adminRouter);
 
 export default app;

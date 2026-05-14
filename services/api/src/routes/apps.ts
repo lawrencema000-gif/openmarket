@@ -19,6 +19,7 @@ import {
   pickBestTranslationLocale,
 } from "@openmarket/contracts/i18n";
 import { computeSourceCodeTier } from "@openmarket/contracts/source-code";
+import { resolveRunningExperiment } from "../lib/listing-experiments";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
 import { recordAdminAction } from "../lib/audit";
@@ -283,10 +284,64 @@ appsRouter.get("/apps/:id", async (c) => {
   // Resolve currentListing convenience: the listing referenced by
   // app.currentListingId, or the most recent listing if currentListingId
   // isn't set yet.
-  const baselineListing =
+  const rawBaseline =
     app.listings?.find((l) => l.id === app.currentListingId) ??
     app.listings?.[app.listings.length - 1] ??
     null;
+
+  // P3-B: resolve a running listing experiment + pick a variant for
+  // this subject. The variant overlays its non-null fields onto the
+  // baseline listing BEFORE the locale overlay so localized
+  // experiments compose. Subject key:
+  //   1. Better Auth session user.id (signed-in stable per account)
+  //   2. om_visitor cookie (anonymous stable per browser)
+  //   3. per-request salt (uncached anon visitors — counted but not
+  //      sticky; conversion lift is noisier but not poisoned)
+  let experimentBlock: {
+    experimentId: string;
+    variantId: string;
+    variantLabel: string;
+  } | null = null;
+  let baselineListing = rawBaseline;
+  try {
+    let subjectKey: string;
+    const { auth } = await import("../lib/auth");
+    const session = await auth.api
+      .getSession({ headers: c.req.raw.headers })
+      .catch(() => null);
+    if (session?.user?.id) {
+      subjectKey = `user:${session.user.id}`;
+    } else {
+      const cookieHeader = c.req.header("cookie") ?? "";
+      const m = cookieHeader.match(/(?:^|;\s*)om_visitor=([^;]+)/);
+      if (m && m[1]) {
+        subjectKey = `visitor:${m[1]}`;
+      } else {
+        subjectKey = `anon:${Math.random().toString(36).slice(2)}`;
+      }
+    }
+    const resolved = await resolveRunningExperiment(id, subjectKey);
+    if (resolved && rawBaseline) {
+      const v = resolved.variant;
+      baselineListing = {
+        ...rawBaseline,
+        title: v.title ?? rawBaseline.title,
+        shortDescription:
+          v.shortDescription ?? rawBaseline.shortDescription,
+        fullDescription:
+          v.fullDescription ?? rawBaseline.fullDescription,
+        iconUrl: v.iconUrl ?? rawBaseline.iconUrl,
+        screenshots: v.screenshots ?? rawBaseline.screenshots,
+      };
+      experimentBlock = {
+        experimentId: resolved.experimentId,
+        variantId: v.id,
+        variantLabel: v.label,
+      };
+    }
+  } catch {
+    // Soft-fail — experiment overlay is non-critical.
+  }
 
   // Locale resolution (P2-H). Order of preference:
   //   1. explicit `?locale=` query
@@ -372,6 +427,9 @@ appsRouter.get("/apps/:id", async (c) => {
     recentReleases,
     previewVideos,
     sourceCode,
+    // P3-B: variant identity for the storefront conversion event hook.
+    // Null when no experiment is running.
+    experiment: experimentBlock,
     // Surface localization metadata so storefront language pickers
     // can render available options + the resolved choice.
     locale: {
