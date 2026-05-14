@@ -4,6 +4,9 @@ import "./globals.css";
 import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
 import { UserMenu } from "@/components/user-menu";
+import { UILocalePicker } from "@/components/ui-locale-picker";
+import { I18nProvider } from "@/i18n/provider";
+import { getUIT } from "@/i18n/server";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
@@ -32,13 +35,14 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: ROOT_TITLE, description: ROOT_DESCRIPTION },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { locale, messages, t } = await getUIT();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className="min-h-screen bg-slate-50/50 text-gray-900 flex flex-col">
         {/* Plausible — privacy-respecting analytics. No cookies, no personal IDs.
             Active only when NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set in env. */}
@@ -51,6 +55,7 @@ export default function RootLayout({
           />
         ) : null}
 
+        <I18nProvider locale={locale} messages={messages}>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white focus:text-sm focus:font-medium"
@@ -96,8 +101,11 @@ export default function RootLayout({
                 href="/search"
                 className="px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium transition-colors hidden sm:block"
               >
-                Browse
+                {t("nav.browse")}
               </Link>
+              <div className="hidden md:block">
+                <UILocalePicker />
+              </div>
               <UserMenu />
             </nav>
           </div>
@@ -147,7 +155,7 @@ export default function RootLayout({
               {/* About */}
               <div>
                 <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">
-                  About
+                  {t("footer.about")}
                 </h3>
                 <ul className="space-y-2.5 text-sm text-gray-500">
                   <li><Link href="/about" className="hover:text-gray-900 transition-colors">About OpenMarket</Link></li>
@@ -160,7 +168,7 @@ export default function RootLayout({
               {/* Legal */}
               <div>
                 <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">
-                  Legal
+                  {t("footer.legal")}
                 </h3>
                 <ul className="space-y-2.5 text-sm text-gray-500">
                   <li><Link href="/privacy" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
@@ -184,6 +192,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        </I18nProvider>
       </body>
     </html>
   );

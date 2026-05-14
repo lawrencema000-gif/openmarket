@@ -23,6 +23,7 @@ import { ExperimentEvents } from "@/components/experiment-events";
 import { InstallBar } from "@/components/install-bar";
 import { LocalePicker } from "@/components/locale-picker";
 import { PreviewVideosRail } from "@/components/preview-videos-rail";
+import { getUIT } from "@/i18n/server";
 
 interface Developer {
   id: string;
@@ -254,7 +255,10 @@ export default async function AppDetailPage({
   const { id } = await params;
   const search = (await searchParams) ?? {};
   const locale = typeof search.locale === "string" ? search.locale : undefined;
-  const appResult = await getApp(id, locale);
+  const [appResult, { t }] = await Promise.all([
+    getApp(id, locale),
+    getUIT(),
+  ]);
 
   if (appResult.kind === "not-found") {
     notFound();
@@ -457,7 +461,7 @@ export default async function AppDetailPage({
           {/* Screenshots */}
           {app.screenshots && app.screenshots.length > 0 && (
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Screenshots</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("appDetail.screenshots")}</h2>
               <div
                 className="relative"
                 style={{
@@ -483,7 +487,7 @@ export default async function AppDetailPage({
           <div className="space-y-6">
             {/* About */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">About</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">{t("appDetail.about")}</h2>
               {app.description ? (
                 <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-[15px]">{app.description}</p>
               ) : app.shortDescription ? (
@@ -578,7 +582,7 @@ export default async function AppDetailPage({
             {((app.permissions && app.permissions.length > 0) || dangerousPerms.length > 0) && (
               <section>
                 <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
-                  Permissions
+                  {t("appDetail.permissions")}
                 </h2>
                 <div className="space-y-4">
                   {dangerousPerms.length > 0 && (
@@ -587,7 +591,7 @@ export default async function AppDetailPage({
                         <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                         </svg>
-                        <h3 className="text-sm font-semibold text-red-700">Dangerous Permissions</h3>
+                        <h3 className="text-sm font-semibold text-red-700">{t("appDetail.dangerousPermissions")}</h3>
                       </div>
                       <ul className="space-y-1.5">
                         {dangerousPerms.map((perm) => (
@@ -601,7 +605,7 @@ export default async function AppDetailPage({
                   )}
                   {normalPerms.length > 0 && (
                     <div className="rounded-xl bg-gray-50 border border-gray-200 p-4">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-3">Standard Permissions</h3>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3">{t("appDetail.standardPermissions")}</h3>
                       <ul className="space-y-1.5">
                         {normalPerms.map((perm) => (
                           <li key={perm} className="flex items-center gap-2 text-sm text-gray-600">
