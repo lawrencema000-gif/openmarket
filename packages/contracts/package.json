@@ -27,6 +27,7 @@
     "./promo-codes": "./src/promo-codes.ts",
     "./listing-experiments": "./src/listing-experiments.ts",
     "./parental-controls": "./src/parental-controls.ts",
+    "./family-sharing": "./src/family-sharing.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

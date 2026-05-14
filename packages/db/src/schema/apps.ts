@@ -110,6 +110,15 @@ export const apps = pgTable("apps", {
     .default(false)
     .notNull(),
   /**
+   * Family sharing (P3-E). When true, members of a family group can
+   * see the app in their library after the owner installs it. The
+   * developer opts in per-app because some apps (e.g. single-user
+   * social) genuinely don't make sense to share.
+   */
+  familySharingEnabled: boolean("family_sharing_enabled")
+    .default(false)
+    .notNull(),
+  /**
    * Source-code transparency verification (P3-O).
    *
    * Two independent attestations, set by admins on the admin

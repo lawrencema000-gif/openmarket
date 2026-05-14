@@ -145,6 +145,12 @@ export default function AccountPage() {
           >
             Parental controls
           </Link>
+          <Link
+            href="/account/family"
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Family
+          </Link>
           <button
             type="button"
             onClick={onSignOut}

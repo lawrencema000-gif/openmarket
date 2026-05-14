@@ -6,6 +6,7 @@ import { api, ApiError } from "@/lib/api";
 import { RolloutControls } from "@/components/rollout-controls";
 import { BetaToggle } from "@/components/beta-toggle";
 import { PreRegistrationToggle } from "@/components/pre-registration-toggle";
+import { FamilySharingToggle } from "@/components/family-sharing-toggle";
 
 interface App {
   id: string;
@@ -18,6 +19,7 @@ interface App {
   websiteUrl?: string;
   betaTrackEnabled?: boolean;
   preRegistrationEnabled?: boolean;
+  familySharingEnabled?: boolean;
 }
 
 interface BetaInfo {
@@ -131,6 +133,11 @@ export default function AppDetailPage({
         appId={id}
         initialEnabled={beta?.enabled ?? app.betaTrackEnabled ?? false}
         testerCount={beta?.testerCount}
+      />
+
+      <FamilySharingToggle
+        appId={id}
+        initialEnabled={app.familySharingEnabled ?? false}
       />
 
       {/* Releases */}

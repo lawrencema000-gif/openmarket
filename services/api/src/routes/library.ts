@@ -12,6 +12,7 @@ import {
 } from "@openmarket/db/schema";
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
+import { fanOutFamilyShareToMembers } from "../lib/family-sharing";
 import type { Variables } from "../lib/types";
 
 export const libraryRouter = new Hono<{ Variables: Variables }>();
@@ -187,6 +188,14 @@ libraryRouter.post(
         })
         .where(eq(libraryEntries.id, existing.id))
         .returning();
+
+      // Fan out family sharing on reinstall too — if the owner had
+      // uninstalled the app, the members' entries followed; restoring
+      // the owner's row should restore theirs as well.
+      void fanOutFamilyShareToMembers(profile.id, appId).catch((err) => {
+        console.error("[library] family-share fan-out failed (reinstall)", err);
+      });
+
       return c.json({ entry: updated, reinstalled: existing.uninstalledAt !== null });
     }
 
@@ -199,6 +208,15 @@ libraryRouter.post(
         source: body.source ?? "store_app",
       })
       .returning();
+
+    // P3-E: family sharing fan-out. If the installer is a family owner
+    // and the app is opted into sharing, mirror the entry into each
+    // active member's library. Fire-and-forget — failure shouldn't
+    // block the install response.
+    void fanOutFamilyShareToMembers(profile.id, appId).catch((err) => {
+      console.error("[library] family-share fan-out failed", err);
+    });
+
     return c.json({ entry: created, reinstalled: false }, 201);
   },
 );

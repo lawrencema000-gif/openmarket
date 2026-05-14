@@ -44,6 +44,7 @@ import { reviewHighlightsRouter } from "./routes/review-highlights";
 import { promoCodesRouter } from "./routes/promo-codes";
 import { listingExperimentsRouter } from "./routes/listing-experiments";
 import { parentalControlsRouter } from "./routes/parental-controls";
+import { familySharingRouter } from "./routes/family-sharing";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -116,6 +117,7 @@ app.route("/api", reviewHighlightsRouter);
 app.route("/api", promoCodesRouter);
 app.route("/api", listingExperimentsRouter);
 app.route("/api", parentalControlsRouter);
+app.route("/api", familySharingRouter);
 app.route("/api", adminRouter);
 
 export default app;

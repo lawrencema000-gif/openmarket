@@ -485,6 +485,8 @@ appsRouter.get("/apps/:id", async (c) => {
     recentReleases,
     previewVideos,
     sourceCode,
+    // P3-E: developer-attested family sharing flag (storefront badge).
+    familySharingEnabled: app.familySharingEnabled,
     // P3-F: parental gate signal. Null for anonymous / unscoped viewers.
     parental,
     // P3-B: variant identity for the storefront conversion event hook.
