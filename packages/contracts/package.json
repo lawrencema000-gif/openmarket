@@ -28,6 +28,7 @@
     "./listing-experiments": "./src/listing-experiments.ts",
     "./parental-controls": "./src/parental-controls.ts",
     "./family-sharing": "./src/family-sharing.ts",
+    "./aab": "./src/aab.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

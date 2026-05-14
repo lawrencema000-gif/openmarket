@@ -319,6 +319,28 @@ export const releaseArtifacts = pgTable("release_artifacts", {
   fileSize: bigint("file_size", { mode: "number" }).notNull(),
   sha256: text("sha256").notNull(),
   uploadStatus: uploadStatusEnum("upload_status").default("pending").notNull(),
+  /**
+   * P3-G: AAB support.
+   *
+   * When the developer uploads an AAB, we keep it as the "parent"
+   * artifact (artifactType='aab') and generate device-specific APK
+   * "splits" via the bundletool adapter. Each split row points back
+   * here via parentArtifactId and carries its targeting metadata in
+   * `manifest` (abi, screenDensity, languages).
+   *
+   * For raw APK uploads both fields are null — no parent, manifest
+   * info lives on `artifact_metadata` as before.
+   */
+  parentArtifactId: uuid("parent_artifact_id"),
+  /**
+   * Bundletool device-target descriptor for generated splits:
+   *   { abi?: "arm64-v8a" | "armeabi-v7a" | "x86_64",
+   *     screenDensity?: number,
+   *     languages?: string[],
+   *     bundletoolVersion?: string }
+   * Null for raw APK + raw AAB rows.
+   */
+  manifest: jsonb("manifest"),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

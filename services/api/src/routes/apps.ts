@@ -236,6 +236,7 @@ appsRouter.get("/apps/:id", async (c) => {
   // surface size/SDK info for a release that hasn't passed scanning.
   let latestArtifact: {
     id: string;
+    artifactType: "apk" | "aab";
     fileSize: number;
     fileSizeFormatted: string;
     sha256: string;
@@ -267,6 +268,7 @@ appsRouter.get("/apps/:id", async (c) => {
     if (row?.artifact && row.metadata) {
       latestArtifact = {
         id: row.artifact.id,
+        artifactType: row.artifact.artifactType,
         fileSize: row.artifact.fileSize,
         fileSizeFormatted: formatBytes(row.artifact.fileSize),
         sha256: row.artifact.sha256,
