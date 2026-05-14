@@ -83,8 +83,11 @@ export function InstallBar({
           <span className="text-xs text-amber-600 font-medium">APK not yet available</span>
         )}
         {gated && apkUrl ? (
-          <span className="text-[11px] text-amber-700 font-medium ml-2">
-            🔒 Parent PIN required
+          <span
+            className="text-[11px] text-amber-700 font-medium ml-2"
+            role="note"
+          >
+            <span aria-hidden="true">🔒</span> Parent PIN required
           </span>
         ) : null}
         {children}

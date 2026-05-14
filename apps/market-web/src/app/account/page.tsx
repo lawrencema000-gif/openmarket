@@ -215,9 +215,13 @@ export default function AccountPage() {
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
-          {savedAt && Date.now() - savedAt < 4000 ? (
-            <span className="text-xs text-emerald-700">Saved.</span>
-          ) : null}
+          <span
+            role="status"
+            aria-live="polite"
+            className="text-xs text-emerald-700"
+          >
+            {savedAt && Date.now() - savedAt < 4000 ? "Saved." : ""}
+          </span>
         </div>
       </section>
 

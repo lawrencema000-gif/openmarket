@@ -246,9 +246,13 @@ export default function ParentalControlsPage() {
           >
             Save settings
           </button>
-          {savedAt && Date.now() - savedAt < 4000 ? (
-            <span className="ml-3 text-xs text-emerald-700">Saved.</span>
-          ) : null}
+          <span
+            role="status"
+            aria-live="polite"
+            className="ml-3 text-xs text-emerald-700"
+          >
+            {savedAt && Date.now() - savedAt < 4000 ? "Saved." : ""}
+          </span>
         </section>
       ) : null}
 

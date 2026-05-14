@@ -196,9 +196,13 @@ export default function NotificationsPage() {
             )}
           </tbody>
         </table>
-        {savedAt ? (
-          <p className="text-[11px] text-emerald-700">Saved.</p>
-        ) : null}
+        <p
+          role="status"
+          aria-live="polite"
+          className="text-[11px] text-emerald-700 min-h-[1rem]"
+        >
+          {savedAt ? "Saved." : ""}
+        </p>
       </section>
 
       {/* Subscriptions */}

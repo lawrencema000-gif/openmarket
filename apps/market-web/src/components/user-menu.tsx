@@ -50,9 +50,10 @@ export function UserMenu() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
-        className="flex items-center gap-2 rounded-full p-1 hover:bg-gray-100 transition-colors"
+        className="flex items-center gap-2 rounded-full p-1 hover:bg-gray-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={`Account menu for ${user.name ?? user.email}`}
       >
         {user.image ? (
           // eslint-disable-next-line @next/next/no-img-element
