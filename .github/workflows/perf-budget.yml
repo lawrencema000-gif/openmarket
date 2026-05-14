@@ -1,0 +1,62 @@
+name: Performance Budget
+
+on:
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "apps/market-web/**"
+      - "apps/dev-portal/**"
+      - "apps/admin/**"
+      - "packages/ui/**"
+      - "packages/contracts/**"
+      - ".github/workflows/perf-budget.yml"
+  push:
+    branches: [master, main]
+
+# Allow concurrent runs to cancel each other — perf checks take time
+# and rerunning on a fresh push is more useful than letting the old
+# run finish.
+concurrency:
+  group: perf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - { name: market-web, dir: apps/market-web }
+          - { name: dev-portal, dir: apps/dev-portal }
+          - { name: admin, dir: apps/admin }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build ${{ matrix.app.name }}
+        # Lighthouse asserts on the production build. Workspace `build`
+        # script runs Next.js's production build for this app only.
+        run: pnpm --filter @openmarket/${{ matrix.app.name }} build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+          NEXT_PUBLIC_STOREFRONT_URL: http://localhost:4310
+
+      - name: Run Lighthouse CI
+        # @lhci/cli@0.13 reads the per-app lighthouserc.json, starts the
+        # production server it points at, runs N collections, asserts
+        # against the budget, and uploads results to temporary-public-
+        # storage so reviewers can open the report from the PR check.
+        run: npx --yes @lhci/cli@0.13 autorun --config=${{ matrix.app.dir }}/lighthouserc.json
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

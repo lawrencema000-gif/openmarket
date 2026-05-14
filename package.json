@@ -19,6 +19,10 @@
     "smoke:rate-limit": "tsx scripts/smoke/rate-limit.ts",
     "smoke:sitemap": "tsx scripts/smoke/sitemap.ts",
     "smoke": "pnpm smoke:rate-limit && pnpm smoke:sitemap",
+    "perf:budget": "tsx scripts/perf/run-lhci.ts",
+    "perf:budget:market-web": "npx --yes @lhci/cli@0.13 autorun --config=apps/market-web/lighthouserc.json",
+    "perf:budget:dev-portal": "npx --yes @lhci/cli@0.13 autorun --config=apps/dev-portal/lighthouserc.json",
+    "perf:budget:admin": "npx --yes @lhci/cli@0.13 autorun --config=apps/admin/lighthouserc.json",
     "e2e": "pnpm --filter @openmarket/e2e test",
     "test:integration": "INTEGRATION_DB_URL=$DATABASE_URL pnpm --filter @openmarket/api test"
   },
