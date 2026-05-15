@@ -9,6 +9,7 @@ import {
   appListings,
   appListingTranslations,
   appPreviewVideos,
+  appPricing,
   artifactMetadata,
   developers,
   parentalControls,
@@ -22,6 +23,7 @@ import {
 } from "@openmarket/contracts/i18n";
 import { computeSourceCodeTier } from "@openmarket/contracts/source-code";
 import { isInstallAllowedWithoutPin } from "@openmarket/contracts/parental-controls";
+import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { resolveRunningExperiment } from "../lib/listing-experiments";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
@@ -462,6 +464,51 @@ appsRouter.get("/apps/:id", async (c) => {
     // Soft-fail — parental gate is non-critical for the page render.
   }
 
+  // P4-A: per-app pricing for the storefront badge. Country comes
+  // from the user's profile when signed in; anonymous viewers see
+  // the `default` price. Free apps return null here.
+  let pricing: {
+    isPaid: boolean;
+    price: {
+      priceCents: number;
+      currency: string;
+      countryCode: string;
+    } | null;
+    refundWindowHours: number | null;
+  } | null = null;
+  try {
+    const pricingRows = await db
+      .select({
+        countryCode: appPricing.countryCode,
+        priceCents: appPricing.priceCents,
+        currency: appPricing.currency,
+        active: appPricing.active,
+      })
+      .from(appPricing)
+      .where(eq(appPricing.appId, id));
+    // Pull viewer country if signed in.
+    let viewerCountry: string | null = null;
+    const { auth } = await import("../lib/auth");
+    const session = await auth.api
+      .getSession({ headers: c.req.raw.headers })
+      .catch(() => null);
+    if (session?.user?.email) {
+      const profile = await db.query.users.findFirst({
+        where: eq(users.email, session.user.email.toLowerCase()),
+        columns: { country: true },
+      });
+      viewerCountry = profile?.country ?? null;
+    }
+    const resolved = resolvePriceForCountry(pricingRows, viewerCountry);
+    pricing = {
+      isPaid: resolved !== null,
+      price: resolved,
+      refundWindowHours: app.refundWindowHours ?? null,
+    };
+  } catch {
+    // Soft-fail — pricing surfaces are non-critical for the page.
+  }
+
   // Source-code transparency block (P3-O). Combines the URL from the
   // current listing with the admin-attested verification flags on the
   // app row so the storefront can render a single badge tier.
@@ -487,6 +534,10 @@ appsRouter.get("/apps/:id", async (c) => {
     recentReleases,
     previewVideos,
     sourceCode,
+    // P4-A: per-app pricing block for the storefront badge / install
+    // affordance. Null when the resolver lookup errored; isPaid:false
+    // when the app has no pricing rows.
+    pricing,
     // P3-E: developer-attested family sharing flag (storefront badge).
     familySharingEnabled: app.familySharingEnabled,
     // P3-F: parental gate signal. Null for anonymous / unscoped viewers.

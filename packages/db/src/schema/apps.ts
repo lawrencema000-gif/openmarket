@@ -119,6 +119,22 @@ export const apps = pgTable("apps", {
     .default(false)
     .notNull(),
   /**
+   * P3-I refund window. Hours after purchase during which a buyer
+   * can self-serve a refund. Null = no auto-refund policy
+   * (developer reviews each request manually). 0 = refunds disabled.
+   *
+   * Common values:
+   *   2  — Play Store standard
+   *   24 — generous; lets buyers try across a day
+   *   48 — Steam's refund window
+   *
+   * Refund eligibility is computed via
+   * computeRefundEligibility(purchasedAt, refundWindowHours, now)
+   * in @openmarket/contracts/pricing. Free apps (no pricing rows)
+   * have nothing to refund and ignore this field.
+   */
+  refundWindowHours: integer("refund_window_hours"),
+  /**
    * Source-code transparency verification (P3-O).
    *
    * Two independent attestations, set by admins on the admin

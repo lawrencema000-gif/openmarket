@@ -21,6 +21,7 @@ import { BetaJoinButton } from "@/components/beta-join-button";
 import { PreRegisterButton } from "@/components/pre-register-button";
 import { ExperimentEvents } from "@/components/experiment-events";
 import { InstallBar } from "@/components/install-bar";
+import { PriceBadge } from "@/components/price-badge";
 import { LocalePicker } from "@/components/locale-picker";
 import { PreviewVideosRail } from "@/components/preview-videos-rail";
 import { getUIT } from "@/i18n/server";
@@ -112,6 +113,16 @@ interface AppDetail {
     role: "child" | "parent";
     maxContentRating: "everyone" | "teen" | "mature";
     requiresPinUnlock: boolean;
+  } | null;
+  // P4-A pricing
+  pricing?: {
+    isPaid: boolean;
+    price: {
+      priceCents: number;
+      currency: string;
+      countryCode: string;
+    } | null;
+    refundWindowHours: number | null;
   } | null;
 }
 
@@ -436,6 +447,15 @@ export default async function AppDetailPage({
           {/* Beta program join CTA. Renders nothing when the developer
               hasn't enabled the program or there's no beta release yet. */}
           <BetaJoinButton appId={app.id} />
+
+          {/* Price badge (P4-A) — renders only when the app has
+              an active pricing row for the viewer's country / default. */}
+          {app.pricing?.isPaid && app.pricing.price ? (
+            <PriceBadge
+              price={app.pricing.price}
+              refundWindowHours={app.pricing.refundWindowHours}
+            />
+          ) : null}
 
           {/* Download action bar — P3-F gates installs through a
               parental PIN dialog when the API flags requiresPinUnlock. */}

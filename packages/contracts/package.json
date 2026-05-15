@@ -29,6 +29,7 @@
     "./parental-controls": "./src/parental-controls.ts",
     "./family-sharing": "./src/family-sharing.ts",
     "./aab": "./src/aab.ts",
+    "./pricing": "./src/pricing.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

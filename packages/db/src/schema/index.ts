@@ -22,4 +22,5 @@ export * from "./promo-codes";
 export * from "./listing-experiments";
 export * from "./parental-controls";
 export * from "./family-sharing";
+export * from "./pricing";
 export * from "./relations";
