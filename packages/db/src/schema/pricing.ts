@@ -107,7 +107,21 @@ export const purchases = pgTable(
     /** Country at purchase time — frozen so later relocation doesn't change refund logic. */
     countryAtPurchase: text("country_at_purchase"),
     status: purchaseStatusEnum("status").default("pending").notNull(),
+    /**
+     * Stripe payment intent id (pi_…) captured from payment_intent.*
+     * webhook events. Distinct from the checkout session id because
+     * a session can spawn multiple payment intents on retry, and
+     * the dispute / refund webhooks reference the intent specifically.
+     */
     stripePaymentIntentId: text("stripe_payment_intent_id"),
+    /**
+     * Stripe Checkout Session id (cs_…) returned by
+     * stripe.checkout.sessions.create. Populated on POST /purchase
+     * when the adapter has checkout capability; null for the Noop
+     * stub. Indexed so the webhook handler can locate the row from
+     * a checkout.session.completed event in a single query.
+     */
+    stripeCheckoutSessionId: text("stripe_checkout_session_id"),
     purchasedAt: timestamp("purchased_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -118,6 +132,7 @@ export const purchases = pgTable(
   (t) => [
     index("purchases_user_idx").on(t.userId, t.purchasedAt),
     index("purchases_app_idx").on(t.appId, t.purchasedAt),
-    index("purchases_stripe_idx").on(t.stripePaymentIntentId),
+    index("purchases_stripe_intent_idx").on(t.stripePaymentIntentId),
+    index("purchases_stripe_session_idx").on(t.stripeCheckoutSessionId),
   ],
 );

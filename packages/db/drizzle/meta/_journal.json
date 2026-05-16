@@ -169,6 +169,13 @@
       "when": 1778835490196,
       "tag": "0023_shocking_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1778950383707,
+      "tag": "0024_glossy_dazzler",
+      "breakpoints": true
     }
   ]
 }

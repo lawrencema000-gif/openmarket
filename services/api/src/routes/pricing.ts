@@ -21,7 +21,14 @@ import {
   findEffectiveDeveloperContext,
   roleSatisfies,
 } from "../lib/team";
+import {
+  StripeNotConfiguredError,
+  getStripeAdapter,
+} from "../lib/stripe";
 import type { Variables } from "../lib/types";
+
+const STOREFRONT_URL =
+  process.env.STOREFRONT_URL ?? "http://localhost:3000";
 
 export const pricingRouter = new Hono<{ Variables: Variables }>();
 
@@ -235,15 +242,61 @@ pricingRouter.post(
       })
       .returning();
 
-    // Stripe wire-up lives in the follow-up block. v1 returns the
-    // pending row so the storefront can route to a "checkout coming
-    // soon" page rather than crash on a missing endpoint.
+    // Stripe integration (P4-A-2). When the adapter is live, create a
+    // Checkout Session, save its id + intent on the purchase row,
+    // and return the redirect URL. When the adapter is the default
+    // Noop, return null URL + a note — storefront still works for
+    // dev/CI without API keys.
+    const adapter = getStripeAdapter();
+    let checkoutUrl: string | null = null;
+    if (adapter.isLive()) {
+      try {
+        // Resolve app title for the checkout line-item label.
+        const app2 = await db.query.apps.findFirst({
+          where: eq(apps.id, appId),
+          with: { listings: true },
+        });
+        const listing =
+          app2?.listings?.find((l) => l.id === app2.currentListingId) ??
+          app2?.listings?.[app2?.listings.length - 1];
+        const appTitle = listing?.title ?? "OpenMarket app";
+
+        const session = await adapter.createCheckoutSession({
+          purchaseId: row!.id,
+          appId,
+          appTitle,
+          priceCents: resolved.priceCents,
+          currency: resolved.currency,
+          customerEmail: profile.email,
+          successUrl: `${STOREFRONT_URL}/apps/${appId}?purchase=success`,
+          cancelUrl: `${STOREFRONT_URL}/apps/${appId}?purchase=cancel`,
+        });
+        await db
+          .update(purchases)
+          .set({
+            stripeCheckoutSessionId: session.sessionId,
+            stripePaymentIntentId: session.paymentIntentId,
+          })
+          .where(eq(purchases.id, row!.id));
+        checkoutUrl = session.url;
+      } catch (err) {
+        if (err instanceof StripeNotConfiguredError) {
+          // Adapter said it was live but the env wasn't actually wired —
+          // fall through to the stub response with a clear note.
+          checkoutUrl = null;
+        } else {
+          throw err;
+        }
+      }
+    }
+
     return c.json(
       {
-        purchase: row,
-        checkout: null,
-        note:
-          "Stripe Checkout integration ships in a follow-up block. This row will be flipped to 'completed' by the webhook then.",
+        purchase: { ...row, stripeCheckoutSessionId: checkoutUrl ? "set" : null },
+        checkout: checkoutUrl ? { url: checkoutUrl } : null,
+        note: checkoutUrl
+          ? undefined
+          : "Stripe is not configured on this deploy. Purchase row recorded as pending; configure STRIPE_DRIVER=stripe + secret keys to enable Checkout.",
       },
       201,
     );
@@ -305,17 +358,47 @@ pricingRouter.post(
       });
     }
 
-    // Auto-approve. Stripe refund issuance lands in the follow-up
-    // block; v1 just flips the row + records the reason.
+    // Auto-approve. When the Stripe adapter is live AND we have a
+    // payment intent on this purchase, call the API to issue the
+    // refund before flipping the row. When the adapter is Noop or
+    // the row pre-dates Stripe integration (no intent id), we just
+    // flip the row and document the unrefunded payment in
+    // refundReason so admin tooling can reconcile manually.
+    const adapter = getStripeAdapter();
+    let refundIssued = false;
+    let refundError: string | null = null;
+    if (adapter.isLive() && purchase.stripePaymentIntentId) {
+      try {
+        await adapter.refundPayment({
+          paymentIntentId: purchase.stripePaymentIntentId,
+          reason: body.reason,
+        });
+        refundIssued = true;
+      } catch (err) {
+        if (err instanceof StripeNotConfiguredError) {
+          refundError = "stripe driver not configured";
+        } else {
+          refundError = err instanceof Error ? err.message : "stripe refund failed";
+        }
+      }
+    }
+
     await db
       .update(purchases)
       .set({
         status: "refunded",
         refundedAt: new Date(),
-        refundReason: body.reason ?? "auto-refund within window",
+        refundReason: refundError
+          ? `${body.reason ?? "auto-refund within window"} (stripe error: ${refundError})`
+          : body.reason ?? "auto-refund within window",
       })
       .where(eq(purchases.id, purchase.id));
 
-    return c.json({ autoApproved: true, eligibility });
+    return c.json({
+      autoApproved: true,
+      refundIssued,
+      refundError,
+      eligibility,
+    });
   },
 );

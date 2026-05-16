@@ -22,6 +22,7 @@ import { PreRegisterButton } from "@/components/pre-register-button";
 import { ExperimentEvents } from "@/components/experiment-events";
 import { InstallBar } from "@/components/install-bar";
 import { PriceBadge } from "@/components/price-badge";
+import { PurchaseButton } from "@/components/purchase-button";
 import { LocalePicker } from "@/components/locale-picker";
 import { PreviewVideosRail } from "@/components/preview-videos-rail";
 import { getUIT } from "@/i18n/server";
@@ -448,13 +449,20 @@ export default async function AppDetailPage({
               hasn't enabled the program or there's no beta release yet. */}
           <BetaJoinButton appId={app.id} />
 
-          {/* Price badge (P4-A) — renders only when the app has
-              an active pricing row for the viewer's country / default. */}
+          {/* Price badge + purchase button (P4-A / P4-A-2). Renders
+              only when the app has an active pricing row for the
+              viewer's country / default. PurchaseButton talks to
+              Stripe via the adapter — when the adapter is the Noop
+              default, the API returns a note and the button shows
+              the "Stripe not configured" hint inline. */}
           {app.pricing?.isPaid && app.pricing.price ? (
-            <PriceBadge
-              price={app.pricing.price}
-              refundWindowHours={app.pricing.refundWindowHours}
-            />
+            <div className="flex flex-wrap items-end gap-4">
+              <PriceBadge
+                price={app.pricing.price}
+                refundWindowHours={app.pricing.refundWindowHours}
+              />
+              <PurchaseButton appId={app.id} price={app.pricing.price} />
+            </div>
           ) : null}
 
           {/* Download action bar — P3-F gates installs through a
