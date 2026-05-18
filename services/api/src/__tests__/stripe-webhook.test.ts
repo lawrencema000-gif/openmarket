@@ -124,10 +124,12 @@ describe("POST /api/stripe/webhook", () => {
   });
 
   it("200 + no-op for an event type we don't handle", async () => {
+    // P4-B added subscription handlers; pick a genuinely-unhandled
+    // event type to exercise the default no-op branch.
     const body = JSON.stringify({
       id: "evt_1",
-      type: "customer.subscription.updated",
-      data: { object: { id: "sub_1" } },
+      type: "invoice.upcoming",
+      data: { object: { id: "in_test" } },
     });
     const res = await app.request("/api/stripe/webhook", {
       method: "POST",

@@ -1,6 +1,16 @@
 import { and, eq } from "drizzle-orm";
-import { purchases } from "@openmarket/db/schema";
+import { iapPurchases, purchases } from "@openmarket/db/schema";
 import { db } from "./db";
+
+type IapSubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "incomplete"
+  | "incomplete_expired"
+  | "unpaid"
+  | "paused";
 
 /**
  * Pure-ish webhook event dispatcher (P4-A-2).
@@ -31,10 +41,15 @@ export interface StripeWebhookEvent {
       id: string;
       // Checkout.Session fields
       payment_intent?: string | null;
+      subscription?: string | null;
       // PaymentIntent fields
       last_payment_error?: { message?: string } | null;
       // Charge fields
       payment_intent_id?: string;
+      // Subscription fields (customer.subscription.* events)
+      status?: string;
+      current_period_end?: number; // unix seconds
+      cancel_at_period_end?: boolean;
     };
   };
 }
@@ -55,6 +70,14 @@ export async function applyStripeWebhookEvent(
       return handlePaymentFailed(event);
     case "charge.refunded":
       return handleChargeRefunded(event);
+    // P4-B subscription lifecycle. These events flow ONLY through
+    // iap_purchases (app purchases are one-shot via Checkout +
+    // payment_intent, not subscriptions).
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+      return handleSubscriptionUpdated(event);
+    case "customer.subscription.deleted":
+      return handleSubscriptionDeleted(event);
     default:
       return {
         applied: false,
@@ -69,32 +92,59 @@ async function handleCheckoutCompleted(
 ): Promise<DispatchResult> {
   const sessionId = event.data.object.id;
   const paymentIntentId = event.data.object.payment_intent ?? null;
-  const row = await db.query.purchases.findFirst({
+  const subscriptionId = event.data.object.subscription ?? null;
+
+  // Try app purchase first.
+  const appRow = await db.query.purchases.findFirst({
     where: eq(purchases.stripeCheckoutSessionId, sessionId),
   });
-  if (!row) {
+  if (appRow) {
+    if (appRow.status === "completed") {
+      return {
+        applied: false,
+        reason: "already completed (idempotent no-op)",
+        purchaseId: appRow.id,
+      };
+    }
+    await db
+      .update(purchases)
+      .set({
+        status: "completed",
+        stripePaymentIntentId: paymentIntentId ?? appRow.stripePaymentIntentId,
+        completedAt: new Date(),
+      })
+      .where(eq(purchases.id, appRow.id));
+    return { applied: true, reason: "completed", purchaseId: appRow.id };
+  }
+
+  // Fall through to IAP purchase lookup.
+  const iapRow = await db.query.iapPurchases.findFirst({
+    where: eq(iapPurchases.stripeCheckoutSessionId, sessionId),
+  });
+  if (!iapRow) {
     return {
       applied: false,
       reason: `no purchase row for session ${sessionId}`,
       purchaseId: null,
     };
   }
-  if (row.status === "completed") {
+  if (iapRow.status === "completed") {
     return {
       applied: false,
       reason: "already completed (idempotent no-op)",
-      purchaseId: row.id,
+      purchaseId: iapRow.id,
     };
   }
   await db
-    .update(purchases)
+    .update(iapPurchases)
     .set({
       status: "completed",
-      stripePaymentIntentId: paymentIntentId ?? row.stripePaymentIntentId,
+      stripePaymentIntentId: paymentIntentId ?? iapRow.stripePaymentIntentId,
+      stripeSubscriptionId: subscriptionId ?? iapRow.stripeSubscriptionId,
       completedAt: new Date(),
     })
-    .where(eq(purchases.id, row.id));
-  return { applied: true, reason: "completed", purchaseId: row.id };
+    .where(eq(iapPurchases.id, iapRow.id));
+  return { applied: true, reason: "completed", purchaseId: iapRow.id };
 }
 
 async function handlePaymentFailed(
@@ -198,6 +248,89 @@ export async function locatePurchaseByEither(
     if (bySession) return bySession;
   }
   return undefined;
+}
+
+/**
+ * Subscription lifecycle handler (P4-B).
+ *
+ * Mirrors Stripe's subscription state onto the matching iap_purchases
+ * row. We listen for both `created` and `updated` since they carry
+ * the same payload — flipping the row is idempotent so handling
+ * both is safe and gives us the trialing→active transition for
+ * free.
+ *
+ * Lookup precedence:
+ *   1. stripe_subscription_id (set on prior updates)
+ *   2. fallback by session/intent isn't possible from this payload
+ *      — the initial customer.subscription.created carries no
+ *      session/intent, so the row MUST have been created by the
+ *      checkout.session.completed handler first. That handler
+ *      populates stripeSubscriptionId from session.subscription
+ *      before this event arrives; in the rare race we 200 + no-op
+ *      and rely on the next .updated event.
+ */
+async function handleSubscriptionUpdated(
+  event: StripeWebhookEvent,
+): Promise<DispatchResult> {
+  const subscriptionId = event.data.object.id;
+  const status = event.data.object.status as IapSubscriptionStatus | undefined;
+  const currentPeriodEnd = event.data.object.current_period_end ?? null;
+  const cancelAtPeriodEnd = !!event.data.object.cancel_at_period_end;
+
+  const row = await db.query.iapPurchases.findFirst({
+    where: eq(iapPurchases.stripeSubscriptionId, subscriptionId),
+  });
+  if (!row) {
+    return {
+      applied: false,
+      reason: `no iap_purchases row for subscription ${subscriptionId}`,
+      purchaseId: null,
+    };
+  }
+
+  await db
+    .update(iapPurchases)
+    .set({
+      subscriptionStatus: status ?? row.subscriptionStatus,
+      currentPeriodEnd:
+        currentPeriodEnd != null
+          ? new Date(currentPeriodEnd * 1000)
+          : row.currentPeriodEnd,
+      cancelAtPeriodEnd,
+    })
+    .where(eq(iapPurchases.id, row.id));
+  return { applied: true, reason: `subscription:${status ?? "updated"}`, purchaseId: row.id };
+}
+
+async function handleSubscriptionDeleted(
+  event: StripeWebhookEvent,
+): Promise<DispatchResult> {
+  const subscriptionId = event.data.object.id;
+  const row = await db.query.iapPurchases.findFirst({
+    where: eq(iapPurchases.stripeSubscriptionId, subscriptionId),
+  });
+  if (!row) {
+    return {
+      applied: false,
+      reason: `no iap_purchases row for subscription ${subscriptionId}`,
+      purchaseId: null,
+    };
+  }
+  if (row.subscriptionStatus === "canceled") {
+    return {
+      applied: false,
+      reason: "already canceled (idempotent no-op)",
+      purchaseId: row.id,
+    };
+  }
+  await db
+    .update(iapPurchases)
+    .set({
+      subscriptionStatus: "canceled",
+      cancelAtPeriodEnd: false,
+    })
+    .where(eq(iapPurchases.id, row.id));
+  return { applied: true, reason: "subscription:canceled", purchaseId: row.id };
 }
 
 // Reference to remove unused-import warnings when refactoring.

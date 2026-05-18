@@ -176,6 +176,13 @@
       "when": 1778950383707,
       "tag": "0024_glossy_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1779147573929,
+      "tag": "0025_eager_alice",
+      "breakpoints": true
     }
   ]
 }

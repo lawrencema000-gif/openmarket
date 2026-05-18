@@ -23,6 +23,7 @@ import { ExperimentEvents } from "@/components/experiment-events";
 import { InstallBar } from "@/components/install-bar";
 import { PriceBadge } from "@/components/price-badge";
 import { PurchaseButton } from "@/components/purchase-button";
+import { IapRail } from "@/components/iap-rail";
 import { LocalePicker } from "@/components/locale-picker";
 import { PreviewVideosRail } from "@/components/preview-videos-rail";
 import { getUIT } from "@/i18n/server";
@@ -480,6 +481,10 @@ export default async function AppDetailPage({
               <LibraryButton appId={app.id} />
             </div>
           </InstallBar>
+
+          {/* In-app purchases rail (P4-B) — fetched client-side; renders
+              nothing when the app has no active IAP products. */}
+          <IapRail appId={app.id} />
 
           {/* Preview videos — rendered above screenshots when present. */}
           {app.previewVideos && app.previewVideos.length > 0 && (

@@ -48,6 +48,7 @@ import { familySharingRouter } from "./routes/family-sharing";
 import { bundletoolRouter } from "./routes/bundletool";
 import { pricingRouter } from "./routes/pricing";
 import { stripeWebhookRouter } from "./routes/stripe-webhook";
+import { iapRouter } from "./routes/iap";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -124,6 +125,7 @@ app.route("/api", familySharingRouter);
 app.route("/api", bundletoolRouter);
 app.route("/api", pricingRouter);
 app.route("/api", stripeWebhookRouter);
+app.route("/api", iapRouter);
 app.route("/api", adminRouter);
 
 export default app;
