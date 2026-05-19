@@ -37,3 +37,6 @@ pnpm-debug.log*
 .vercel
 supabase/
 .email-log/
+
+# Preview screenshots from local dev runs
+.preview/

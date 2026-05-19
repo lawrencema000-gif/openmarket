@@ -4,6 +4,7 @@ import {
   StripeNotConfiguredError,
   getStripeAdapter,
   resetStripeAdapter,
+  type StripeAdapter,
 } from "../lib/stripe";
 
 describe("getStripeAdapter selection", () => {
@@ -59,7 +60,7 @@ describe("getStripeAdapter selection", () => {
 
 describe("NoopStripeAdapter", () => {
   it("throws StripeNotConfiguredError on createCheckoutSession", async () => {
-    const a = new NoopStripeAdapter();
+    const a: StripeAdapter = new NoopStripeAdapter();
     await expect(
       a.createCheckoutSession({
         purchaseId: "p",
@@ -75,7 +76,7 @@ describe("NoopStripeAdapter", () => {
   });
 
   it("throws StripeNotConfiguredError on refundPayment", async () => {
-    const a = new NoopStripeAdapter();
+    const a: StripeAdapter = new NoopStripeAdapter();
     await expect(
       a.refundPayment({ paymentIntentId: "pi_test" }),
     ).rejects.toBeInstanceOf(StripeNotConfiguredError);
