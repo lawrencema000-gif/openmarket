@@ -29,4 +29,5 @@ export * from "./payouts";
 export * from "./promoted-listings";
 export * from "./affiliates";
 export * from "./enterprise";
+export * from "./federation";
 export * from "./relations";
