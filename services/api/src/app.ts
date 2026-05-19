@@ -55,6 +55,7 @@ import { payoutsRouter } from "./routes/payouts";
 import { liveAnalyticsRouter } from "./routes/live-analytics";
 import { promotedListingsRouter } from "./routes/promoted-listings";
 import { affiliatesRouter } from "./routes/affiliates";
+import { enterpriseRouter } from "./routes/enterprise";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -138,6 +139,7 @@ app.route("/api", payoutsRouter);
 app.route("/api", liveAnalyticsRouter);
 app.route("/api", promotedListingsRouter);
 app.route("/api", affiliatesRouter);
+app.route("/api", enterpriseRouter);
 app.route("/api", adminRouter);
 
 export default app;

@@ -28,4 +28,5 @@ export * from "./app-subscriptions";
 export * from "./payouts";
 export * from "./promoted-listings";
 export * from "./affiliates";
+export * from "./enterprise";
 export * from "./relations";

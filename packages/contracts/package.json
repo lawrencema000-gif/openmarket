@@ -34,6 +34,7 @@
     "./app-subscriptions": "./src/app-subscriptions.ts",
     "./promoted-listings": "./src/promoted-listings.ts",
     "./affiliates": "./src/affiliates.ts",
+    "./enterprise": "./src/enterprise.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {
