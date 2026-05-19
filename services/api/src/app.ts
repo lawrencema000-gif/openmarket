@@ -52,6 +52,7 @@ import { iapRouter } from "./routes/iap";
 import { revenueRouter } from "./routes/revenue";
 import { appSubscriptionsRouter } from "./routes/app-subscriptions";
 import { payoutsRouter } from "./routes/payouts";
+import { liveAnalyticsRouter } from "./routes/live-analytics";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -132,6 +133,7 @@ app.route("/api", iapRouter);
 app.route("/api", revenueRouter);
 app.route("/api", appSubscriptionsRouter);
 app.route("/api", payoutsRouter);
+app.route("/api", liveAnalyticsRouter);
 app.route("/api", adminRouter);
 
 export default app;
