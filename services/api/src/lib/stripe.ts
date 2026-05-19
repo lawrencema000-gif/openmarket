@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { StripeBackedAdapter } from "./stripe-backed";
 
 /**
  * Stripe integration seam (P4-A-2).
@@ -87,12 +88,18 @@ export function getStripeAdapter(): StripeAdapter {
     driverSingleton = new NoopStripeAdapter();
     return driverSingleton;
   }
-  // `stripe` driver path: dynamic import of a follow-up
-  // StripeBackedAdapter that wraps the official `stripe` npm
-  // package. Kept un-imported here so the build doesn't choke when
-  // the package isn't installed (it isn't, in v1).
+  if (which === "stripe") {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error(
+        "STRIPE_DRIVER=stripe but STRIPE_SECRET_KEY is unset. Configure both or fall back to STRIPE_DRIVER=noop.",
+      );
+    }
+    driverSingleton = new StripeBackedAdapter(secretKey);
+    return driverSingleton;
+  }
   throw new Error(
-    `Unknown STRIPE_DRIVER=${which}. Set to 'noop' (default) or 'stripe' once the StripeBackedAdapter ships.`,
+    `Unknown STRIPE_DRIVER=${which}. Set to 'noop' (default) or 'stripe'.`,
   );
 }
 

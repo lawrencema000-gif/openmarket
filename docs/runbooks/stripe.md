@@ -7,7 +7,7 @@ OpenMarket's paid-apps flow uses Stripe Checkout for payment + the standard webh
 - Event dispatcher for the three lifecycle events that drive the `purchases.status` state machine
 - Schema: `purchases.stripeCheckoutSessionId` + the existing `stripePaymentIntentId` + indexes on both
 
-A real Stripe-backed adapter (`StripeBackedAdapter`) is the next code-change — wire `stripe.checkout.sessions.create()` + `stripe.refunds.create()` and flip `STRIPE_DRIVER=stripe`. Schema, webhook, route, and storefront UI are already in place.
+**Block DD (P4-A-2 follow-up):** the real `StripeBackedAdapter` is now shipped at `services/api/src/lib/stripe-backed.ts` and wraps the official `stripe` npm package. Selection is wired end-to-end — flip `STRIPE_DRIVER=stripe` + set `STRIPE_SECRET_KEY=sk_…` and the storefront purchase button issues real Checkout Sessions, the webhook flips rows on payment, and `/purchases/:id/refund` calls `stripe.refunds.create()` inside the auto-window. The Noop adapter remains the default so dev / CI keep working without keys.
 
 ## TL;DR
 
