@@ -32,6 +32,7 @@
     "./pricing": "./src/pricing.ts",
     "./iap": "./src/iap.ts",
     "./app-subscriptions": "./src/app-subscriptions.ts",
+    "./promoted-listings": "./src/promoted-listings.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {
