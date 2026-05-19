@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import {
   appSubscriptions,
+  developerPayoutAccounts,
   iapPurchases,
   purchases,
 } from "@openmarket/db/schema";
@@ -54,6 +55,13 @@ export interface StripeWebhookEvent {
       status?: string;
       current_period_end?: number; // unix seconds
       cancel_at_period_end?: boolean;
+      // Account fields (account.updated for Connect, P4-D)
+      charges_enabled?: boolean;
+      payouts_enabled?: boolean;
+      details_submitted?: boolean;
+      default_currency?: string;
+      country?: string;
+      requirements?: { eventually_due?: string[] } | null;
     };
   };
 }
@@ -82,6 +90,8 @@ export async function applyStripeWebhookEvent(
       return handleSubscriptionUpdated(event);
     case "customer.subscription.deleted":
       return handleSubscriptionDeleted(event);
+    case "account.updated":
+      return handleAccountUpdated(event);
     default:
       return {
         applied: false,
@@ -406,6 +416,61 @@ async function handleSubscriptionDeleted(
     applied: true,
     reason: "app-subscription:canceled",
     purchaseId: appSubRow.id,
+  };
+}
+
+/**
+ * P4-D Connect account lifecycle. Stripe fires account.updated when
+ * a developer progresses through onboarding (or when they update
+ * payout details later). We mirror the relevant fields onto our
+ * developer_payout_accounts row so dev-portal / admin reads stay
+ * current without a live retrieve() round-trip on every page load.
+ */
+async function handleAccountUpdated(
+  event: StripeWebhookEvent,
+): Promise<DispatchResult> {
+  const accountId = event.data.object.id;
+  const row = await db.query.developerPayoutAccounts.findFirst({
+    where: eq(developerPayoutAccounts.stripeAccountId, accountId),
+  });
+  if (!row) {
+    return {
+      applied: false,
+      reason: `no payout account row for ${accountId}`,
+      purchaseId: null,
+    };
+  }
+  const chargesEnabled =
+    event.data.object.charges_enabled ?? row.chargesEnabled;
+  const payoutsEnabled =
+    event.data.object.payouts_enabled ?? row.payoutsEnabled;
+  const detailsSubmitted =
+    event.data.object.details_submitted ?? row.detailsSubmitted;
+  const defaultCurrency =
+    event.data.object.default_currency ?? row.defaultCurrency;
+  const country = event.data.object.country ?? row.countryCode;
+  // Tax info is collected when Stripe's eventually_due queue is empty
+  // — heuristic that matches the onboarding completion criteria.
+  const requirementsDone =
+    !event.data.object.requirements?.eventually_due?.length;
+
+  await db
+    .update(developerPayoutAccounts)
+    .set({
+      chargesEnabled,
+      payoutsEnabled,
+      detailsSubmitted,
+      defaultCurrency,
+      countryCode: country,
+      taxInfoCollected: requirementsDone,
+      updatedAt: new Date(),
+    })
+    .where(eq(developerPayoutAccounts.id, row.id));
+
+  return {
+    applied: true,
+    reason: `account.updated:${payoutsEnabled ? "ready" : "pending"}`,
+    purchaseId: row.id,
   };
 }
 

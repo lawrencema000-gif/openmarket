@@ -43,12 +43,59 @@ export interface StripeRefundResult {
   status: string;
 }
 
+/**
+ * Stripe Connect Express interfaces (P4-D). Onboarding returns an
+ * account id + a hosted-onboarding URL; status checks mirror the
+ * subset of Stripe's account fields we surface to devs.
+ */
+export interface ConnectOnboardingRequest {
+  developerId: string;
+  email: string;
+  countryCode?: string;
+  refreshUrl: string;
+  returnUrl: string;
+}
+
+export interface ConnectOnboardingResult {
+  accountId: string;
+  onboardingUrl: string;
+}
+
+export interface ConnectAccountStatus {
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  defaultCurrency: string | null;
+  country: string | null;
+}
+
+export interface TransferRequest {
+  destinationAccountId: string;
+  amountCents: number;
+  currency: string;
+  metadata: { payoutId: string; developerId: string };
+}
+
+export interface TransferResult {
+  transferId: string;
+}
+
 export interface StripeAdapter {
   name(): string;
   /** Whether this adapter actually talks to Stripe. */
   isLive(): boolean;
   createCheckoutSession(req: CheckoutSessionRequest): Promise<CheckoutSession>;
   refundPayment(req: StripeRefundRequest): Promise<StripeRefundResult>;
+  createConnectOnboarding(
+    req: ConnectOnboardingRequest,
+  ): Promise<ConnectOnboardingResult>;
+  refreshConnectOnboarding(args: {
+    accountId: string;
+    refreshUrl: string;
+    returnUrl: string;
+  }): Promise<{ onboardingUrl: string }>;
+  retrieveConnectAccount(accountId: string): Promise<ConnectAccountStatus>;
+  createTransfer(req: TransferRequest): Promise<TransferResult>;
 }
 
 /**
@@ -75,6 +122,18 @@ export class NoopStripeAdapter implements StripeAdapter {
     throw new StripeNotConfiguredError();
   }
   async refundPayment(): Promise<StripeRefundResult> {
+    throw new StripeNotConfiguredError();
+  }
+  async createConnectOnboarding(): Promise<ConnectOnboardingResult> {
+    throw new StripeNotConfiguredError();
+  }
+  async refreshConnectOnboarding(): Promise<{ onboardingUrl: string }> {
+    throw new StripeNotConfiguredError();
+  }
+  async retrieveConnectAccount(): Promise<ConnectAccountStatus> {
+    throw new StripeNotConfiguredError();
+  }
+  async createTransfer(): Promise<TransferResult> {
     throw new StripeNotConfiguredError();
   }
 }

@@ -2,9 +2,14 @@ import Stripe from "stripe";
 import type {
   CheckoutSession,
   CheckoutSessionRequest,
+  ConnectAccountStatus,
+  ConnectOnboardingRequest,
+  ConnectOnboardingResult,
   StripeAdapter,
   StripeRefundRequest,
   StripeRefundResult,
+  TransferRequest,
+  TransferResult,
 } from "./stripe";
 
 /**
@@ -106,5 +111,71 @@ export class StripeBackedAdapter implements StripeAdapter {
       refundId: refund.id,
       status: refund.status ?? "unknown",
     };
+  }
+
+  // ── Connect (P4-D) ──────────────────────────────────────────
+
+  async createConnectOnboarding(
+    req: ConnectOnboardingRequest,
+  ): Promise<ConnectOnboardingResult> {
+    const account = await this.client.accounts.create({
+      type: "express",
+      email: req.email,
+      country: req.countryCode,
+      capabilities: {
+        transfers: { requested: true },
+      },
+      metadata: { developerId: req.developerId },
+    });
+    const link = await this.client.accountLinks.create({
+      account: account.id,
+      refresh_url: req.refreshUrl,
+      return_url: req.returnUrl,
+      type: "account_onboarding",
+    });
+    return {
+      accountId: account.id,
+      onboardingUrl: link.url,
+    };
+  }
+
+  async refreshConnectOnboarding(args: {
+    accountId: string;
+    refreshUrl: string;
+    returnUrl: string;
+  }): Promise<{ onboardingUrl: string }> {
+    const link = await this.client.accountLinks.create({
+      account: args.accountId,
+      refresh_url: args.refreshUrl,
+      return_url: args.returnUrl,
+      type: "account_onboarding",
+    });
+    return { onboardingUrl: link.url };
+  }
+
+  async retrieveConnectAccount(
+    accountId: string,
+  ): Promise<ConnectAccountStatus> {
+    const account = await this.client.accounts.retrieve(accountId);
+    return {
+      chargesEnabled: account.charges_enabled ?? false,
+      payoutsEnabled: account.payouts_enabled ?? false,
+      detailsSubmitted: account.details_submitted ?? false,
+      defaultCurrency: account.default_currency ?? null,
+      country: account.country ?? null,
+    };
+  }
+
+  async createTransfer(req: TransferRequest): Promise<TransferResult> {
+    const transfer = await this.client.transfers.create({
+      amount: req.amountCents,
+      currency: req.currency.toLowerCase(),
+      destination: req.destinationAccountId,
+      metadata: {
+        payoutId: req.metadata.payoutId,
+        developerId: req.metadata.developerId,
+      },
+    });
+    return { transferId: transfer.id };
   }
 }
