@@ -1,12 +1,19 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap');
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+@import "@openmarket/ui/styles/tokens.css";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
 
 body {
-  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-family: 'Work Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  color: rgb(var(--om-ink));
+}
+
+h1, h2, h3, h4, h5, h6, .om-display {
+  font-family: 'Outfit', 'Work Sans', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

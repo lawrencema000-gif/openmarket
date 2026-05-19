@@ -4,13 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import {
-  PageHeader,
   Stat,
   Card,
   CardHeader,
   CardTitle,
   CardContent,
   Button,
+  Aurora,
+  Eyebrow,
+  GradientText,
 } from "@openmarket/ui";
 
 interface Developer {
@@ -92,11 +94,31 @@ export default function DashboardPage() {
   const activeTrustIndex = currentTrustStep >= 0 ? currentTrustStep : 0;
 
   return (
-    <div className="max-w-4xl space-y-8">
-      <PageHeader
-        title="Dashboard"
-        description={`Welcome back${developer?.displayName ? `, ${developer.displayName}` : ""}. Here's an overview of your developer account.`}
-      />
+    <div className="max-w-5xl space-y-8">
+      <section className="relative isolate overflow-hidden rounded-3xl om-glass-strong p-8 sm:p-10">
+        <Aurora />
+        <div className="relative space-y-3">
+          <Eyebrow tone="primary" pulse>
+            Developer console
+          </Eyebrow>
+          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+            Welcome back
+            {developer?.displayName ? (
+              <>
+                ,{" "}
+                <GradientText as="span">
+                  {developer.displayName}
+                </GradientText>
+              </>
+            ) : null}
+            .
+          </h1>
+          <p className="text-slate-500 max-w-xl">
+            Snapshot of your apps, trust state, and the things you can ship
+            right now.
+          </p>
+        </div>
+      </section>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

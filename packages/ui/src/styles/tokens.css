@@ -1,0 +1,206 @@
+/**
+ * OpenMarket design tokens.
+ *
+ * Single source of truth for the brand visual language. Imported once
+ * per app from the app-level globals.css; do not redefine these in
+ * individual components.
+ *
+ * Palette: trust-purple primary + transaction-green CTA, sourced from
+ * the ui-ux-pro-max recommendation for an Android app marketplace.
+ * Glassmorphism surfaces with backdrop blur.
+ */
+
+:root {
+  /* Brand */
+  --om-primary: 124 58 237;       /* violet-600  #7C3AED */
+  --om-primary-soft: 167 139 250; /* violet-400  #A78BFA */
+  --om-primary-deep: 76 29 149;   /* violet-900  #4C1D95 */
+  --om-cta: 34 197 94;            /* green-500   #22C55E */
+  --om-cta-deep: 21 128 61;       /* green-700   #15803D */
+
+  /* Surfaces */
+  --om-bg: 250 245 255;           /* purple-50   #FAF5FF */
+  --om-surface: 255 255 255;
+  --om-surface-tint: 245 243 255; /* violet-50   #F5F3FF */
+  --om-ink: 76 29 149;            /* violet-900  #4C1D95 */
+  --om-ink-mute: 71 85 105;       /* slate-600   #475569 */
+  --om-ink-soft: 100 116 139;     /* slate-500   #64748B */
+  --om-line: 226 232 240;         /* slate-200   #E2E8F0 */
+  --om-line-soft: 241 245 249;    /* slate-100   #F1F5F9 */
+
+  /* Semantic */
+  --om-success: 16 185 129;
+  --om-warning: 245 158 11;
+  --om-danger: 239 68 68;
+  --om-info: 59 130 246;
+
+  /* Glass */
+  --om-glass-bg: 255 255 255;
+  --om-glass-opacity: 0.7;
+  --om-glass-border: 255 255 255;
+  --om-glass-border-opacity: 0.4;
+
+  /* Motion */
+  --om-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --om-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --om-dur-fast: 150ms;
+  --om-dur-base: 220ms;
+  --om-dur-slow: 360ms;
+
+  /* Radii */
+  --om-radius-sm: 8px;
+  --om-radius-md: 12px;
+  --om-radius-lg: 16px;
+  --om-radius-xl: 24px;
+  --om-radius-2xl: 32px;
+
+  /* Shadows */
+  --om-shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -8px rgb(76 29 149 / 0.08);
+  --om-shadow-lift: 0 10px 30px -12px rgb(76 29 149 / 0.18);
+  --om-shadow-glow: 0 0 0 1px rgb(167 139 250 / 0.3), 0 18px 40px -16px rgb(124 58 237 / 0.5);
+}
+
+/* Reduced-motion respect — disables decorative aurora animations
+   without breaking layout transitions. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --om-dur-fast: 0ms;
+    --om-dur-base: 0ms;
+    --om-dur-slow: 0ms;
+  }
+  .om-aurora,
+  .om-aurora * {
+    animation: none !important;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ *  Utility classes — small, single-purpose. Apps compose with
+ *  Tailwind on top of these.
+ * ─────────────────────────────────────────────────────────────────── */
+
+.om-bg-app {
+  background:
+    radial-gradient(ellipse at top left, rgb(245 243 255) 0%, transparent 60%),
+    radial-gradient(ellipse at top right, rgb(254 240 255) 0%, transparent 60%),
+    rgb(250 250 252);
+}
+
+.om-glass {
+  background-color: rgb(var(--om-glass-bg) / var(--om-glass-opacity));
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgb(var(--om-glass-border) / var(--om-glass-border-opacity));
+}
+
+.om-glass-strong {
+  background-color: rgb(var(--om-glass-bg) / 0.82);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgb(255 255 255 / 0.6);
+}
+
+.om-text-gradient {
+  background: linear-gradient(120deg, rgb(124 58 237), rgb(167 139 250) 40%, rgb(34 197 94));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Aurora — animated colour blobs sitting behind the hero. Keep the
+   sizes generous and the blur huge; the goal is suggestion not focus. */
+.om-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.om-aurora::before,
+.om-aurora::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.om-aurora::before {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle at center, rgb(167 139 250) 0%, transparent 70%);
+  top: -120px;
+  left: -120px;
+  animation: om-aurora-drift-1 22s var(--om-ease-in-out) infinite alternate;
+}
+
+.om-aurora::after {
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle at center, rgb(34 197 94 / 0.5) 0%, transparent 70%);
+  bottom: -140px;
+  right: -120px;
+  animation: om-aurora-drift-2 26s var(--om-ease-in-out) infinite alternate;
+}
+
+@keyframes om-aurora-drift-1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(80px, 40px) scale(1.1); }
+}
+
+@keyframes om-aurora-drift-2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-60px, -40px) scale(1.08); }
+}
+
+/* Tile-hover lift. Apply on cards in lists. */
+.om-tile {
+  transition:
+    transform var(--om-dur-base) var(--om-ease-out),
+    box-shadow var(--om-dur-base) var(--om-ease-out),
+    border-color var(--om-dur-base) var(--om-ease-out);
+}
+
+.om-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--om-shadow-lift);
+}
+
+/* Subtle border-glow on focus + interactive elements. */
+.om-glow-ring:focus-visible {
+  outline: none;
+  box-shadow: var(--om-shadow-glow);
+}
+
+/* Marquee — single linear pass; pause on hover. */
+@keyframes om-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.om-marquee {
+  animation: om-marquee 40s linear infinite;
+}
+
+.om-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Shimmer — replaces the existing app-level keyframe so it can be
+   shared. */
+@keyframes om-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.om-skeleton {
+  background: linear-gradient(90deg,
+    rgb(241 245 249) 0%,
+    rgb(248 250 252) 50%,
+    rgb(241 245 249) 100%);
+  background-size: 200% 100%;
+  animation: om-shimmer 1.6s linear infinite;
+}

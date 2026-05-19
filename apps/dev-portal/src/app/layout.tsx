@@ -79,11 +79,11 @@ function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-60 bg-slate-900 hidden md:flex flex-col z-20">
+    <aside className="fixed left-0 top-0 h-full w-60 bg-gradient-to-b from-slate-900 via-violet-950 to-slate-900 hidden md:flex flex-col z-20 border-r border-violet-900/40">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-slate-800">
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center flex-shrink-0 shadow-md shadow-violet-500/40">
             <svg className="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 1.5a.75.75 0 0 1 .75.75V7.5h-1.5V2.25A.75.75 0 0 1 12 1.5ZM11.25 7.5v5.69l-3.22-3.22a.75.75 0 0 0-1.06 1.06l4.5 4.5a.75.75 0 0 0 1.06 0l4.5-4.5a.75.75 0 1 0-1.06-1.06l-3.22 3.22V7.5h-1.5Z" />
               <path fillRule="evenodd" d="M3 15.75a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75ZM3 18.75a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
@@ -106,8 +106,8 @@ function Sidebar() {
               href={link.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-slate-800 text-white border-l-2 border-blue-500 pl-[10px]"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800 border-l-2 border-transparent pl-[10px]"
+                  ? "bg-violet-600/20 text-white border-l-2 border-violet-400 pl-[10px] shadow-inner shadow-violet-500/10"
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent pl-[10px]"
               }`}
             >
               {link.icon}
@@ -146,7 +146,7 @@ function MobileNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 bg-slate-900 border-t border-slate-800 flex z-20"
+      className="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur-lg border-t border-violet-900/40 flex z-20"
       role="navigation"
       aria-label="Mobile navigation"
     >
@@ -157,7 +157,7 @@ function MobileNav() {
             key={link.href}
             href={link.href}
             className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${
-              isActive ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+              isActive ? "text-violet-400" : "text-slate-500 hover:text-slate-300"
             }`}
           >
             {link.icon}
@@ -206,7 +206,7 @@ export default function RootLayout({
         <title>OpenMarket Developer Console</title>
         <meta name="description" content="Manage your apps and releases on OpenMarket." />
       </head>
-      <body className="bg-slate-50 text-gray-900">
+      <body className="om-bg-app text-slate-900">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white"

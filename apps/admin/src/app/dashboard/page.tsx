@@ -1,4 +1,14 @@
-import { PageHeader, Stat, StatusBadge, Card, CardHeader, CardTitle, CardContent } from "@openmarket/ui";
+import {
+  Stat,
+  StatusBadge,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Aurora,
+  Eyebrow,
+  GradientText,
+} from "@openmarket/ui";
 import { API_URL } from "@/lib/api";
 
 interface BombSignal {
@@ -73,10 +83,21 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Dashboard"
-        description="Moderation command center — overview of risk queue, reports, and recent actions."
-      />
+      <section className="relative isolate overflow-hidden rounded-3xl om-glass-strong p-8 sm:p-10">
+        <Aurora />
+        <div className="relative space-y-3">
+          <Eyebrow tone="neutral" pulse>
+            Moderation
+          </Eyebrow>
+          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+            <GradientText as="span">Command center.</GradientText>
+          </h1>
+          <p className="text-slate-500 max-w-2xl">
+            Risk queue, reports, and recent actions — at a glance. Click in for
+            the full audit trail.
+          </p>
+        </div>
+      </section>
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

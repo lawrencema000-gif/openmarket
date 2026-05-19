@@ -43,7 +43,7 @@ export default async function RootLayout({
   const { locale, messages, t } = await getUIT();
   return (
     <html lang={locale}>
-      <body className="min-h-screen bg-slate-50/50 text-gray-900 flex flex-col">
+      <body className="min-h-screen om-bg-app text-slate-900 flex flex-col">
         {/* Plausible — privacy-respecting analytics. No cookies, no personal IDs.
             Active only when NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set in env. */}
         {PLAUSIBLE_DOMAIN ? (
@@ -65,12 +65,12 @@ export default async function RootLayout({
 
         <header
           role="banner"
-          className="bg-white border-b border-gray-200/80 sticky top-0 z-40 shadow-sm"
+          className="om-glass-strong border-b border-white/40 sticky top-0 z-40"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-6">
             {/* Brand */}
             <Link href="/" className="flex items-center gap-2 shrink-0 group">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm group-hover:bg-blue-700 transition-colors">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-violet-700 flex items-center justify-center shadow-md shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-shadow">
                 <svg
                   className="w-4 h-4 text-white"
                   viewBox="0 0 24 24"
@@ -83,7 +83,7 @@ export default async function RootLayout({
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </div>
-              <span className="font-bold text-xl text-gray-900 tracking-tight">OpenMarket</span>
+              <span className="om-display font-bold text-xl text-slate-900 tracking-tight">OpenMarket</span>
             </Link>
 
             {/* Center search */}
@@ -99,7 +99,7 @@ export default async function RootLayout({
             >
               <Link
                 href="/search"
-                className="px-3 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium transition-colors hidden sm:block"
+                className="px-3 py-2 rounded-lg text-slate-600 hover:text-violet-700 hover:bg-violet-50/60 font-medium transition-colors hidden sm:block"
               >
                 {t("nav.browse")}
               </Link>
@@ -123,72 +123,72 @@ export default async function RootLayout({
           {children}
         </main>
 
-        <footer className="bg-gray-50 border-t border-gray-200/80 mt-16">
+        <footer className="om-glass border-t border-white/50 mt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {/* Discover */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">
+                <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-[0.12em] mb-4">
                   Discover
                 </h3>
-                <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><Link href="/search" className="hover:text-gray-900 transition-colors">Browse All Apps</Link></li>
-                  <li><Link href="/search?trustTier=verified" className="hover:text-gray-900 transition-colors">Verified Apps</Link></li>
-                  <li><Link href="/search?category=productivity" className="hover:text-gray-900 transition-colors">Productivity</Link></li>
-                  <li><Link href="/search?category=tools" className="hover:text-gray-900 transition-colors">Tools</Link></li>
+                <ul className="space-y-2.5 text-sm text-slate-500">
+                  <li><Link href="/search" className="hover:text-violet-700 transition-colors">Browse All Apps</Link></li>
+                  <li><Link href="/search?trustTier=verified" className="hover:text-violet-700 transition-colors">Verified Apps</Link></li>
+                  <li><Link href="/search?category=productivity" className="hover:text-violet-700 transition-colors">Productivity</Link></li>
+                  <li><Link href="/search?category=tools" className="hover:text-violet-700 transition-colors">Tools</Link></li>
                 </ul>
               </div>
 
               {/* Developers */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">
+                <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-[0.12em] mb-4">
                   Developers
                 </h3>
-                <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><a href="https://openmarket-dev-portal.vercel.app" className="hover:text-gray-900 transition-colors">Developer Portal</a></li>
-                  <li><a href="https://openmarket-dev-portal.vercel.app/apps/new" className="hover:text-gray-900 transition-colors">Publish an App</a></li>
-                  <li><a href="https://github.com/lawrencema000-gif/openmarket/blob/main/docs/IMPLEMENTATION-PLAN.md" className="hover:text-gray-900 transition-colors">Implementation plan</a></li>
+                <ul className="space-y-2.5 text-sm text-slate-500">
+                  <li><a href="https://openmarket-dev-portal.vercel.app" className="hover:text-violet-700 transition-colors">Developer Portal</a></li>
+                  <li><a href="https://openmarket-dev-portal.vercel.app/apps/new" className="hover:text-violet-700 transition-colors">Publish an App</a></li>
+                  <li><a href="https://github.com/lawrencema000-gif/openmarket/blob/main/docs/IMPLEMENTATION-PLAN.md" className="hover:text-violet-700 transition-colors">Implementation plan</a></li>
                   <li><span className="text-gray-400 cursor-not-allowed" title="Tier 2 — coming after Tier 1 ships">API Reference (planned)</span></li>
                 </ul>
               </div>
 
               {/* About */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">
+                <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-[0.12em] mb-4">
                   {t("footer.about")}
                 </h3>
-                <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><Link href="/about" className="hover:text-gray-900 transition-colors">About OpenMarket</Link></li>
-                  <li><Link href="/content-policy" className="hover:text-gray-900 transition-colors">Content Policy</Link></li>
-                  <li><Link href="/transparency-report" className="hover:text-gray-900 transition-colors">Transparency Report</Link></li>
-                  <li><a href="https://github.com/lawrencema000-gif/openmarket" className="hover:text-gray-900 transition-colors">GitHub</a></li>
+                <ul className="space-y-2.5 text-sm text-slate-500">
+                  <li><Link href="/about" className="hover:text-violet-700 transition-colors">About OpenMarket</Link></li>
+                  <li><Link href="/content-policy" className="hover:text-violet-700 transition-colors">Content Policy</Link></li>
+                  <li><Link href="/transparency-report" className="hover:text-violet-700 transition-colors">Transparency Report</Link></li>
+                  <li><a href="https://github.com/lawrencema000-gif/openmarket" className="hover:text-violet-700 transition-colors">GitHub</a></li>
                 </ul>
               </div>
 
               {/* Legal */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">
+                <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-[0.12em] mb-4">
                   {t("footer.legal")}
                 </h3>
-                <ul className="space-y-2.5 text-sm text-gray-500">
-                  <li><Link href="/privacy" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
-                  <li><Link href="/terms" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
-                  <li><Link href="/dmca" className="hover:text-gray-900 transition-colors">DMCA</Link></li>
-                  <li><Link href="/security" className="hover:text-gray-900 transition-colors">Security</Link></li>
+                <ul className="space-y-2.5 text-sm text-slate-500">
+                  <li><Link href="/privacy" className="hover:text-violet-700 transition-colors">Privacy Policy</Link></li>
+                  <li><Link href="/terms" className="hover:text-violet-700 transition-colors">Terms of Service</Link></li>
+                  <li><Link href="/dmca" className="hover:text-violet-700 transition-colors">DMCA</Link></li>
+                  <li><Link href="/security" className="hover:text-violet-700 transition-colors">Security</Link></li>
                 </ul>
               </div>
             </div>
 
-            <div className="mt-10 pt-6 border-t border-gray-200 flex items-center justify-between">
+            <div className="mt-10 pt-6 border-t border-white/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-600 to-violet-700 flex items-center justify-center shadow-sm shadow-violet-500/40">
                   <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">OpenMarket</span>
+                <span className="om-display text-sm font-semibold text-slate-900">OpenMarket</span>
               </div>
-              <p className="text-xs text-gray-400">© 2026 OpenMarket. Open source, transparent, yours.</p>
+              <p className="text-xs text-slate-500">© 2026 OpenMarket. Open source, transparent, yours.</p>
             </div>
           </div>
         </footer>
