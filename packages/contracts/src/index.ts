@@ -25,3 +25,4 @@ export * from "./family-sharing";
 export * from "./aab";
 export * from "./pricing";
 export * from "./iap";
+export * from "./app-subscriptions";

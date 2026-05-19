@@ -24,4 +24,5 @@ export * from "./parental-controls";
 export * from "./family-sharing";
 export * from "./pricing";
 export * from "./iap";
+export * from "./app-subscriptions";
 export * from "./relations";

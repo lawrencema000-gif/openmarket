@@ -183,6 +183,13 @@
       "when": 1779147573929,
       "tag": "0025_eager_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1779152789338,
+      "tag": "0026_daffy_thunderbird",
+      "breakpoints": true
     }
   ]
 }

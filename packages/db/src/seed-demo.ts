@@ -29,7 +29,6 @@ async function main() {
       .values({
         email: devEmail,
         displayName: "Demo Studios",
-        websiteUrl: "https://demo.openmarket.local",
         trustLevel: "verified",
       })
       .returning();

@@ -135,6 +135,22 @@ export const apps = pgTable("apps", {
    */
   refundWindowHours: integer("refund_window_hours"),
   /**
+   * App-level subscription (P4-C). When true, the storefront swaps
+   * the regular install / purchase button for "Subscribe to install".
+   * Users must have an active app_subscriptions row to download.
+   *
+   * Mutually exclusive with one-time paid apps: the dev-portal
+   * pricing form refuses to set both subscriptionEnabled AND a
+   * non-zero default price on the same app.
+   */
+  subscriptionEnabled: boolean("subscription_enabled")
+    .default(false)
+    .notNull(),
+  /** day | week | month | year (same as iap_products). Required when subscriptionEnabled. */
+  subscriptionInterval: text("subscription_interval"),
+  subscriptionIntervalCount: integer("subscription_interval_count"),
+  subscriptionTrialDays: integer("subscription_trial_days"),
+  /**
    * Source-code transparency verification (P3-O).
    *
    * Two independent attestations, set by admins on the admin

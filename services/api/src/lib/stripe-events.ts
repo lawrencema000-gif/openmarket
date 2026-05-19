@@ -1,5 +1,9 @@
 import { and, eq } from "drizzle-orm";
-import { iapPurchases, purchases } from "@openmarket/db/schema";
+import {
+  appSubscriptions,
+  iapPurchases,
+  purchases,
+} from "@openmarket/db/schema";
 import { db } from "./db";
 
 type IapSubscriptionStatus =
@@ -121,30 +125,55 @@ async function handleCheckoutCompleted(
   const iapRow = await db.query.iapPurchases.findFirst({
     where: eq(iapPurchases.stripeCheckoutSessionId, sessionId),
   });
-  if (!iapRow) {
+  if (iapRow) {
+    if (iapRow.status === "completed") {
+      return {
+        applied: false,
+        reason: "already completed (idempotent no-op)",
+        purchaseId: iapRow.id,
+      };
+    }
+    await db
+      .update(iapPurchases)
+      .set({
+        status: "completed",
+        stripePaymentIntentId: paymentIntentId ?? iapRow.stripePaymentIntentId,
+        stripeSubscriptionId: subscriptionId ?? iapRow.stripeSubscriptionId,
+        completedAt: new Date(),
+      })
+      .where(eq(iapPurchases.id, iapRow.id));
+    return { applied: true, reason: "completed", purchaseId: iapRow.id };
+  }
+
+  // P4-C: app-level subscriptions. checkout.session.completed for a
+  // Stripe Subscription Checkout carries `subscription`; we capture
+  // it onto our row and let the customer.subscription.* events drive
+  // the lifecycle flips from here.
+  const appSubRow = await db.query.appSubscriptions.findFirst({
+    where: eq(appSubscriptions.stripeCheckoutSessionId, sessionId),
+  });
+  if (!appSubRow) {
     return {
       applied: false,
       reason: `no purchase row for session ${sessionId}`,
       purchaseId: null,
     };
   }
-  if (iapRow.status === "completed") {
+  if (appSubRow.status === "active" || appSubRow.status === "trialing") {
     return {
       applied: false,
-      reason: "already completed (idempotent no-op)",
-      purchaseId: iapRow.id,
+      reason: "already active (idempotent no-op)",
+      purchaseId: appSubRow.id,
     };
   }
   await db
-    .update(iapPurchases)
+    .update(appSubscriptions)
     .set({
-      status: "completed",
-      stripePaymentIntentId: paymentIntentId ?? iapRow.stripePaymentIntentId,
-      stripeSubscriptionId: subscriptionId ?? iapRow.stripeSubscriptionId,
-      completedAt: new Date(),
+      status: appSubRow.trialDays ? "trialing" : "active",
+      stripeSubscriptionId: subscriptionId ?? appSubRow.stripeSubscriptionId,
     })
-    .where(eq(iapPurchases.id, iapRow.id));
-  return { applied: true, reason: "completed", purchaseId: iapRow.id };
+    .where(eq(appSubscriptions.id, appSubRow.id));
+  return { applied: true, reason: "app-subscription:started", purchaseId: appSubRow.id };
 }
 
 async function handlePaymentFailed(
@@ -277,60 +306,107 @@ async function handleSubscriptionUpdated(
   const currentPeriodEnd = event.data.object.current_period_end ?? null;
   const cancelAtPeriodEnd = !!event.data.object.cancel_at_period_end;
 
-  const row = await db.query.iapPurchases.findFirst({
+  // Try IAP purchase first.
+  const iapRow = await db.query.iapPurchases.findFirst({
     where: eq(iapPurchases.stripeSubscriptionId, subscriptionId),
   });
-  if (!row) {
+  if (iapRow) {
+    await db
+      .update(iapPurchases)
+      .set({
+        subscriptionStatus: status ?? iapRow.subscriptionStatus,
+        currentPeriodEnd:
+          currentPeriodEnd != null
+            ? new Date(currentPeriodEnd * 1000)
+            : iapRow.currentPeriodEnd,
+        cancelAtPeriodEnd,
+      })
+      .where(eq(iapPurchases.id, iapRow.id));
+    return { applied: true, reason: `subscription:${status ?? "updated"}`, purchaseId: iapRow.id };
+  }
+
+  // Fall through to app-level subscription (P4-C).
+  const appSubRow = await db.query.appSubscriptions.findFirst({
+    where: eq(appSubscriptions.stripeSubscriptionId, subscriptionId),
+  });
+  if (!appSubRow) {
     return {
       applied: false,
-      reason: `no iap_purchases row for subscription ${subscriptionId}`,
+      reason: `no purchase row for subscription ${subscriptionId}`,
       purchaseId: null,
     };
   }
-
   await db
-    .update(iapPurchases)
+    .update(appSubscriptions)
     .set({
-      subscriptionStatus: status ?? row.subscriptionStatus,
+      status: status ?? appSubRow.status,
       currentPeriodEnd:
         currentPeriodEnd != null
           ? new Date(currentPeriodEnd * 1000)
-          : row.currentPeriodEnd,
+          : appSubRow.currentPeriodEnd,
       cancelAtPeriodEnd,
     })
-    .where(eq(iapPurchases.id, row.id));
-  return { applied: true, reason: `subscription:${status ?? "updated"}`, purchaseId: row.id };
+    .where(eq(appSubscriptions.id, appSubRow.id));
+  return {
+    applied: true,
+    reason: `app-subscription:${status ?? "updated"}`,
+    purchaseId: appSubRow.id,
+  };
 }
 
 async function handleSubscriptionDeleted(
   event: StripeWebhookEvent,
 ): Promise<DispatchResult> {
   const subscriptionId = event.data.object.id;
-  const row = await db.query.iapPurchases.findFirst({
+
+  const iapRow = await db.query.iapPurchases.findFirst({
     where: eq(iapPurchases.stripeSubscriptionId, subscriptionId),
   });
-  if (!row) {
+  if (iapRow) {
+    if (iapRow.subscriptionStatus === "canceled") {
+      return {
+        applied: false,
+        reason: "already canceled (idempotent no-op)",
+        purchaseId: iapRow.id,
+      };
+    }
+    await db
+      .update(iapPurchases)
+      .set({ subscriptionStatus: "canceled", cancelAtPeriodEnd: false })
+      .where(eq(iapPurchases.id, iapRow.id));
+    return { applied: true, reason: "subscription:canceled", purchaseId: iapRow.id };
+  }
+
+  const appSubRow = await db.query.appSubscriptions.findFirst({
+    where: eq(appSubscriptions.stripeSubscriptionId, subscriptionId),
+  });
+  if (!appSubRow) {
     return {
       applied: false,
-      reason: `no iap_purchases row for subscription ${subscriptionId}`,
+      reason: `no purchase row for subscription ${subscriptionId}`,
       purchaseId: null,
     };
   }
-  if (row.subscriptionStatus === "canceled") {
+  if (appSubRow.status === "canceled") {
     return {
       applied: false,
       reason: "already canceled (idempotent no-op)",
-      purchaseId: row.id,
+      purchaseId: appSubRow.id,
     };
   }
   await db
-    .update(iapPurchases)
+    .update(appSubscriptions)
     .set({
-      subscriptionStatus: "canceled",
+      status: "canceled",
       cancelAtPeriodEnd: false,
+      canceledAt: new Date(),
     })
-    .where(eq(iapPurchases.id, row.id));
-  return { applied: true, reason: "subscription:canceled", purchaseId: row.id };
+    .where(eq(appSubscriptions.id, appSubRow.id));
+  return {
+    applied: true,
+    reason: "app-subscription:canceled",
+    purchaseId: appSubRow.id,
+  };
 }
 
 // Reference to remove unused-import warnings when refactoring.

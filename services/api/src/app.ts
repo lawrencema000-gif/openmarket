@@ -50,6 +50,7 @@ import { pricingRouter } from "./routes/pricing";
 import { stripeWebhookRouter } from "./routes/stripe-webhook";
 import { iapRouter } from "./routes/iap";
 import { revenueRouter } from "./routes/revenue";
+import { appSubscriptionsRouter } from "./routes/app-subscriptions";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -128,6 +129,7 @@ app.route("/api", pricingRouter);
 app.route("/api", stripeWebhookRouter);
 app.route("/api", iapRouter);
 app.route("/api", revenueRouter);
+app.route("/api", appSubscriptionsRouter);
 app.route("/api", adminRouter);
 
 export default app;
