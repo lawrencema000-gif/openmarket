@@ -33,6 +33,7 @@
     "./iap": "./src/iap.ts",
     "./app-subscriptions": "./src/app-subscriptions.ts",
     "./promoted-listings": "./src/promoted-listings.ts",
+    "./affiliates": "./src/affiliates.ts",
     "./email": "./src/email.ts"
   },
   "scripts": {

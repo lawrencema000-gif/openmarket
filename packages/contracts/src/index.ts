@@ -27,3 +27,4 @@ export * from "./pricing";
 export * from "./iap";
 export * from "./app-subscriptions";
 export * from "./promoted-listings";
+export * from "./affiliates";

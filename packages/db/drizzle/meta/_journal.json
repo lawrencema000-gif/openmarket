@@ -204,6 +204,13 @@
       "when": 1779153896459,
       "tag": "0028_icy_lionheart",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1779154427798,
+      "tag": "0029_majestic_captain_universe",
+      "breakpoints": true
     }
   ]
 }
