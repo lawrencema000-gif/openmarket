@@ -20,6 +20,7 @@ import {
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
+import { rateLimit } from "../middleware/rate-limit";
 import {
   findEffectiveDeveloperContext,
   roleSatisfies,
@@ -248,6 +249,11 @@ affiliatesRouter.patch(
 
 affiliatesRouter.post(
   "/affiliate/click",
+  // Device-fingerprint dedup (below) stops a single device padding clicks,
+  // but does nothing against a distributed botnet rotating fingerprints.
+  // A per-IP cap raises the cost of that attack. Generous enough that a
+  // real user browsing several referral links in a session is unaffected.
+  rateLimit({ windowSec: 60, max: 30, by: "ip", bucket: "affiliate-click" }),
   zValidator("json", affiliateClickSchema),
   async (c) => {
     const input = c.req.valid("json");

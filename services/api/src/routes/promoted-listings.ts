@@ -16,6 +16,7 @@ import {
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
+import { rateLimit } from "../middleware/rate-limit";
 import {
   findEffectiveDeveloperContext,
   roleSatisfies,
@@ -396,6 +397,10 @@ promotedListingsRouter.get("/promoted/active", async (c) => {
 
 promotedListingsRouter.post(
   "/promoted/:id/impression",
+  // Public, unauthenticated, and feeds billing/analytics counters — so it
+  // is a fraud target. Cap per IP+route. Impressions fire on every render
+  // so the ceiling is higher than clicks but still finite.
+  rateLimit({ windowSec: 60, max: 60, by: "ip+route", bucket: "promo-impression" }),
   async (c) => {
     const id = c.req.param("id") as string;
     const day = todayUtc();
@@ -425,6 +430,11 @@ promotedListingsRouter.post(
 
 promotedListingsRouter.post(
   "/promoted/:id/click",
+  // Clicks directly debit the promotion's daily budget — the highest-value
+  // fraud target on the platform. Tight per-IP+route cap; a real user
+  // clicking a sponsored card more than a handful of times a minute is
+  // already anomalous.
+  rateLimit({ windowSec: 60, max: 10, by: "ip+route", bucket: "promo-click" }),
   async (c) => {
     const id = c.req.param("id") as string;
     const day = todayUtc();

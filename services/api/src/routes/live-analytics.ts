@@ -7,6 +7,7 @@ import {
 } from "@openmarket/db/schema";
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
+import { rateLimit } from "../middleware/rate-limit";
 import {
   findEffectiveDeveloperContext,
   roleSatisfies,
@@ -65,6 +66,11 @@ async function ensureOwnership(userEmail: string, appId: string) {
 liveAnalyticsRouter.get(
   "/apps/:id/live",
   requireAuth,
+  // The dev-portal polls this every 5s and each call runs two non-trivial
+  // aggregates over install_events. A stuck or duplicated dashboard tab
+  // could storm Postgres. Cap per user at ~1 req/2s, well above the 5s
+  // poll cadence so normal use never trips it.
+  rateLimit({ windowSec: 60, max: 30, by: "user", bucket: "live-analytics" }),
   async (c) => {
     const appId = c.req.param("id") as string;
     const user = c.get("user");

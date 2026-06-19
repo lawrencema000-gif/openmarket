@@ -15,6 +15,7 @@ import {
 import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
+import { rateLimit } from "../middleware/rate-limit";
 import {
   findEffectiveDeveloperContext,
   roleSatisfies,
@@ -281,6 +282,11 @@ appSubscriptionsRouter.post(
  */
 appSubscriptionsRouter.get(
   "/apps/:id/subscriptions/verify",
+  // Public receipt-verification endpoint the developer's app calls to
+  // confirm entitlement. Unauthenticated + takes a userId param, so it's
+  // both a polling-load and a user-enumeration surface. Cap per IP+route;
+  // generous because a legit app may verify on each cold start.
+  rateLimit({ windowSec: 60, max: 100, by: "ip+route", bucket: "sub-verify" }),
   zValidator(
     "query",
     receiptVerifySchema,
