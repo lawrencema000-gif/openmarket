@@ -135,7 +135,12 @@ chartsRouter.get(
     const source = await db.query.apps.findFirst({
       where: eq(apps.id, appId),
     });
-    if (!source) return c.json({ items: [] });
+    // Moderation gate: a delisted or unpublished app must not act as a
+    // discovery source. Returning items here would both confirm the
+    // hidden app's existence and provide a live rail away from it.
+    if (!source || !source.isPublished || source.isDelisted) {
+      return c.json({ items: [] });
+    }
 
     const sourceListing = source.currentListingId
       ? await db.query.appListings.findFirst({

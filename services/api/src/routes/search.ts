@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { MeiliSearch } from "meilisearch";
-import { sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { searchQuerySchema } from "@openmarket/contracts/search";
-import { searchQueries } from "@openmarket/db/schema";
+import { apps, searchQueries } from "@openmarket/db/schema";
 import { db } from "../lib/db";
 import { rateLimit } from "../middleware/rate-limit";
 
@@ -76,6 +76,39 @@ searchRouter.get(
       offset,
     });
 
+    // Authoritative moderation gate. The Meilisearch index is a CACHE and
+    // can lag behind moderation actions (delist / unpublish) — or be stale
+    // indefinitely if a reindex was missed. Postgres is the source of
+    // truth, so we re-check the live publish/delist state for the returned
+    // hit set and drop anything no longer publicly visible. This makes a
+    // freshly-delisted app (e.g. a malware takedown) disappear from search
+    // IMMEDIATELY, before any reindex runs. The hit set is bounded by
+    // `limit`, so this is one small `WHERE id IN (...)` lookup per page.
+    //
+    // Fail-closed by design: if this check throws, the request errors
+    // rather than risk serving moderated content. A delisted-malware app
+    // surfacing in search is a worse outcome than a transient search 500.
+    let hits = result.hits;
+    let hiddenCount = 0;
+    const hitIds = result.hits
+      .map((h) => (h as { id?: string }).id)
+      .filter((id): id is string => typeof id === "string");
+    if (hitIds.length > 0) {
+      const liveRows = await db
+        .select({ id: apps.id })
+        .from(apps)
+        .where(
+          and(
+            inArray(apps.id, hitIds),
+            eq(apps.isPublished, true),
+            eq(apps.isDelisted, false),
+          ),
+        );
+      const visible = new Set(liveRows.map((r) => r.id));
+      hits = result.hits.filter((h) => visible.has((h as { id?: string }).id ?? ""));
+      hiddenCount = result.hits.length - hits.length;
+    }
+
     // Best-effort query log. Only on the first page so multi-page
     // pagination doesn't multi-count a single user-intent search.
     if (page === 1) {
@@ -94,9 +127,14 @@ searchRouter.get(
       }
     }
 
+    const estimatedTotal = result.estimatedTotalHits ?? result.hits.length;
     return c.json({
-      hits: result.hits,
-      totalHits: result.estimatedTotalHits ?? result.hits.length,
+      hits,
+      // Subtract the moderated hits we dropped on this page so the count
+      // doesn't overstate what's actually reachable. Still an estimate
+      // (Meili's count is itself approximate), but never lower than the
+      // hits we're returning.
+      totalHits: Math.max(hits.length, estimatedTotal - hiddenCount),
       page,
       limit,
       processingTimeMs: result.processingTimeMs,
