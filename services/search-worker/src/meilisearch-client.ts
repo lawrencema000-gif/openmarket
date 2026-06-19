@@ -1,11 +1,28 @@
 import { MeiliSearch } from "meilisearch";
 
 const MEILI_URL = process.env.MEILI_URL ?? "http://localhost:7700";
-const MEILI_MASTER_KEY = process.env.MEILI_MASTER_KEY ?? "openmarket_dev_key";
+
+/**
+ * Resolve the Meilisearch API key. In production the key MUST come from
+ * the environment — silently falling back to a public "dev key" would
+ * leave a production index world-writable behind a guessable secret.
+ * Outside production we allow the well-known local-dev key so the Docker
+ * stack works out of the box.
+ */
+function resolveMeiliKey(): string {
+  const key = process.env.MEILI_MASTER_KEY;
+  if (key && key.length > 0) return key;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "MEILI_MASTER_KEY must be set in production — refusing to start with the public dev key.",
+    );
+  }
+  return "openmarket_dev_key";
+}
 
 export const client = new MeiliSearch({
   host: MEILI_URL,
-  apiKey: MEILI_MASTER_KEY,
+  apiKey: resolveMeiliKey(),
 });
 
 export const APPS_INDEX = "apps";
