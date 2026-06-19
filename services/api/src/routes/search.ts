@@ -22,12 +22,18 @@ const APPS_INDEX = "apps";
 function resolveMeiliKey(): string {
   const key = process.env.MEILI_MASTER_KEY;
   if (key && key.length > 0) return key;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "MEILI_MASTER_KEY must be set in production — refusing to start with the public dev key.",
-    );
-  }
-  return "openmarket_dev_key";
+  // Fail-CLOSED: only fall back to the public dev key when NODE_ENV is
+  // EXPLICITLY a known non-prod value. An unset, misspelled, or
+  // staging-style NODE_ENV refuses to boot rather than silently running
+  // the index behind a source-visible key. (Local dev + Docker set
+  // MEILI_MASTER_KEY in .env, so this fallback is a safety net, not the
+  // normal path.) Mirrors the allowlist convention in middleware/auth.ts.
+  const env = process.env.NODE_ENV;
+  if (env === "development" || env === "test") return "openmarket_dev_key";
+  throw new Error(
+    "MEILI_MASTER_KEY must be set — refusing to start with the public dev key " +
+      `(NODE_ENV=${env ?? "unset"}).`,
+  );
 }
 
 const meiliClient = new MeiliSearch({

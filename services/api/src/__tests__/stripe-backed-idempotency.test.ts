@@ -45,8 +45,8 @@ describe("StripeBackedAdapter idempotency keys", () => {
     });
 
     expect(checkoutCreate).toHaveBeenCalledTimes(1);
-    const [, options] = checkoutCreate.mock.calls[0];
-    expect(options).toEqual({ idempotencyKey: "checkout_purch-abc" });
+    const call = checkoutCreate.mock.calls[0]!;
+    expect(call[1]).toEqual({ idempotencyKey: "checkout_purch-abc" });
   });
 
   it("passes idempotencyKey=transfer_<payoutId> to transfers.create", async () => {
@@ -60,7 +60,7 @@ describe("StripeBackedAdapter idempotency keys", () => {
     });
 
     expect(transfersCreate).toHaveBeenCalledTimes(1);
-    const [, options] = transfersCreate.mock.calls[0];
-    expect(options).toEqual({ idempotencyKey: "transfer_payout-xyz" });
+    const call = transfersCreate.mock.calls[0]!;
+    expect(call[1]).toEqual({ idempotencyKey: "transfer_payout-xyz" });
   });
 });
