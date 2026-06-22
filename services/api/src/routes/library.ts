@@ -4,6 +4,7 @@ import { and, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import {
+  appPricing,
   apps,
   appListings,
   installEvents,
@@ -11,6 +12,7 @@ import {
   releases,
   users,
 } from "@openmarket/db/schema";
+import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 import { fanOutFamilyShareToMembers } from "../lib/family-sharing";
@@ -56,10 +58,38 @@ async function recordInstallSignal(opts: {
     .returning({ id: installEvents.id });
 
   if (event && opts.deviceFingerprintHash) {
+    // Resolve the app's list price so bps-based affiliate commissions are
+    // computed against a real amount (free apps → null → 0, which only
+    // affects bps programs; flat-commission programs are unaffected).
+    let installPriceCents = 0;
+    let currency: string | undefined;
+    try {
+      const pricingRows = await db
+        .select({
+          countryCode: appPricing.countryCode,
+          priceCents: appPricing.priceCents,
+          currency: appPricing.currency,
+          active: appPricing.active,
+        })
+        .from(appPricing)
+        .where(eq(appPricing.appId, opts.appId));
+      // Default-country list price; per-country attribution pricing is a
+      // future refinement (install payload carries no country today).
+      const resolved = resolvePriceForCountry(pricingRows, null);
+      if (resolved) {
+        installPriceCents = resolved.priceCents;
+        currency = resolved.currency;
+      }
+    } catch (err) {
+      console.error("[library] price resolution for attribution failed", err);
+    }
+
     await recordAffiliateConversion({
       appId: opts.appId,
       installEventId: event.id,
       deviceFingerprintHash: opts.deviceFingerprintHash,
+      installPriceCents,
+      currency,
     });
   }
 }
