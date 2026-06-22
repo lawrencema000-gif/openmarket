@@ -1,0 +1,42 @@
+# OpenMarket search-worker — Fly.io app config.
+#
+# Deploy from repo root:
+#   fly launch --config services/search-worker/fly.toml --no-deploy   # first time
+#   fly secrets set --config services/search-worker/fly.toml ...
+#   fly deploy --config services/search-worker/fly.toml
+
+app = "openmarket-search-worker"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "Dockerfile"
+  ignorefile = "../../.dockerignore"
+
+[env]
+  NODE_ENV = "production"
+  WORKER_CONCURRENCY = "5"
+
+[checks]
+  [checks.process]
+    type = "tcp"
+    interval = "30s"
+    grace_period = "10s"
+    timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"
+
+[scaling]
+  min_machines_running = 1
+
+# Secrets to set via `fly secrets set` (NOT in this file):
+#   REDIS_URL                 — Upstash rediss:// URL (must match the API's
+#                               so it consumes the API's index jobs)
+#   MEILI_URL                 — Meilisearch host
+#   MEILI_MASTER_KEY          — REQUIRED in production (fails closed)
+#   SENTRY_DSN                — error tracking (optional)
+# See docs/runbooks/production-env.md for the full matrix.

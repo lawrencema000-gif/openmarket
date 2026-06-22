@@ -1,0 +1,40 @@
+# OpenMarket scan-worker — Fly.io app config.
+#
+# Deploy from repo root:
+#   fly launch --config services/scan-worker/fly.toml --no-deploy   # first time
+#   fly secrets set --config services/scan-worker/fly.toml ...
+#   fly deploy --config services/scan-worker/fly.toml
+
+app = "openmarket-scan-worker"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "Dockerfile"
+  ignorefile = "../../.dockerignore"
+
+[env]
+  NODE_ENV = "production"
+  WORKER_CONCURRENCY = "5"
+
+[checks]
+  [checks.process]
+    type = "tcp"
+    interval = "30s"
+    grace_period = "10s"
+    timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"
+
+[scaling]
+  min_machines_running = 1
+
+# Secrets to set via `fly secrets set` (NOT in this file):
+#   DATABASE_URL              — Neon pooled connection string
+#   REDIS_URL                 — Upstash rediss:// URL
+#   SENTRY_DSN                — error tracking (optional)
+# See docs/runbooks/production-env.md for the full matrix.

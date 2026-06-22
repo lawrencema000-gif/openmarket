@@ -1,0 +1,47 @@
+# OpenMarket ingest-worker — Fly.io app config.
+#
+# Deploy from repo root:
+#   fly launch --config services/ingest-worker/fly.toml --no-deploy   # first time
+#   fly secrets set --config services/ingest-worker/fly.toml ...      # see below
+#   fly deploy --config services/ingest-worker/fly.toml
+
+app = "openmarket-ingest-worker"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "Dockerfile"
+  ignorefile = "../../.dockerignore"
+
+[env]
+  NODE_ENV = "production"
+  WORKER_CONCURRENCY = "5"
+
+# Workers accept no HTTP traffic — no [[services]] block. Fly probes the
+# process is alive via a TCP check.
+[checks]
+  [checks.process]
+    type = "tcp"
+    interval = "30s"
+    grace_period = "10s"
+    timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"   # APK parse/unzip is memory-heavier than the other workers
+
+[scaling]
+  min_machines_running = 1
+
+# Secrets to set via `fly secrets set` (NOT in this file):
+#   DATABASE_URL              — Neon pooled connection string
+#   REDIS_URL                 — Upstash rediss:// URL
+#   R2_ACCOUNT_ID             — Cloudflare R2 account
+#   R2_ACCESS_KEY_ID
+#   R2_SECRET_ACCESS_KEY
+#   R2_ENDPOINT               — (optional; derived from R2_ACCOUNT_ID if unset)
+#   SENTRY_DSN                — error tracking (optional)
+# (Artifact bucket isn't an env var here — it arrives in each ingest job.)
+# See docs/runbooks/production-env.md for the full matrix.
