@@ -22,6 +22,7 @@ import {
   pickBestTranslationLocale,
 } from "@openmarket/contracts/i18n";
 import { computeSourceCodeTier } from "@openmarket/contracts/source-code";
+import { updateAppListingSchema } from "@openmarket/contracts/apps";
 import { isInstallAllowedWithoutPin } from "@openmarket/contracts/parental-controls";
 import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { resolveRunningExperiment } from "../lib/listing-experiments";
@@ -557,30 +558,44 @@ appsRouter.get("/apps/:id", async (c) => {
 });
 
 // Update app listing
-appsRouter.patch("/apps/:id", requireAuth, async (c) => {
-  const appId = c.req.param("id") as string;
-  const user = c.get("user");
-  const body = await c.req.json();
+appsRouter.patch(
+  "/apps/:id",
+  requireAuth,
+  // Whitelisted, closed-set body — the previous handler spread the raw
+  // request body into the UPDATE, letting a caller write arbitrary columns.
+  zValidator("json", updateAppListingSchema),
+  async (c) => {
+    const appId = c.req.param("id") as string;
+    const user = c.get("user");
+    const body = c.req.valid("json");
 
-  const developer = await db.query.developers.findFirst({
-    where: eq(developers.email, user.email),
-  });
-  if (!developer) throw new HTTPException(404, { message: "Developer not found" });
+    const developer = await db.query.developers.findFirst({
+      where: eq(developers.email, user.email),
+    });
+    if (!developer) throw new HTTPException(404, { message: "Developer not found" });
 
-  const app = await db.query.apps.findFirst({
-    where: and(eq(apps.id, appId), eq(apps.developerId, developer.id)),
-  });
-  if (!app) throw new HTTPException(404, { message: "App not found or not owned by you" });
+    const app = await db.query.apps.findFirst({
+      where: and(eq(apps.id, appId), eq(apps.developerId, developer.id)),
+    });
+    if (!app) throw new HTTPException(404, { message: "App not found or not owned by you" });
 
-  if (app.currentListingId) {
-    await db.update(appListings).set({
-      ...body,
-      updatedAt: new Date(),
-    }).where(eq(appListings.id, app.currentListingId));
-  }
+    // Don't silently 200 when there's no listing to edit — that left the
+    // developer believing their changes saved. Surface it.
+    if (!app.currentListingId) {
+      throw new HTTPException(422, {
+        message:
+          "This app has no current listing to update. Create a listing first.",
+      });
+    }
 
-  return c.json({ success: true });
-});
+    await db
+      .update(appListings)
+      .set({ ...body, updatedAt: new Date() })
+      .where(eq(appListings.id, app.currentListingId));
+
+    return c.json({ success: true });
+  },
+);
 
 /**
  * PATCH /apps/:id/anti-features

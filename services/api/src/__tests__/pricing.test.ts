@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 
-vi.mock("../lib/db", () => ({
-  db: {
+vi.mock("../lib/db", () => {
+  const db: any = {
     insert: vi.fn(() => ({
       values: vi.fn(() => ({
         returning: vi.fn().mockResolvedValue([{ id: "p-new" }]),
@@ -26,8 +26,12 @@ vi.mock("../lib/db", () => ({
       users: { findFirst: vi.fn() },
       purchases: { findFirst: vi.fn() },
     },
-  },
-}));
+  };
+  // The purchase handler wraps insert+session in a transaction; run the
+  // callback against the same db mock so tx.insert === db.insert.
+  db.transaction = vi.fn(async (cb: (tx: unknown) => unknown) => cb(db));
+  return { db };
+});
 
 vi.mock("../middleware/auth", () => ({
   requireAuth: vi.fn(async (c: any, next: any) => {

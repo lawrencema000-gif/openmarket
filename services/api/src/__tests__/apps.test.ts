@@ -311,3 +311,70 @@ describe("PATCH /api/admin/apps/:id/anti-features (admin override)", () => {
     expect(body.antiFeatures).toEqual(["tracking", "knownVuln"]);
   });
 });
+
+describe("PATCH /api/apps/:id (listing edit)", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("rejects unknown fields (closed whitelist) with 400", async () => {
+    const res = await app.request("/api/apps/app-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      // isDelisted is NOT a developer-editable listing field.
+      body: JSON.stringify({ title: "New Title", isDelisted: false }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an empty body with 400", async () => {
+    const res = await app.request("/api/apps/app-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("422s when the app has no current listing to edit", async () => {
+    vi.mocked(db.query.developers.findFirst).mockResolvedValueOnce({
+      id: "dev-1",
+      email: "dev@test.com",
+    } as never);
+    vi.mocked(db.query.apps.findFirst).mockResolvedValueOnce({
+      id: "app-1",
+      developerId: "dev-1",
+      currentListingId: null,
+    } as never);
+    const res = await app.request("/api/apps/app-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "New Title" }),
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it("updates the current listing on the happy path", async () => {
+    vi.mocked(db.query.developers.findFirst).mockResolvedValueOnce({
+      id: "dev-1",
+      email: "dev@test.com",
+    } as never);
+    vi.mocked(db.query.apps.findFirst).mockResolvedValueOnce({
+      id: "app-1",
+      developerId: "dev-1",
+      currentListingId: "listing-1",
+    } as never);
+    vi.mocked(db.update).mockReturnValueOnce({
+      set: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue(undefined),
+    } as never);
+    const res = await app.request("/api/apps/app-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "New Title", containsAds: true }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { success: boolean };
+    expect(body.success).toBe(true);
+  });
+});

@@ -26,6 +26,39 @@ export const createAppSchema = z.object({
 
 export type CreateApp = z.infer<typeof createAppSchema>;
 
+/**
+ * Whitelisted fields a developer may edit on their app's current listing
+ * via PATCH /apps/:id. Deliberately a CLOSED set (.strict): the previous
+ * handler spread the raw request body into the UPDATE, which let a caller
+ * write arbitrary columns (id, appId, createdAt, …). At least one field
+ * must be present.
+ */
+export const updateAppListingSchema = z
+  .object({
+    title: z.string().min(2).max(100),
+    shortDescription: z.string().min(10).max(80),
+    fullDescription: z.string().min(20).max(4000),
+    category: z.string().min(1),
+    subcategory: z.string().min(1).max(80),
+    iconUrl: z.string().url(),
+    featureGraphicUrl: z.string().url(),
+    screenshots: z.array(z.string().url()).min(2).max(8),
+    privacyPolicyUrl: z.string().url(),
+    websiteUrl: z.string().url(),
+    sourceCodeUrl: z.string().url(),
+    isExperimental: z.boolean(),
+    containsAds: z.boolean(),
+    containsIap: z.boolean(),
+    contentRating: z.enum(["everyone", "teen", "mature"]),
+  })
+  .strict()
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, {
+    message: "Provide at least one field to update",
+  });
+
+export type UpdateAppListing = z.infer<typeof updateAppListingSchema>;
+
 export const createReleaseSchema = z.object({
   appId: uuidSchema,
   versionCode: z.number().int().positive(),

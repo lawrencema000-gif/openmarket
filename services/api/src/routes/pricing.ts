@@ -230,65 +230,75 @@ pricingRouter.post(
       });
     }
 
-    const [row] = await db
-      .insert(purchases)
-      .values({
-        userId: profile.id,
-        appId,
-        priceCents: resolved.priceCents,
-        currency: resolved.currency,
-        countryAtPurchase: body.countryCode ?? resolved.countryCode,
-        status: "pending",
-      })
-      .returning();
-
-    // Stripe integration (P4-A-2). When the adapter is live, create a
-    // Checkout Session, save its id + intent on the purchase row,
-    // and return the redirect URL. When the adapter is the default
-    // Noop, return null URL + a note — storefront still works for
-    // dev/CI without API keys.
     const adapter = getStripeAdapter();
-    let checkoutUrl: string | null = null;
-    if (adapter.isLive()) {
-      try {
-        // Resolve app title for the checkout line-item label.
-        const app2 = await db.query.apps.findFirst({
-          where: eq(apps.id, appId),
-          with: { listings: true },
-        });
-        const listing =
-          app2?.listings?.find((l) => l.id === app2.currentListingId) ??
-          app2?.listings?.[app2?.listings.length - 1];
-        const appTitle = listing?.title ?? "OpenMarket app";
 
-        const session = await adapter.createCheckoutSession({
-          purchaseId: row!.id,
+    // Resolve the app title for the Checkout line-item label up front
+    // (read-only) so the DB transaction below stays short.
+    let appTitle = "OpenMarket app";
+    if (adapter.isLive()) {
+      const app2 = await db.query.apps.findFirst({
+        where: eq(apps.id, appId),
+        with: { listings: true },
+      });
+      const listing =
+        app2?.listings?.find((l) => l.id === app2.currentListingId) ??
+        app2?.listings?.[app2?.listings.length - 1];
+      appTitle = listing?.title ?? appTitle;
+    }
+
+    // Insert the pending row and create the Checkout Session in ONE
+    // transaction. Previously the row was committed first, so a Stripe
+    // failure left an orphaned `pending` purchase with no session. Now a
+    // genuine Stripe error rolls the insert back — no orphan, the caller
+    // can simply retry. The Noop path (StripeNotConfiguredError) keeps the
+    // pending row so dev/CI without keys still works.
+    const { row, checkoutUrl } = await db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(purchases)
+        .values({
+          userId: profile.id,
           appId,
-          appTitle,
           priceCents: resolved.priceCents,
           currency: resolved.currency,
-          customerEmail: profile.email,
-          successUrl: `${STOREFRONT_URL}/apps/${appId}?purchase=success`,
-          cancelUrl: `${STOREFRONT_URL}/apps/${appId}?purchase=cancel`,
-        });
-        await db
-          .update(purchases)
-          .set({
-            stripeCheckoutSessionId: session.sessionId,
-            stripePaymentIntentId: session.paymentIntentId,
-          })
-          .where(eq(purchases.id, row!.id));
-        checkoutUrl = session.url;
-      } catch (err) {
-        if (err instanceof StripeNotConfiguredError) {
-          // Adapter said it was live but the env wasn't actually wired —
-          // fall through to the stub response with a clear note.
-          checkoutUrl = null;
-        } else {
-          throw err;
+          countryAtPurchase: body.countryCode ?? resolved.countryCode,
+          status: "pending",
+        })
+        .returning();
+
+      let url: string | null = null;
+      if (adapter.isLive()) {
+        try {
+          const session = await adapter.createCheckoutSession({
+            purchaseId: inserted!.id,
+            appId,
+            appTitle,
+            priceCents: resolved.priceCents,
+            currency: resolved.currency,
+            customerEmail: profile.email,
+            successUrl: `${STOREFRONT_URL}/apps/${appId}?purchase=success`,
+            cancelUrl: `${STOREFRONT_URL}/apps/${appId}?purchase=cancel`,
+          });
+          await tx
+            .update(purchases)
+            .set({
+              stripeCheckoutSessionId: session.sessionId,
+              stripePaymentIntentId: session.paymentIntentId,
+            })
+            .where(eq(purchases.id, inserted!.id));
+          url = session.url;
+        } catch (err) {
+          if (err instanceof StripeNotConfiguredError) {
+            // Adapter claimed live but env wasn't wired — keep the pending
+            // row + stub response rather than rolling back.
+            url = null;
+          } else {
+            // Real Stripe failure → throw to roll back the insert.
+            throw err;
+          }
         }
       }
-    }
+      return { row: inserted, checkoutUrl: url };
+    });
 
     return c.json(
       {
