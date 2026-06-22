@@ -10,7 +10,7 @@ import {
   users,
 } from "@openmarket/db/schema";
 import { db } from "../lib/db";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, requireAuthVerified } from "../middleware/auth";
 import { findEffectiveDeveloperContext, roleSatisfies } from "../lib/team";
 import { enqueueEmail } from "../lib/email";
 import type { Variables } from "../lib/types";
@@ -117,7 +117,8 @@ teamRouter.get("/developers/me/team", requireAuth, async (c) => {
  */
 teamRouter.post(
   "/developers/me/team/invites",
-  requireAuth,
+  // Inviting teammates is a privileged action — require a verified email.
+  requireAuthVerified,
   zValidator("json", inviteBodySchema),
   async (c) => {
     const user = c.get("user");
@@ -213,7 +214,10 @@ teamRouter.post(
  */
 teamRouter.post(
   "/team/invites/:token/accept",
-  requireAuth,
+  // The accepting user must have a verified email before being bound into
+  // a publisher's team — otherwise an unverified address that merely
+  // received the invite link could gain team access.
+  requireAuthVerified,
   async (c) => {
     const token = c.req.param("token") as string;
     const user = c.get("user");
@@ -284,7 +288,8 @@ teamRouter.post(
  */
 teamRouter.delete(
   "/developers/me/team/members/:id",
-  requireAuth,
+  // Removing a teammate is privileged — require a verified email.
+  requireAuthVerified,
   async (c) => {
     const user = c.get("user");
     const memberId = c.req.param("id") as string;

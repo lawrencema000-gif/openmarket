@@ -27,11 +27,12 @@ vi.mock("../lib/db", () => ({
 
 vi.mock("../middleware/auth", () => ({
   requireAuth: vi.fn(async (c: any, next: any) => {
-    c.set("user", {
-      id: "auth-u-1",
-      email: "owner@test.com",
-      emailVerified: true,
-    });
+    c.set("user", { id: "auth-u-1", email: "owner@test.com", emailVerified: true });
+    c.set("session", { id: "sess-1" });
+    await next();
+  }),
+  requireAuthVerified: vi.fn(async (c: any, next: any) => {
+    c.set("user", { id: "auth-u-1", email: "owner@test.com", emailVerified: true });
     c.set("session", { id: "sess-1" });
     await next();
   }),

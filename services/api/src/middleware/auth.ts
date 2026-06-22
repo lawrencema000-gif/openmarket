@@ -36,12 +36,17 @@ function readTestModeUser(c: Context):
   return { id, email, emailVerified: true };
 }
 
-export async function requireAuth(c: Context<{ Variables: Variables }>, next: Next) {
+/**
+ * Resolve the caller into `c.get("user")` / `c.get("session")`, honoring
+ * test-mode headers. Throws 401 if there is no valid session. Shared by
+ * requireAuth and requireAuthVerified so the session-resolution logic
+ * lives in exactly one place.
+ */
+async function resolveSession(c: Context<{ Variables: Variables }>) {
   const testUser = readTestModeUser(c);
   if (testUser) {
     c.set("session", { id: `test-${testUser.id}` } as never);
     c.set("user", testUser as never);
-    await next();
     return;
   }
 
@@ -55,5 +60,34 @@ export async function requireAuth(c: Context<{ Variables: Variables }>, next: Ne
 
   c.set("session", session.session);
   c.set("user", session.user);
+}
+
+export async function requireAuth(c: Context<{ Variables: Variables }>, next: Next) {
+  await resolveSession(c);
+  await next();
+}
+
+/**
+ * Like requireAuth, but additionally requires a VERIFIED email.
+ *
+ * Use on endpoints where an unverified account could cause real harm by
+ * acting before proving control of its email: claiming developer status,
+ * inviting/removing team members, minting API tokens, onboarding for
+ * payouts. Mirrors the emailVerified gate already enforced by
+ * requireAdmin. Better Auth populates `emailVerified` on the session
+ * user; absent/false is treated as unverified and refused.
+ */
+export async function requireAuthVerified(
+  c: Context<{ Variables: Variables }>,
+  next: Next,
+) {
+  await resolveSession(c);
+  const user = c.get("user") as { emailVerified?: boolean } | undefined;
+  if (user?.emailVerified !== true) {
+    throw new HTTPException(403, {
+      message:
+        "A verified email is required for this action. Check your inbox for the verification link.",
+    });
+  }
   await next();
 }

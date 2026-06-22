@@ -16,7 +16,12 @@ vi.mock("../lib/db", () => ({
 
 vi.mock("../middleware/auth", () => ({
   requireAuth: vi.fn(async (c: any, next: any) => {
-    c.set("user", { id: "test-user-id", email: "dev@test.com" });
+    c.set("user", { id: "test-user-id", email: "dev@test.com", emailVerified: true });
+    c.set("session", { id: "test-session" });
+    await next();
+  }),
+  requireAuthVerified: vi.fn(async (c: any, next: any) => {
+    c.set("user", { id: "test-user-id", email: "dev@test.com", emailVerified: true });
     c.set("session", { id: "test-session" });
     await next();
   }),

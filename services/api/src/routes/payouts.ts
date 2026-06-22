@@ -6,7 +6,7 @@ import {
   payouts,
 } from "@openmarket/db/schema";
 import { db } from "../lib/db";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, requireAuthVerified } from "../middleware/auth";
 import {
   findEffectiveDeveloperContext,
   roleSatisfies,
@@ -53,7 +53,10 @@ async function getOwnerCtx(userEmail: string) {
 
 payoutsRouter.post(
   "/developers/me/payouts/onboard",
-  requireAuth,
+  // Payout onboarding ties a Stripe Connect account to this identity —
+  // must prove email control first. Reading account state / history below
+  // stays on requireAuth.
+  requireAuthVerified,
   async (c) => {
     const user = c.get("user");
     const ctx = await getOwnerCtx(user.email);

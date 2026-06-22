@@ -6,7 +6,7 @@ import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import { apiTokens, developers } from "@openmarket/db/schema";
 import { db } from "../lib/db";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, requireAuthVerified } from "../middleware/auth";
 import { hashToken, ALLOWED_SCOPES } from "../middleware/api-token";
 import type { Variables } from "../lib/types";
 
@@ -51,7 +51,9 @@ async function getCallerDeveloper(email: string) {
  */
 apiTokensRouter.post(
   "/developers/me/api-tokens",
-  requireAuth,
+  // Minting a long-lived API credential is exactly the kind of action an
+  // unverified account must not take. Listing/revoking stay on requireAuth.
+  requireAuthVerified,
   zValidator("json", createSchema),
   async (c) => {
     const user = c.get("user");

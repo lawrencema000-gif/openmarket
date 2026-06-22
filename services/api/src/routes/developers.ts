@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../lib/db";
 import { developers } from "@openmarket/db/schema";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, requireAuthVerified } from "../middleware/auth";
 import {
   createDeveloperProfileSchema,
   updateDeveloperProfileSchema,
@@ -28,10 +28,12 @@ developersRouter.get("/developers/me", requireAuth, async (c) => {
   return c.json(developer);
 });
 
-// Create developer profile
+// Create developer profile — gated on a verified email so an unverified
+// account can't claim publisher status before proving it controls the
+// inbox.
 developersRouter.post(
   "/developers",
-  requireAuth,
+  requireAuthVerified,
   zValidator("json", createDeveloperProfileSchema),
   async (c) => {
     const user = c.get("user");
