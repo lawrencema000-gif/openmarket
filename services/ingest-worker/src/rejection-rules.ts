@@ -12,7 +12,13 @@ export interface ApkInfo {
   packageName: string;
   isDebugBuild: boolean;
   fileSizeBytes: number;
-  signingKeyFingerprint: string;
+  /**
+   * Signing-certificate SHA-256 fingerprint. Null when the APK has no
+   * readable v1 signature block (e.g. v2/v3-only signing) — in that case
+   * the SIGNING_KEY_CHANGED check is skipped rather than compared against
+   * a fabricated value.
+   */
+  signingKeyFingerprint: string | null;
   versionCode: number;
   /** ABIs found in lib/<abi>/. Optional — empty for pure-Java APKs. */
   abis?: string[];
@@ -21,7 +27,7 @@ export interface ApkInfo {
 }
 
 export interface PreviousRelease {
-  signingKeyFingerprint: string;
+  signingKeyFingerprint: string | null;
   versionCode: number;
 }
 
@@ -44,6 +50,15 @@ export interface RejectionResult {
 }
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500 MB
+
+/**
+ * A real signing-cert fingerprint is a canonical SHA-256: 64 lowercase
+ * hex chars. Null (no v1 cert) and legacy 16-char apk-hash slices both
+ * fail this and cause the key-continuity check to be skipped.
+ */
+function isRealFingerprint(fp: string | null): fp is string {
+  return typeof fp === "string" && /^[0-9a-f]{64}$/.test(fp);
+}
 
 /**
  * The ABI strings Android officially recognizes for the lib/<abi>/ layout.
@@ -119,13 +134,31 @@ export function checkRejectionRules(
   }
 
   if (previousRelease) {
-    if (apk.signingKeyFingerprint !== previousRelease.signingKeyFingerprint) {
-      return rejection(
-        "SIGNING_KEY_CHANGED",
-        "Signing key fingerprint differs from the previous release of this app. " +
-          "If you intentionally rotated keys, contact admin to escalate.",
-        warnings,
-      );
+    // Only enforce key continuity when BOTH fingerprints are real cert
+    // fingerprints (canonical SHA-256 = 64 hex chars). A null means we
+    // couldn't read a v1 cert (v2/v3-only signing); a non-64-char value
+    // is legacy data from before real extraction landed (the old code
+    // stored a 16-char apk-hash slice). In either case we skip rather
+    // than fabricate a mismatch, and warn so the gap is visible.
+    if (
+      isRealFingerprint(apk.signingKeyFingerprint) &&
+      isRealFingerprint(previousRelease.signingKeyFingerprint)
+    ) {
+      if (apk.signingKeyFingerprint !== previousRelease.signingKeyFingerprint) {
+        return rejection(
+          "SIGNING_KEY_CHANGED",
+          "Signing key fingerprint differs from the previous release of this app. " +
+            "If you intentionally rotated keys, contact admin to escalate.",
+          warnings,
+        );
+      }
+    } else {
+      warnings.push({
+        code: "SIGNING_KEY_UNVERIFIED",
+        reason:
+          "Could not read a v1 signing certificate for this or the previous " +
+          "release; signing-key continuity was not verified.",
+      });
     }
     if (apk.versionCode === previousRelease.versionCode) {
       return rejection(

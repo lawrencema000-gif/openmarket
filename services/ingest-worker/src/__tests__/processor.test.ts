@@ -255,7 +255,8 @@ describe("processIngestJob", () => {
           [ARTIFACT],
           [RELEASE],
           [APP],
-          [{ versionCode: 4, signingKeyFingerprint: "old-fp" }],
+          // Real (64-hex) fingerprints that differ → genuine key change.
+          [{ versionCode: 4, signingKeyFingerprint: "e".repeat(64) }],
         ],
       });
       const result = await processIngestJob(
@@ -266,7 +267,7 @@ describe("processIngestJob", () => {
           apkInfo: {
             packageName: "com.test.app",
             versionCode: 5,
-            signingKeyFingerprint: "new-fp",
+            signingKeyFingerprint: "f".repeat(64),
           },
         }),
         db,

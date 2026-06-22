@@ -11,6 +11,7 @@ import {
 } from "@openmarket/db";
 import { extractApkMetadata } from "./apk-extractor.js";
 import { inspectApkZip } from "./zip-inspect.js";
+import { extractSigningKeyFingerprint } from "./signing-cert.js";
 import { downloadArtifact } from "./storage.js";
 import {
   type ApkInfo,
@@ -149,21 +150,23 @@ export async function processIngestJob(
     });
     cleanup = dl.cleanup;
     try {
-      const [zip, parsed] = await Promise.all([
+      const [zip, parsed, signingKeyFingerprint] = await Promise.all([
         inspectApkZip(dl.path),
         extractApkMetadata(dl.path),
+        // Real signing-cert fingerprint (stable across builds with the
+        // same key). Null for v2/v3-only APKs with no v1 cert block — the
+        // rejection rule skips the key-continuity check in that case
+        // rather than comparing a fabricated value.
+        extractSigningKeyFingerprint(dl.path),
       ]);
       extracted = { ...parsed, abis: zip.abis, nativeLibs: zip.nativeLibs };
       apkInfo = {
-        // signing-key fingerprint + verified-signature both belong to the
-        // scan-worker (P1-J runs apksigner). Until then we use weak hints
-        // from the zip + a placeholder fingerprint derived from sha256.
         hasValidSignature: zip.hasMetaInfSignature,
         hasManifest: zip.hasManifest,
         packageName: parsed.packageName,
         isDebugBuild: parsed.isDebugBuild,
         fileSizeBytes: dl.size,
-        signingKeyFingerprint: artifact.sha256.slice(0, 16),
+        signingKeyFingerprint,
         versionCode: parsed.versionCode,
         abis: zip.abis,
         channel: release.channel as "stable" | "beta" | "canary",
@@ -229,7 +232,10 @@ export async function processIngestJob(
       nativeLibs: extracted.nativeLibs,
       appLabel: extracted.appLabel,
       isDebugBuild: extracted.isDebugBuild,
-      signingKeyFingerprint: apkInfo.signingKeyFingerprint,
+      // Column is NOT NULL; persist "" when no v1 cert was readable. The
+      // rejection rule treats non-64-hex values (incl. "") as unverified
+      // and skips the key-continuity comparison.
+      signingKeyFingerprint: apkInfo.signingKeyFingerprint ?? "",
       components: {
         activities: extracted.activities,
         services: extracted.services,

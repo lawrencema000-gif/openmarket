@@ -2,18 +2,23 @@ import { describe, it, expect } from "vitest";
 import { checkRejectionRules } from "../rejection-rules.js";
 import type { ApkInfo, PreviousRelease } from "../rejection-rules.js";
 
+// Canonical SHA-256 cert fingerprints: 64 lowercase hex chars. The rule
+// only enforces key continuity on values of this shape.
+const FP_A = "a".repeat(64);
+const FP_B = "b".repeat(64);
+
 const validApk: ApkInfo = {
   hasValidSignature: true,
   hasManifest: true,
   packageName: "com.example.app",
   isDebugBuild: false,
   fileSizeBytes: 10 * 1024 * 1024, // 10 MB
-  signingKeyFingerprint: "AA:BB:CC:DD",
+  signingKeyFingerprint: FP_A,
   versionCode: 2,
 };
 
 const previousRelease: PreviousRelease = {
-  signingKeyFingerprint: "AA:BB:CC:DD",
+  signingKeyFingerprint: FP_A,
   versionCode: 1,
 };
 
@@ -74,21 +79,38 @@ describe("checkRejectionRules", () => {
   });
 
   it("rejects when signing key changed from previous release", () => {
-    const prev: PreviousRelease = { signingKeyFingerprint: "EE:FF:00:11", versionCode: 1 };
+    const prev: PreviousRelease = { signingKeyFingerprint: FP_B, versionCode: 1 };
     const result = checkRejectionRules(validApk, "com.example.app", prev);
     expect(result.rejected).toBe(true);
     expect(result.reason).toMatch(/signing key/i);
   });
 
+  it("skips the key-continuity check (warns) when the current fingerprint is null (v2/v3-only)", () => {
+    const apk: ApkInfo = { ...validApk, signingKeyFingerprint: null };
+    const prev: PreviousRelease = { signingKeyFingerprint: FP_B, versionCode: 1 };
+    const result = checkRejectionRules(apk, "com.example.app", prev);
+    expect(result.rejected).toBe(false);
+    expect(result.warnings.some((w) => w.code === "SIGNING_KEY_UNVERIFIED")).toBe(true);
+  });
+
+  it("skips the key-continuity check when the previous fingerprint is a legacy short value", () => {
+    // Pre-fix releases stored a 16-char apk-hash slice — must not be
+    // compared against a real 64-char fingerprint (would false-reject).
+    const prev: PreviousRelease = { signingKeyFingerprint: "abc123def4567890", versionCode: 1 };
+    const result = checkRejectionRules(validApk, "com.example.app", prev);
+    expect(result.rejected).toBe(false);
+    expect(result.warnings.some((w) => w.code === "SIGNING_KEY_UNVERIFIED")).toBe(true);
+  });
+
   it("rejects when versionCode does not increase from previous release", () => {
-    const prev: PreviousRelease = { signingKeyFingerprint: "AA:BB:CC:DD", versionCode: 2 };
+    const prev: PreviousRelease = { signingKeyFingerprint: FP_A, versionCode: 2 };
     const result = checkRejectionRules(validApk, "com.example.app", prev);
     expect(result.rejected).toBe(true);
     expect(result.reason).toMatch(/versionCode/i);
   });
 
   it("rejects when versionCode is lower than previous release", () => {
-    const prev: PreviousRelease = { signingKeyFingerprint: "AA:BB:CC:DD", versionCode: 5 };
+    const prev: PreviousRelease = { signingKeyFingerprint: FP_A, versionCode: 5 };
     const apk: ApkInfo = { ...validApk, versionCode: 3 };
     const result = checkRejectionRules(apk, "com.example.app", prev);
     expect(result.rejected).toBe(true);
