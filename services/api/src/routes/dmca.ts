@@ -565,6 +565,27 @@ dmcaRouter.post(
           reviewedAt: new Date(),
         })
         .where(eq(dmcaCounterNotices.id, id));
+
+      // Notify the filer their counter-notice was rejected — the app stays
+      // delisted and they have statutory windows to act, so silence here
+      // is a real compliance gap. Mirror the takedown/notice-rejected
+      // notify pattern; never let a mail failure fail the decision.
+      try {
+        await enqueueEmail({
+          template: "dmca-counter-notice-rejected",
+          to: cn.counterPartyEmail,
+          props: {
+            counterPartyName: cn.counterPartyName,
+            reason:
+              body.notes ??
+              "Counter-notice did not satisfy the requirements of 17 USC 512(g)(3).",
+          },
+          idempotencyKey: `dmca-counter-rejected_${cn.id}`,
+          tags: [{ name: "category", value: "trust-safety" }],
+        });
+      } catch (err) {
+        console.warn("[dmca] counter-notice rejection email failed:", err);
+      }
     }
 
     await recordAdminAction({

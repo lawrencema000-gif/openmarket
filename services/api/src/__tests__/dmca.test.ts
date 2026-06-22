@@ -322,3 +322,60 @@ describe("POST /dmca/counter-notices", () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe("POST /admin/dmca/counter-notices/:id/validate", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const FILED_CN = {
+    id: "cn-1",
+    noticeId: "00000000-0000-0000-0000-000000000001",
+    status: "filed",
+    counterPartyName: "Acme Inc",
+    counterPartyEmail: "legal@acme.com",
+  };
+
+  it("emails the filer when a counter-notice is rejected (audit #13)", async () => {
+    const { enqueueEmail } = await import("../lib/email");
+    vi.mocked(db.query.dmcaCounterNotices.findFirst).mockResolvedValueOnce(
+      FILED_CN as never,
+    );
+    const res = await app.request(
+      "/api/admin/dmca/counter-notices/cn-1/validate",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision: "rejected", notes: "Missing jurisdiction consent." }),
+      },
+    );
+    expect(res.status).toBe(200);
+    expect(enqueueEmail).toHaveBeenCalledTimes(1);
+    const arg = vi.mocked(enqueueEmail).mock.calls[0]![0] as {
+      template: string;
+      to: string;
+      props: { counterPartyName: string; reason: string };
+    };
+    expect(arg.template).toBe("dmca-counter-notice-rejected");
+    expect(arg.to).toBe("legal@acme.com");
+    expect(arg.props.counterPartyName).toBe("Acme Inc");
+    expect(arg.props.reason).toMatch(/jurisdiction/i);
+  });
+
+  it("does NOT email when a counter-notice is validated", async () => {
+    const { enqueueEmail } = await import("../lib/email");
+    vi.mocked(db.query.dmcaCounterNotices.findFirst).mockResolvedValueOnce(
+      FILED_CN as never,
+    );
+    const res = await app.request(
+      "/api/admin/dmca/counter-notices/cn-1/validate",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision: "validated" }),
+      },
+    );
+    expect(res.status).toBe(200);
+    expect(enqueueEmail).not.toHaveBeenCalled();
+  });
+});

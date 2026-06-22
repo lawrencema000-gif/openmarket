@@ -97,6 +97,17 @@ export interface DmcaTakedownNoticeProps {
 }
 
 /**
+ * Sent to the developer when their §512(g) counter-notice is rejected by
+ * a moderator. The app stays delisted; the developer needs to know so
+ * they can correct + refile or pursue other remedies within statutory
+ * windows.
+ */
+export interface DmcaCounterNoticeRejectedProps {
+  counterPartyName: string;
+  reason: string;
+}
+
+/**
  * Team invite — sent when an owner/admin invites a teammate.
  */
 export interface TeamInviteProps {
@@ -131,6 +142,7 @@ export type EmailTemplateMap = {
   "dmca-notice-received": DmcaNoticeReceivedProps;
   "dmca-notice-rejected": DmcaNoticeRejectedProps;
   "dmca-takedown-notice": DmcaTakedownNoticeProps;
+  "dmca-counter-notice-rejected": DmcaCounterNoticeRejectedProps;
   "team-invite": TeamInviteProps;
   "pre-registration-launch": PreRegistrationLaunchProps;
 };
