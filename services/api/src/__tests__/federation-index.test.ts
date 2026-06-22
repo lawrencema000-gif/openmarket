@@ -9,11 +9,23 @@ const h = vi.hoisted(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { generateKeyPairSync } = require("node:crypto");
   const { privateKey } = generateKeyPairSync("ed25519");
+  const privPem = privateKey
+    .export({ type: "pkcs8", format: "pem" })
+    .toString();
+  const activeKey = {
+    keyId: "key_test",
+    publicKey: "pub",
+    privateKeyEncrypted: privPem,
+    isActive: true,
+  };
   return {
-    privPem: privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+    privPem,
     mainRows: [] as unknown[],
     fallbackRows: [] as unknown[],
     selectCall: 0,
+    // Overridable per-test: drives getOrMintActiveKey().
+    keyFindFirst: (): unknown => activeKey,
+    insertReturning: (): unknown => Promise.resolve([activeKey]),
   };
 });
 
@@ -33,29 +45,39 @@ vi.mock("../lib/db", () => ({
       chain.then = (resolve: (v: unknown[]) => unknown) => resolve(terminal);
       return chain;
     }),
+    insert: vi.fn(() => ({
+      values: vi.fn(() => ({
+        returning: () => h.insertReturning(),
+      })),
+    })),
     query: {
       federationKeys: {
-        findFirst: vi.fn().mockResolvedValue({
-          keyId: "key_test",
-          publicKey: "pub",
-          privateKeyEncrypted: h.privPem,
-          isActive: true,
-        }),
+        findFirst: vi.fn(() => h.keyFindFirst()),
       },
     },
   },
 }));
 
 import { federationRouter } from "../routes/federation";
+import { db } from "../lib/db";
 
 const app = new Hono();
 app.route("/api", federationRouter);
+
+const ACTIVE_KEY = {
+  keyId: "key_test",
+  publicKey: "pub",
+  privateKeyEncrypted: h.privPem,
+  isActive: true,
+};
 
 describe("GET /api/federation/index — listing fallback (audit #7)", () => {
   beforeEach(() => {
     h.selectCall = 0;
     h.mainRows = [];
     h.fallbackRows = [];
+    h.keyFindFirst = () => ACTIVE_KEY;
+    h.insertReturning = () => Promise.resolve([ACTIVE_KEY]);
   });
 
   it("keeps apps with a null currentListing via the fallback, and skips apps with no listing at all", async () => {
@@ -107,5 +129,23 @@ describe("GET /api/federation/index — listing fallback (audit #7)", () => {
     // Envelope is signed.
     expect(body.keyId).toBe("key_test");
     expect(typeof body.signature).toBe("string");
+  });
+
+  it("recovers from a lost key-mint race via the winner's active key (audit #8)", async () => {
+    // No existing key on first lookup → tries to mint → the one-active
+    // partial unique index rejects with 23505 (another request won) →
+    // re-query returns the winner's key.
+    let findCalls = 0;
+    h.keyFindFirst = () => (findCalls++ === 0 ? null : ACTIVE_KEY);
+    h.insertReturning = () =>
+      Promise.reject(Object.assign(new Error("duplicate key"), { code: "23505" }));
+    h.mainRows = [];
+
+    const res = await app.request("/api/federation/index");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    // Signed with the WINNER's key, not a second freshly-minted one.
+    expect(body.keyId).toBe("key_test");
+    expect(findCalls).toBe(2); // initial miss + post-conflict re-query
   });
 });

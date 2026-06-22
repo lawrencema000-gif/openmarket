@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "federation_keys_one_active_idx" ON "federation_keys" USING btree ("is_active") WHERE is_active = true;

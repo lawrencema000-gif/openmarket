@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -199,5 +200,13 @@ export const federationKeys = pgTable(
   },
   (t) => [
     uniqueIndex("federation_keys_key_id_idx").on(t.keyId),
+    // At most ONE active signing key may exist at a time. Peers pin the
+    // active public key; two active keys would make signature
+    // verification non-deterministic. This partial unique index turns the
+    // TOCTOU in getOrMintActiveKey() into a hard DB guarantee — a racing
+    // second mint fails with 23505 and falls back to the winner's key.
+    uniqueIndex("federation_keys_one_active_idx")
+      .on(t.isActive)
+      .where(sql`is_active = true`),
   ],
 );

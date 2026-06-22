@@ -85,20 +85,47 @@ async function getOrMintActiveKey() {
     .replace(/=+$/g, "");
 
   const keyId = `key_${Date.now()}`;
-  const [row] = await db
-    .insert(federationKeys)
-    .values({
-      keyId,
-      publicKey: pubB64u,
+  try {
+    const [row] = await db
+      .insert(federationKeys)
+      .values({
+        keyId,
+        publicKey: pubB64u,
+        privateKeyEncrypted: privPem,
+        isActive: true,
+      })
+      .returning();
+    // Stash the PEM on a non-persisted property so the signer in the same
+    // request doesn't have to re-fetch + re-format.
+    return Object.assign(row ?? { keyId, publicKey: pubB64u }, {
       privateKeyEncrypted: privPem,
-      isActive: true,
-    })
-    .returning();
-  // Stash the PEM on a non-persisted property so the signer in the same
-  // request doesn't have to re-fetch + re-format.
-  return Object.assign(row ?? { keyId, publicKey: pubB64u }, {
-    privateKeyEncrypted: privPem,
-  });
+    });
+  } catch (err) {
+    // Lost the mint race: another concurrent request already inserted the
+    // single active key (federation_keys_one_active_idx). Discard our
+    // throwaway keypair and use the winner's active key so every request
+    // signs with the SAME key peers have pinned.
+    if (isUniqueViolation(err)) {
+      const winner = await db.query.federationKeys.findFirst({
+        where: eq(federationKeys.isActive, true),
+      });
+      if (winner) return winner;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Postgres unique-violation (SQLSTATE 23505) detector — used to resolve
+ * the federation key-mint race against the one-active partial index.
+ */
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: string }).code === "23505"
+  );
 }
 
 /* -------------------------------------------------------------------------
