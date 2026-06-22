@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { apps, reviews, users } from "@openmarket/db/schema";
 import { db } from "./db";
+import { recomputeReviewHighlightsForApp } from "./review-highlights";
 
 /**
  * Two layers of automated review moderation:
@@ -230,6 +231,56 @@ export async function runBombDetectionAndFreeze(
       .where(sql`${apps.id} = ANY(${freezeIds})`);
   }
   return toFreeze;
+}
+
+/**
+ * Promote all reviews past their 24h cool-off into the public set.
+ * Idempotent sweep, safe to run on a cron or trigger from the admin
+ * endpoint. Context-free so both callers share it. Recomputes review
+ * highlights for each affected app (fire-and-forget).
+ *
+ * A review goes public when: publishedAt IS NULL, not flagged, older than
+ * 24h, and its app is not under review-freeze.
+ */
+export async function promoteDueReviews(): Promise<{
+  promoted: number;
+  affectedApps: number;
+}> {
+  const now = new Date();
+  const result = await db.execute(sql`
+    UPDATE reviews
+       SET published_at = ${now}, updated_at = ${now}
+     WHERE published_at IS NULL
+       AND is_flagged = false
+       AND created_at <= ${new Date(now.getTime() - 24 * 60 * 60 * 1000)}
+       AND app_id NOT IN (SELECT id FROM apps WHERE review_freeze = true)
+     RETURNING app_id
+  `);
+  const resultAsUnknown = result as unknown as {
+    rows?: Array<{ app_id: string }>;
+  };
+  const promotedRows: Array<{ app_id: string }> = Array.isArray(
+    resultAsUnknown.rows,
+  )
+    ? resultAsUnknown.rows
+    : Array.isArray(result)
+      ? (result as unknown as Array<{ app_id: string }>)
+      : [];
+  const affectedApps = new Set(
+    promotedRows.map((r) => r.app_id).filter(Boolean),
+  );
+  const promoted =
+    (result as { rowCount?: number | null }).rowCount ??
+    (result as { rowsAffected?: number }).rowsAffected ??
+    promotedRows.length;
+
+  for (const appId of affectedApps) {
+    void recomputeReviewHighlightsForApp(appId).catch((err) => {
+      console.error("[reviews] highlights recompute failed", { appId }, err);
+    });
+  }
+
+  return { promoted, affectedApps: affectedApps.size };
 }
 
 /** Used in tests + the admin dashboard. */

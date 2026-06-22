@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, isNotNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import {
@@ -17,6 +17,7 @@ import { recordAdminAction } from "../lib/audit";
 import { appendTransparencyEvent } from "../lib/transparency";
 import { enqueueEmail } from "../lib/email";
 import { syncAppToSearchIndex } from "../lib/search-index";
+import { restoreDueDmcaCounterNotices } from "../lib/dmca-jobs";
 import type { Variables } from "../lib/types";
 
 export const dmcaRouter = new Hono<{ Variables: Variables }>();
@@ -619,69 +620,15 @@ dmcaRouter.post(
  * filed in that window, this cron flips them back live.
  */
 dmcaRouter.post("/admin/dmca/restore-due", requireAdmin, async (c) => {
-  const now = new Date();
-  const eligibleNotices = await db
-    .select({
-      cn: dmcaCounterNotices,
-      notice: dmcaNotices,
-    })
-    .from(dmcaCounterNotices)
-    .innerJoin(dmcaNotices, eq(dmcaNotices.id, dmcaCounterNotices.noticeId))
-    .where(
-      and(
-        eq(dmcaCounterNotices.status, "validated"),
-        isNotNull(dmcaCounterNotices.restoreEligibleAt),
-        lte(dmcaCounterNotices.restoreEligibleAt, now),
-        eq(dmcaNotices.status, "counter_noticed"),
-      ),
-    );
-
-  const results: Array<{ noticeId: string; appId: string | null }> = [];
-  for (const row of eligibleNotices) {
-    const { cn, notice } = row;
-    await db.transaction(async (tx) => {
-      await tx
-        .update(dmcaCounterNotices)
-        .set({ status: "restored" })
-        .where(eq(dmcaCounterNotices.id, cn.id));
-      await tx
-        .update(dmcaNotices)
-        .set({ status: "restored", restoredAt: now })
-        .where(eq(dmcaNotices.id, notice.id));
-      if (notice.appId) {
-        await tx
-          .update(apps)
-          .set({
-            isDelisted: false,
-            delistReason: null,
-            updatedAt: now,
-          })
-          .where(eq(apps.id, notice.appId));
-      }
-    });
-
-    if (notice.appId) {
-      await appendTransparencyEvent({
-        eventType: "dmca_counter_notice_restored",
-        targetType: "app",
-        targetId: notice.appId,
-        reason: `Counter-notice waiting period elapsed without lawsuit. Notice ${notice.noticeNumber}.`,
-        legalBasis: "17 USC 512(g)",
-        jurisdiction: "US",
-      });
-      // Re-index the restored app so it's discoverable again.
-      void syncAppToSearchIndex(notice.appId);
-    }
-    results.push({ noticeId: notice.id, appId: notice.appId });
-  }
+  const { restoredCount, results } = await restoreDueDmcaCounterNotices();
 
   await recordAdminAction({
     c,
     action: "dmca.restore-due",
     targetType: null,
     targetId: null,
-    metadata: { restoredCount: results.length },
+    metadata: { restoredCount },
   });
 
-  return c.json({ success: true, restoredCount: results.length, results });
+  return c.json({ success: true, restoredCount, results });
 });

@@ -40,6 +40,45 @@ export interface AuditAction {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Sentinel actor for automated (cron/system) audit entries. adminActions
+ * .actorId is a plain non-null uuid with no FK, so a fixed all-zero id
+ * cleanly distinguishes scheduler-driven sweeps from human moderators in
+ * the audit log.
+ */
+const SYSTEM_ACTOR_ID = "00000000-0000-0000-0000-000000000000";
+const SYSTEM_ACTOR_EMAIL = "system@cron";
+
+/**
+ * Record a system/cron-driven action to the audit log. Context-free
+ * variant of recordAdminAction for scheduled jobs that have no Hono
+ * request context or admin user. Best-effort, like recordAdminAction.
+ */
+export async function recordSystemAction(input: {
+  action: string;
+  targetType?: AuditAction["targetType"];
+  targetId?: string | null;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    await db.insert(adminActions).values({
+      actorId: SYSTEM_ACTOR_ID,
+      actorEmail: SYSTEM_ACTOR_EMAIL,
+      action: input.action,
+      targetType: input.targetType ?? null,
+      targetId: input.targetId ?? null,
+      requestPath: "cron",
+      requestMethod: "CRON",
+      diff: null,
+      metadata: input.metadata ?? null,
+      ipAddress: null,
+      userAgent: "openmarket-cron",
+    });
+  } catch (err) {
+    console.warn("[audit] system action write failed:", err);
+  }
+}
+
 export async function recordAdminAction(input: AuditAction): Promise<void> {
   try {
     const admin = input.c.get("admin") as

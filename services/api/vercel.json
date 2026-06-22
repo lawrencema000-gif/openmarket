@@ -6,5 +6,12 @@
   "regions": ["iad1"],
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
+  ],
+  "crons": [
+    { "path": "/api/cron/charts-recompute", "schedule": "0 * * * *" },
+    { "path": "/api/cron/statistics-recompute", "schedule": "15 0 * * *" },
+    { "path": "/api/cron/reviews-promote-due", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/reviews-detect-bombs", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/dmca-restore-due", "schedule": "30 1 * * *" }
   ]
 }

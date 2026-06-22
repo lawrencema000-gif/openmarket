@@ -57,6 +57,7 @@ import { promotedListingsRouter } from "./routes/promoted-listings";
 import { affiliatesRouter } from "./routes/affiliates";
 import { enterpriseRouter } from "./routes/enterprise";
 import { federationRouter } from "./routes/federation";
+import { cronRouter } from "./routes/cron";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -142,6 +143,7 @@ app.route("/api", promotedListingsRouter);
 app.route("/api", affiliatesRouter);
 app.route("/api", enterpriseRouter);
 app.route("/api", federationRouter);
+app.route("/api", cronRouter);
 app.route("/api", adminRouter);
 
 export default app;
