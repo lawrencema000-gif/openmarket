@@ -490,9 +490,15 @@ enterpriseRouter.post(
 
 enterpriseRouter.post(
   "/enterprise/enroll",
+  // Enrollment must be authenticated: the catalog + library are scoped to
+  // a USER (enterprise_org_members.userId), so a token alone can't grant
+  // access — we need to know WHO is enrolling. The MDM agent signs the
+  // user in, then presents the provisioned token to bind them to the org.
+  requireAuth,
   zValidator("json", enterpriseEnrollmentConsumeSchema),
   async (c) => {
     const input = c.req.valid("json");
+    const authUser = c.get("user");
     const hash = hashToken(input.token);
 
     const token = await db.query.enterpriseEnrollmentTokens.findFirst({
@@ -518,6 +524,41 @@ enterpriseRouter.post(
       throw new HTTPException(500, { message: "Token org no longer exists" });
     }
 
+    // Resolve (auto-create) the caller's profile row, mirroring the
+    // team-invite-accept flow.
+    let profile = await db.query.users.findFirst({
+      where: eq(users.email, authUser.email.toLowerCase()),
+    });
+    if (!profile) {
+      const [created] = await db
+        .insert(users)
+        .values({ authUserId: authUser.id, email: authUser.email.toLowerCase() })
+        .returning();
+      profile = created;
+    }
+    if (!profile) {
+      throw new HTTPException(500, { message: "Could not resolve user profile" });
+    }
+
+    // THE FIX: actually bind the user to the org. Without this row the
+    // white-label catalog (which gates on enterprise_org_members) would
+    // 403 every subsequent request — P4-I was broken end-to-end.
+    // Idempotent: re-enrolling the same user is a no-op (unique on
+    // (orgId, userId)). Default role is the lowest privilege.
+    await db
+      .insert(enterpriseOrgMembers)
+      .values({ orgId: org.id, userId: profile.id, role: "member" })
+      .onConflictDoNothing();
+
+    // If the token is cohort-scoped, also place the user in that cohort so
+    // cohort-pinned / required apps surface for them.
+    if (token.cohortId) {
+      await db
+        .insert(enterpriseCohortMembers)
+        .values({ cohortId: token.cohortId, userId: profile.id })
+        .onConflictDoNothing();
+    }
+
     await db
       .update(enterpriseEnrollmentTokens)
       .set({
@@ -536,6 +577,7 @@ enterpriseRouter.post(
       },
       cohortId: token.cohortId,
       deviceId: input.deviceId,
+      enrolled: true,
     });
   },
 );

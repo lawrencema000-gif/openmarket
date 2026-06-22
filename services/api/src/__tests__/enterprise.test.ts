@@ -71,6 +71,7 @@ vi.mock("../middleware/admin", () => ({
 }));
 
 import { enterpriseRouter } from "../routes/enterprise";
+import { enterpriseCohortMembers, enterpriseOrgMembers } from "@openmarket/db/schema";
 import { db } from "../lib/db";
 
 const app = new Hono();
@@ -357,5 +358,48 @@ describe("POST /api/enterprise/enroll", () => {
     const body = await res.json();
     expect(body.org.slug).toBe("acme");
     expect(body.cohortId).toBe(COHORT_ID);
+  });
+
+  it("binds the user into org membership (+ cohort) on enroll (audit #9)", async () => {
+    vi.mocked(
+      db.query.enterpriseEnrollmentTokens.findFirst,
+    ).mockResolvedValueOnce({
+      id: "tok-1",
+      orgId: ORG_ID,
+      tokenHash: "h",
+      cohortId: COHORT_ID,
+      expiresAt: new Date(Date.now() + 1_000_000),
+      maxUses: 5,
+      usesCount: 0,
+    } as never);
+    vi.mocked(db.query.enterpriseOrgs.findFirst).mockResolvedValueOnce({
+      id: ORG_ID,
+      slug: "acme",
+      displayName: "Acme",
+      logoUrl: null,
+      primaryColor: "#000000",
+    } as never);
+    // Existing profile → no user insert; isolates the membership inserts.
+    vi.mocked(db.query.users.findFirst).mockResolvedValueOnce({
+      id: "u-1",
+      email: "user@test.com",
+    } as never);
+
+    const res = await app.request("/api/enterprise/enroll", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: "any-token-that-is-long-enough-here",
+        deviceId: "dev-1",
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.enrolled).toBe(true);
+
+    // The fix: an org-members row AND a cohort-members row were inserted.
+    const insertedTables = vi.mocked(db.insert).mock.calls.map((c) => c[0]);
+    expect(insertedTables).toContain(enterpriseOrgMembers);
+    expect(insertedTables).toContain(enterpriseCohortMembers);
   });
 });
