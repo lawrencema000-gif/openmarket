@@ -1,8 +1,42 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 
+// Drives the transactional /promoted/:id/click handler. Set per-test.
+const tx = vi.hoisted(() => ({
+  promotion: null as Record<string, unknown> | null,
+  spentToday: null as number | null,
+}));
+
 vi.mock("../lib/db", () => ({
   db: {
+    transaction: vi.fn(async (cb: (t: unknown) => unknown) => {
+      let selectCall = 0;
+      const t: any = {
+        select: () => {
+          const call = selectCall++;
+          const chain: any = {};
+          chain.from = () => chain;
+          // call 0: locked promotion read (.where then .for("update"))
+          // call 1: today's stats read (.where, awaited)
+          chain.where = () =>
+            call === 0
+              ? chain
+              : Promise.resolve(
+                  tx.spentToday == null ? [] : [{ spendCents: tx.spentToday }],
+                );
+          chain.for = () =>
+            Promise.resolve(tx.promotion ? [tx.promotion] : []);
+          return chain;
+        },
+        insert: () => ({
+          values: () => ({ onConflictDoUpdate: () => Promise.resolve(undefined) }),
+        }),
+        update: () => ({
+          set: () => ({ where: () => Promise.resolve(undefined) }),
+        }),
+      };
+      return cb(t);
+    }),
     insert: vi.fn(() => ({
       values: vi.fn(() => ({
         returning: vi.fn().mockResolvedValue([
@@ -242,46 +276,64 @@ describe("POST /api/admin/promoted-listings/:id/decision", () => {
 });
 
 describe("POST /api/promoted/:id/click", () => {
+  const PROMO = {
+    id: "promo-1",
+    status: "active",
+    bidCentsPerClick: 25,
+    dailyBudgetCents: 1000,
+    currency: "usd",
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(findEffectiveDeveloperContext).mockReset();
-    vi.mocked(db.query.apps.findFirst).mockReset();
-    vi.mocked(db.query.promotedListings.findFirst).mockReset();
+    tx.promotion = null;
+    tx.spentToday = null;
   });
 
-  it("returns recorded:false when promotion is not active", async () => {
-    vi.mocked(db.query.promotedListings.findFirst).mockResolvedValueOnce({
-      id: "promo-1",
-      status: "paused_budget",
-      bidCentsPerClick: 25,
-      dailyBudgetCents: 1000,
-      currency: "usd",
-    } as never);
+  async function click() {
     const res = await app.request("/api/promoted/promo-1/click", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ promotionId: "promo-1", surface: "home" }),
     });
-    expect(res.status).toBe(200);
-    const body = await res.json();
+    return { status: res.status, body: await res.json() };
+  }
+
+  it("returns recorded:false for a non-servable status (e.g. paused_policy)", async () => {
+    tx.promotion = { ...PROMO, status: "paused_policy" };
+    tx.spentToday = 0;
+    const { status, body } = await click();
+    expect(status).toBe(200);
     expect(body.recorded).toBe(false);
   });
 
-  it("records when promotion is active", async () => {
-    vi.mocked(db.query.promotedListings.findFirst).mockResolvedValueOnce({
-      id: "promo-1",
-      status: "active",
-      bidCentsPerClick: 25,
-      dailyBudgetCents: 1000,
-      currency: "usd",
-    } as never);
-    const res = await app.request("/api/promoted/promo-1/click", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ promotionId: "promo-1", surface: "home" }),
-    });
-    expect(res.status).toBe(200);
-    const body = await res.json();
+  it("records a click when active and under budget", async () => {
+    tx.promotion = { ...PROMO };
+    tx.spentToday = 0;
+    const { body } = await click();
     expect(body.recorded).toBe(true);
+  });
+
+  it("refuses the click when it would exceed the daily budget", async () => {
+    // 990 spent + 25 bid = 1015 > 1000 cap → budget gate trips, no charge.
+    tx.promotion = { ...PROMO };
+    tx.spentToday = 990;
+    const { body } = await click();
+    expect(body.recorded).toBe(false);
+    expect(body.reason).toBe("budget_exhausted");
+  });
+
+  it("lazily resumes a paused_budget promotion that has headroom today (new UTC day)", async () => {
+    tx.promotion = { ...PROMO, status: "paused_budget" };
+    tx.spentToday = 0; // budget reset for the new day
+    const { body } = await click();
+    expect(body.recorded).toBe(true);
+  });
+
+  it("keeps a paused_budget promotion paused when today is already maxed", async () => {
+    tx.promotion = { ...PROMO, status: "paused_budget" };
+    tx.spentToday = 1000; // already at cap today
+    const { body } = await click();
+    expect(body.recorded).toBe(false);
   });
 });

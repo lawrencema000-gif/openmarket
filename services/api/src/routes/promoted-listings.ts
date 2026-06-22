@@ -332,25 +332,49 @@ promotedListingsRouter.get("/promoted/active", async (c) => {
   const limit = Math.min(Number(c.req.query("limit") ?? 6), 20);
 
   const now = new Date();
+  const today = todayUtc();
 
   // The storefront query joins apps + the current app_listings row
   // and excludes any app that's been delisted or has a review-freeze.
   // This way moderation action auto-pauses paid placement without us
   // needing a separate cron.
+  //
+  // A promotion is servable when it's `active`, OR it's `paused_budget`
+  // but has spend headroom for TODAY (the UTC day rolled over since it was
+  // paused). The LEFT JOIN on today's stats provides the lazy daily reset
+  // — a budget-paused promotion reappears the next day without a cron, and
+  // the first click flips its stored status back to active.
   const rows = await db
     .select({
       promotion: promotedListings,
       app: apps,
       listing: appListings,
+      spentToday: promotionDailyStats.spendCents,
     })
     .from(promotedListings)
     .innerJoin(apps, eq(apps.id, promotedListings.appId))
     .innerJoin(appListings, eq(appListings.id, apps.currentListingId))
+    .leftJoin(
+      promotionDailyStats,
+      and(
+        eq(promotionDailyStats.promotionId, promotedListings.id),
+        eq(promotionDailyStats.day, today),
+      ),
+    )
     .where(
       and(
-        eq(promotedListings.status, "active"),
         eq(apps.isDelisted, false),
         eq(apps.reviewFreeze, false),
+        or(
+          eq(promotedListings.status, "active"),
+          and(
+            eq(promotedListings.status, "paused_budget"),
+            or(
+              sql`${promotionDailyStats.spendCents} IS NULL`,
+              lt(promotionDailyStats.spendCents, promotedListings.dailyBudgetCents),
+            ),
+          ),
+        ),
         or(
           sql`${promotedListings.startAt} IS NULL`,
           lte(promotedListings.startAt, now),
@@ -438,43 +462,83 @@ promotedListingsRouter.post(
   async (c) => {
     const id = c.req.param("id") as string;
     const day = todayUtc();
-    const promotion = await db.query.promotedListings.findFirst({
-      where: eq(promotedListings.id, id),
+
+    // Serialize clicks per-promotion with SELECT ... FOR UPDATE so the
+    // daily-budget check is reliable. Without the lock, many concurrent
+    // clicks all read status='active' and increment before any sees the
+    // cap, overshooting the budget. Inside the tx we (1) lazily resume a
+    // promotion that was paused on a previous UTC day, (2) gate on the
+    // budget BEFORE charging so the cap is never exceeded, and (3) flip
+    // to paused_budget the moment the cap is reached.
+    const result = await db.transaction(async (tx) => {
+      const [promotion] = await tx
+        .select()
+        .from(promotedListings)
+        .where(eq(promotedListings.id, id))
+        .for("update");
+      if (!promotion) return { recorded: false as const };
+
+      const [today] = await tx
+        .select({ spendCents: promotionDailyStats.spendCents })
+        .from(promotionDailyStats)
+        .where(
+          and(
+            eq(promotionDailyStats.promotionId, id),
+            eq(promotionDailyStats.day, day),
+          ),
+        );
+      const spentToday = today?.spendCents ?? 0;
+
+      // Lazy daily reset: a budget-paused promotion with headroom today
+      // (the UTC day rolled over) is servable again.
+      const servable =
+        promotion.status === "active" ||
+        (promotion.status === "paused_budget" &&
+          spentToday < promotion.dailyBudgetCents);
+      if (!servable) return { recorded: false as const };
+
+      // Budget gate BEFORE charging — never exceed the daily cap.
+      if (spentToday + promotion.bidCentsPerClick > promotion.dailyBudgetCents) {
+        if (promotion.status !== "paused_budget") {
+          await tx
+            .update(promotedListings)
+            .set({ status: "paused_budget", updatedAt: new Date() })
+            .where(eq(promotedListings.id, id));
+        }
+        return { recorded: false as const, reason: "budget_exhausted" };
+      }
+
+      await tx
+        .insert(promotionDailyStats)
+        .values({
+          promotionId: id,
+          day,
+          impressions: 0,
+          clicks: 1,
+          spendCents: promotion.bidCentsPerClick,
+          currency: promotion.currency,
+        })
+        .onConflictDoUpdate({
+          target: [promotionDailyStats.promotionId, promotionDailyStats.day],
+          set: {
+            clicks: sql`${promotionDailyStats.clicks} + 1`,
+            spendCents: sql`${promotionDailyStats.spendCents} + ${promotion.bidCentsPerClick}`,
+            updatedAt: new Date(),
+          },
+        });
+
+      const newSpend = spentToday + promotion.bidCentsPerClick;
+      const nextStatus =
+        newSpend >= promotion.dailyBudgetCents ? "paused_budget" : "active";
+      if (nextStatus !== promotion.status) {
+        await tx
+          .update(promotedListings)
+          .set({ status: nextStatus, updatedAt: new Date() })
+          .where(eq(promotedListings.id, id));
+      }
+      return { recorded: true as const };
     });
-    if (!promotion || promotion.status !== "active") {
-      return c.json({ recorded: false }, 200);
-    }
 
-    const inserted = await db
-      .insert(promotionDailyStats)
-      .values({
-        promotionId: id,
-        day,
-        impressions: 0,
-        clicks: 1,
-        spendCents: promotion.bidCentsPerClick,
-        currency: promotion.currency,
-      })
-      .onConflictDoUpdate({
-        target: [promotionDailyStats.promotionId, promotionDailyStats.day],
-        set: {
-          clicks: sql`${promotionDailyStats.clicks} + 1`,
-          spendCents: sql`${promotionDailyStats.spendCents} + ${promotion.bidCentsPerClick}`,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-
-    const todayRow = inserted[0];
-    if (todayRow && todayRow.spendCents >= promotion.dailyBudgetCents) {
-      await db
-        .update(promotedListings)
-        .set({ status: "paused_budget", updatedAt: new Date() })
-        .where(eq(promotedListings.id, id));
-    }
-    return c.json({ recorded: true });
+    return c.json(result);
   },
 );
-
-// Touch unused imports to satisfy tree-shaking checks for future stats endpoints.
-export const _promotedListingsHelpers = { lt };
