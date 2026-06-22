@@ -22,6 +22,7 @@ import { recordAdminAction } from "../lib/audit";
 import { dispatchReleaseToLibrary } from "../lib/push";
 import { dispatchPreRegistrationLaunch } from "../lib/pre-registration";
 import { recomputeReviewHighlightsForApp } from "../lib/review-highlights";
+import { syncAppToSearchIndex } from "../lib/search-index";
 import { sourceCodeVerificationPatchSchema } from "@openmarket/contracts/source-code";
 import type { Variables } from "../lib/types";
 
@@ -163,6 +164,10 @@ adminRouter.post(
     }).catch((err) => {
       console.error("[admin] release-publish push fan-out failed", err);
     });
+
+    // Refresh the search index — the new release updates the app's
+    // latest-release recency signal (and (re)indexes it if it's now live).
+    void syncAppToSearchIndex(release.appId);
 
     return c.json(updated);
   }

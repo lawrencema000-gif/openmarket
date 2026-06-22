@@ -71,6 +71,10 @@ vi.mock("../lib/email", () => ({
   enqueueEmail: vi.fn().mockResolvedValue({ jobId: "1" }),
 }));
 
+vi.mock("../lib/search-index", () => ({
+  syncAppToSearchIndex: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { dmcaRouter } from "../routes/dmca";
 import { db } from "../lib/db";
 

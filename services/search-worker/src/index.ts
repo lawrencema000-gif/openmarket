@@ -23,7 +23,10 @@ async function main() {
   console.log("Meilisearch index ensured");
 
   const worker = new Worker<SearchIndexJobData>(
-    "openmarket:search-index",
+    // Must match the producer queue in services/api/src/lib/queue.ts
+    // (searchIndexQueue). Previously this used a colon and the producer a
+    // hyphen, so no job the API enqueued ever reached this worker.
+    "openmarket-search-index",
     async (job) => {
       const { action, app } = job.data;
 

@@ -43,6 +43,10 @@ vi.mock("../lib/transparency", () => ({
   appendTransparencyEvent: vi.fn().mockResolvedValue({ id: "t-1" }),
 }));
 
+vi.mock("../lib/search-index", () => ({
+  syncAppToSearchIndex: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("../lib/email", () => ({
   enqueueEmail: vi.fn().mockResolvedValue({ jobId: "1" }),
 }));

@@ -20,6 +20,7 @@ import {
   appendTransparencyEvent,
 } from "../lib/transparency";
 import { recordAdminAction } from "../lib/audit";
+import { syncAppToSearchIndex } from "../lib/search-index";
 import type { Variables } from "../lib/types";
 
 export const reportsRouter = new Hono<{ Variables: Variables }>();
@@ -307,6 +308,11 @@ reportsRouter.post(
       },
     });
 
+    // Drop a just-delisted app from the search index (the query-time DB
+    // gate already hides it; this keeps the index from serving it as a
+    // stale slot).
+    if (delistedAppId) void syncAppToSearchIndex(delistedAppId);
+
     return c.json({ success: true, reportId, resolution: body.resolution });
   },
 );
@@ -451,6 +457,7 @@ reportsRouter.post(
                 })
                 .where(eq(apps.id, app.id));
               delistedAppId = app.id;
+              void syncAppToSearchIndex(app.id); // drop from search index
             }
           } else if (report.targetType === "review") {
             await db

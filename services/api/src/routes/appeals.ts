@@ -15,6 +15,7 @@ import { requireAdmin } from "../middleware/admin";
 import { enqueueEmail } from "../lib/email";
 import { appendTransparencyEvent } from "../lib/transparency";
 import { recordAdminAction } from "../lib/audit";
+import { syncAppToSearchIndex } from "../lib/search-index";
 import type { Variables } from "../lib/types";
 
 export const appealsRouter = new Hono<{ Variables: Variables }>();
@@ -308,6 +309,8 @@ async function applyAcceptance(opts: {
           updatedAt: new Date(),
         })
         .where(eq(apps.id, app.id));
+      // Re-index the reinstated app so it's discoverable again.
+      void syncAppToSearchIndex(app.id);
     }
     await appendTransparencyEvent({
       eventType: "app_relisted",

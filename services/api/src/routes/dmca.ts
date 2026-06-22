@@ -16,6 +16,7 @@ import { rateLimit } from "../middleware/rate-limit";
 import { recordAdminAction } from "../lib/audit";
 import { appendTransparencyEvent } from "../lib/transparency";
 import { enqueueEmail } from "../lib/email";
+import { syncAppToSearchIndex } from "../lib/search-index";
 import type { Variables } from "../lib/types";
 
 export const dmcaRouter = new Hono<{ Variables: Variables }>();
@@ -356,6 +357,8 @@ dmcaRouter.post(
           .where(eq(apps.id, app.id));
       }
     });
+    // Drop the taken-down app from the search index.
+    if (app) void syncAppToSearchIndex(app.id);
 
     // Public record.
     await appendTransparencyEvent({
@@ -666,6 +669,8 @@ dmcaRouter.post("/admin/dmca/restore-due", requireAdmin, async (c) => {
         legalBasis: "17 USC 512(g)",
         jurisdiction: "US",
       });
+      // Re-index the restored app so it's discoverable again.
+      void syncAppToSearchIndex(notice.appId);
     }
     results.push({ noticeId: notice.id, appId: notice.appId });
   }

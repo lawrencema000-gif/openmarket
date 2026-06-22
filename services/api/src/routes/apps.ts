@@ -26,6 +26,7 @@ import { updateAppListingSchema } from "@openmarket/contracts/apps";
 import { isInstallAllowedWithoutPin } from "@openmarket/contracts/parental-controls";
 import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { resolveRunningExperiment } from "../lib/listing-experiments";
+import { syncAppToSearchIndex } from "../lib/search-index";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
 import { recordAdminAction } from "../lib/audit";
@@ -592,6 +593,9 @@ appsRouter.patch(
       .update(appListings)
       .set({ ...body, updatedAt: new Date() })
       .where(eq(appListings.id, app.currentListingId));
+
+    // Keep the search index fresh with the edited title/description/etc.
+    void syncAppToSearchIndex(appId);
 
     return c.json({ success: true });
   },
