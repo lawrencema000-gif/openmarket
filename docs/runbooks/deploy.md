@@ -12,7 +12,9 @@ Everything below is scaffolded and waiting for credentials:
 |---|---|---|
 | API on Vercel | `services/api/api/index.ts` + `vercel.json` | `vercel link` + env vars + push |
 | API/Hono split | `src/app.ts` (pure) + `src/index.ts` (local Node server) | already merged |
-| Workers on Fly.io | `services/notify-worker/Dockerfile` + `fly.toml` | `fly launch` + secrets + `fly deploy` |
+| DB migrations | `vercel.json` buildCommand runs `db:migrate` on **production** builds only | set `DATABASE_URL` (+ `DIRECT_URL`) in Vercel |
+| Scheduled jobs | `vercel.json` `crons` → `GET /api/cron/*` behind `CRON_SECRET` | set `CRON_SECRET` in Vercel (needs Pro, or use an external scheduler) |
+| Workers on Fly.io | Dockerfile + `fly.toml` for **all 4** workers (notify, ingest, scan, search) | `fly launch` + secrets + `fly deploy` per worker |
 | Upstash Redis | `services/api/src/lib/redis-connection.ts` reads `REDIS_URL` | set env var |
 | Cloudflare R2 | `services/api/src/lib/storage.ts` reads `R2_*` | set env vars |
 | Resend | notify-worker `transport/resend.ts` reads `RESEND_API_KEY` | set env var |
@@ -286,3 +288,49 @@ Total fixed cost at v1 launch: **~$0–9/mo** (just Plausible if you go Cloud).
 - **PGP key** publication for `/security`.
 
 These don't block deployment but they DO block claiming the platform is "production" in any meaningful sense.
+
+## Database migrations (production)
+
+OpenMarket uses **versioned** Drizzle migrations in production — never
+`db:push` (which diffs live schema and can silently drop columns). The
+migration files live in `packages/db/drizzle/*.sql` and are committed.
+
+- **How it runs:** `services/api/vercel.json` `buildCommand` runs
+  `pnpm --filter @openmarket/db migrate` **only when `VERCEL_ENV=production`**
+  (preview/dev builds skip it), then builds the API. A failed migration
+  fails the deploy (fail-closed) — the new API is never served against an
+  un-migrated DB.
+- **Connection:** `drizzle.config.ts` prefers `DIRECT_URL` (unpooled Neon)
+  for migrations, falling back to `DATABASE_URL`. Set **both** in Vercel:
+  `DATABASE_URL` = pooled (runtime), `DIRECT_URL` = direct/unpooled (DDL).
+  Migrating through the PgBouncer pooler can hang on advisory locks.
+- **Workers:** Fly workers do NOT migrate — they assume the API deploy has
+  already applied the schema. Deploy/redeploy the API first.
+- **Manual / first run:** `DIRECT_URL=... pnpm --filter @openmarket/db migrate`
+  from a machine with network access to Neon.
+- **Generating new migrations (dev):** edit `packages/db/src/schema/*`,
+  then `pnpm --filter @openmarket/db generate`, review the SQL, commit.
+
+## Scheduled jobs (crons)
+
+Five jobs keep the marketplace alive + compliant. They're `GET /api/cron/*`
+routes guarded by a `CRON_SECRET` bearer (see `services/api/vercel.json`
+`crons`):
+
+| Path | Cadence | Without it |
+|---|---|---|
+| `/api/cron/charts-recompute` | hourly | home page shows empty charts |
+| `/api/cron/statistics-recompute` | daily | dev analytics + ranking empty |
+| `/api/cron/reviews-promote-due` | 15 min | reviews never go public |
+| `/api/cron/reviews-detect-bombs` | 15 min | review brigades go undetected |
+| `/api/cron/dmca-restore-due` | daily | §512(g) restore-window violation |
+
+- **Set `CRON_SECRET`** (a long random string) in Vercel env. Vercel injects
+  it as `Authorization: Bearer <CRON_SECRET>` on cron invocations.
+- **Plan caveat:** Vercel **Hobby** allows only daily crons. The 15-minute
+  review jobs need **Pro**, OR point an external scheduler (GitHub Actions
+  `schedule`, Upstash QStash, cron-job.org) at the same URLs with the
+  `Authorization: Bearer <CRON_SECRET>` header — the routes are
+  scheduler-agnostic.
+- **Manual trigger:** `curl -H "Authorization: Bearer $CRON_SECRET" \
+  https://<api-host>/api/cron/charts-recompute`.
