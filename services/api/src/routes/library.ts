@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   apps,
   appListings,
+  installEvents,
   libraryEntries,
   releases,
   users,
@@ -13,6 +14,7 @@ import {
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 import { fanOutFamilyShareToMembers } from "../lib/family-sharing";
+import { recordAffiliateConversion } from "../lib/affiliate-attribution";
 import type { Variables } from "../lib/types";
 
 export const libraryRouter = new Hono<{ Variables: Variables }>();
@@ -20,7 +22,47 @@ export const libraryRouter = new Hono<{ Variables: Variables }>();
 const recordInstallSchema = z.object({
   versionCode: z.number().int().positive().optional(),
   source: z.enum(["store_app", "web", "direct"]).optional(),
+  /**
+   * Salted device fingerprint hash (non-PII). When present we record an
+   * install_event for analytics and attempt affiliate attribution against
+   * a recent click from the same device.
+   */
+  deviceFingerprintHash: z.string().min(8).max(128).optional(),
 });
+
+/**
+ * Record an install_event and attempt affiliate attribution. Fire-and-
+ * forget — never blocks or fails the install. Centralized so both the
+ * fresh-install and reinstall paths feed analytics + the affiliate
+ * conversion pipeline.
+ */
+async function recordInstallSignal(opts: {
+  appId: string;
+  userId: string;
+  versionCode: number;
+  source: "store_app" | "web" | "direct";
+  deviceFingerprintHash?: string | null;
+}): Promise<void> {
+  const [event] = await db
+    .insert(installEvents)
+    .values({
+      appId: opts.appId,
+      userId: opts.userId,
+      deviceFingerprintHash: opts.deviceFingerprintHash ?? null,
+      installedVersionCode: opts.versionCode,
+      source: opts.source,
+      success: true,
+    })
+    .returning({ id: installEvents.id });
+
+  if (event && opts.deviceFingerprintHash) {
+    await recordAffiliateConversion({
+      appId: opts.appId,
+      installEventId: event.id,
+      deviceFingerprintHash: opts.deviceFingerprintHash,
+    });
+  }
+}
 
 async function profileForAuthUser(authUserId: string, email: string) {
   // Mirror of the helper in routes/users.ts but local — keeps the import
@@ -196,6 +238,20 @@ libraryRouter.post(
         console.error("[library] family-share fan-out failed (reinstall)", err);
       });
 
+      // Only a genuine reinstall (was uninstalled) counts as a new install
+      // signal for analytics + affiliate attribution.
+      if (existing.uninstalledAt) {
+        void recordInstallSignal({
+          appId,
+          userId: profile.id,
+          versionCode: body.versionCode ?? existing.installedVersionCode ?? 0,
+          source: body.source ?? existing.source,
+          deviceFingerprintHash: body.deviceFingerprintHash,
+        }).catch((err) =>
+          console.error("[library] install-signal failed (reinstall)", err),
+        );
+      }
+
       return c.json({ entry: updated, reinstalled: existing.uninstalledAt !== null });
     }
 
@@ -216,6 +272,16 @@ libraryRouter.post(
     void fanOutFamilyShareToMembers(profile.id, appId).catch((err) => {
       console.error("[library] family-share fan-out failed", err);
     });
+
+    void recordInstallSignal({
+      appId,
+      userId: profile.id,
+      versionCode: body.versionCode ?? 0,
+      source: body.source ?? "store_app",
+      deviceFingerprintHash: body.deviceFingerprintHash,
+    }).catch((err) =>
+      console.error("[library] install-signal failed", err),
+    );
 
     return c.json({ entry: created, reinstalled: false }, 201);
   },
