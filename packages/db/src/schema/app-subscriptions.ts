@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -68,9 +69,21 @@ export const appSubscriptions = pgTable(
     canceledAt: timestamp("canceled_at", { withTimezone: true }),
   },
   (t) => [
-    // A user can re-subscribe after a previous cancellation — soft
-    // dedupe at the API layer, not via a unique index, because the
-    // row stays for audit.
+    // A user can re-subscribe after a previous cancellation — historical
+    // rows stay for audit, so the dedupe is scoped to BILLING-ACTIVE
+    // states only. This partial unique index is the DB-level guarantee
+    // behind the "one active subscription per user per app" invariant:
+    // two concurrent requests can each create an `incomplete` row (benign
+    // — the human completes only one checkout), but at most ONE row can
+    // ever reach an active billing state. The webhook activation path
+    // catches the resulting unique-violation and collapses the loser.
+    //
+    // `incomplete` is deliberately EXCLUDED: an abandoned checkout that
+    // Stripe never expires would otherwise block the user from ever
+    // re-subscribing.
+    uniqueIndex("app_subscriptions_one_active_idx")
+      .on(t.userId, t.appId)
+      .where(sql`status IN ('active', 'trialing', 'past_due')`),
     index("app_subscriptions_user_app_idx").on(t.userId, t.appId, t.status),
     uniqueIndex("app_subscriptions_stripe_sub_idx").on(t.stripeSubscriptionId),
     index("app_subscriptions_session_idx").on(t.stripeCheckoutSessionId),

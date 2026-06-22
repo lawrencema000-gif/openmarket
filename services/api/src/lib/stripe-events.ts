@@ -72,6 +72,25 @@ export interface DispatchResult {
   purchaseId: string | null;
 }
 
+/**
+ * Detect a Postgres unique-violation (SQLSTATE 23505). The
+ * `app_subscriptions_one_active_idx` partial unique index lets at most
+ * one row per (user, app) hold an active billing state. If a webhook
+ * tries to activate a SECOND row (the rare case where a user completed
+ * two concurrent checkouts), the DB rejects it. We treat that as a
+ * duplicate to reconcile rather than letting the error bubble — an
+ * unhandled throw here would 500 the webhook and make Stripe retry the
+ * same event indefinitely.
+ */
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: string }).code === "23505"
+  );
+}
+
 export async function applyStripeWebhookEvent(
   event: StripeWebhookEvent,
 ): Promise<DispatchResult> {
@@ -176,13 +195,31 @@ async function handleCheckoutCompleted(
       purchaseId: appSubRow.id,
     };
   }
-  await db
-    .update(appSubscriptions)
-    .set({
-      status: appSubRow.trialDays ? "trialing" : "active",
-      stripeSubscriptionId: subscriptionId ?? appSubRow.stripeSubscriptionId,
-    })
-    .where(eq(appSubscriptions.id, appSubRow.id));
+  try {
+    await db
+      .update(appSubscriptions)
+      .set({
+        status: appSubRow.trialDays ? "trialing" : "active",
+        stripeSubscriptionId: subscriptionId ?? appSubRow.stripeSubscriptionId,
+      })
+      .where(eq(appSubscriptions.id, appSubRow.id));
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      console.error(
+        "[stripe] duplicate app-subscription activation blocked by " +
+          "one-active index — user already has an active subscription. " +
+          `row=${appSubRow.id} user=${appSubRow.userId} app=${appSubRow.appId} ` +
+          `session=${sessionId} sub=${subscriptionId ?? "n/a"}. This row was ` +
+          "paid at Stripe and needs a manual refund/cancel.",
+      );
+      return {
+        applied: false,
+        reason: "duplicate-active-subscription (needs manual reconciliation)",
+        purchaseId: appSubRow.id,
+      };
+    }
+    throw err;
+  }
   return { applied: true, reason: "app-subscription:started", purchaseId: appSubRow.id };
 }
 
@@ -346,17 +383,35 @@ async function handleSubscriptionUpdated(
       purchaseId: null,
     };
   }
-  await db
-    .update(appSubscriptions)
-    .set({
-      status: status ?? appSubRow.status,
-      currentPeriodEnd:
-        currentPeriodEnd != null
-          ? new Date(currentPeriodEnd * 1000)
-          : appSubRow.currentPeriodEnd,
-      cancelAtPeriodEnd,
-    })
-    .where(eq(appSubscriptions.id, appSubRow.id));
+  try {
+    await db
+      .update(appSubscriptions)
+      .set({
+        status: status ?? appSubRow.status,
+        currentPeriodEnd:
+          currentPeriodEnd != null
+            ? new Date(currentPeriodEnd * 1000)
+            : appSubRow.currentPeriodEnd,
+        cancelAtPeriodEnd,
+      })
+      .where(eq(appSubscriptions.id, appSubRow.id));
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      console.error(
+        "[stripe] duplicate app-subscription update blocked by one-active " +
+          `index. row=${appSubRow.id} user=${appSubRow.userId} ` +
+          `app=${appSubRow.appId} sub=${subscriptionId} status=${status}. ` +
+          "Another row already holds the active state — needs manual " +
+          "reconciliation.",
+      );
+      return {
+        applied: false,
+        reason: "duplicate-active-subscription (needs manual reconciliation)",
+        purchaseId: appSubRow.id,
+      };
+    }
+    throw err;
+  }
   return {
     applied: true,
     reason: `app-subscription:${status ?? "updated"}`,
