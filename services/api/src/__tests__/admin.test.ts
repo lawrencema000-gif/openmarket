@@ -167,3 +167,48 @@ describe("Review hold-back: PATCH /api/admin/apps/:id/review-freeze", () => {
     expect(body.reviewFreeze).toBe(true);
   });
 });
+
+describe("POST /api/admin/releases/:id/approve — publishes the app", () => {
+  it("flips the app to isPublished on release approval (follow-up A)", async () => {
+    vi.mocked(db.query.releases.findFirst).mockResolvedValueOnce({
+      id: "release-1",
+      appId: "app-1",
+      versionName: "1.0.0",
+      releaseNotes: "first cut",
+      status: "review",
+    } as never);
+    vi.mocked(db.query.developers.findFirst).mockResolvedValueOnce({
+      id: "mod-1",
+      email: "admin@test.com",
+    } as never);
+    // Used by the push fan-out (fire-and-forget).
+    vi.mocked(db.query.apps.findFirst).mockResolvedValue({
+      id: "app-1",
+      currentListingId: "l-1",
+      listings: [{ id: "l-1", title: "Acme" }],
+    } as never);
+
+    // Capture every UPDATE …set() so we can prove the app was published.
+    const setSpy = vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        returning: vi
+          .fn()
+          .mockResolvedValue([{ id: "release-1", status: "published" }]),
+      }),
+    });
+    vi.mocked(db.update).mockReturnValue({ set: setSpy } as never);
+
+    const res = await app.request("/api/admin/releases/release-1/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(200);
+    // One of the updates set the app live.
+    expect(
+      setSpy.mock.calls.some(
+        (call) => (call[0] as { isPublished?: boolean }).isPublished === true,
+      ),
+    ).toBe(true);
+  });
+});

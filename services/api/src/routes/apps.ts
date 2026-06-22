@@ -129,7 +129,18 @@ appsRouter.post(
       })
       .returning();
 
-    return c.json({ ...app, listing }, 201);
+    // Point the app at its canonical listing. Without this the pointer
+    // stays null and every surface that resolves the current listing via
+    // app.currentListingId (search index, federation, storefront) treats
+    // the app as listing-less. The published gate is separate
+    // (isPublished flips on first release approval).
+    const [withListing] = await db
+      .update(apps)
+      .set({ currentListingId: listing!.id, updatedAt: new Date() })
+      .where(eq(apps.id, app!.id))
+      .returning();
+
+    return c.json({ ...(withListing ?? app), listing }, 201);
   }
 );
 

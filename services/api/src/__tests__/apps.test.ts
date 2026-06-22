@@ -173,6 +173,16 @@ describe("POST /api/apps", () => {
     });
     vi.mocked(db.insert).mockImplementation(insertMock);
 
+    // Handler now points the app at its new listing via an UPDATE …
+    // RETURNING after inserting both rows.
+    vi.mocked(db.update).mockReturnValueOnce({
+      set: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      returning: vi
+        .fn()
+        .mockResolvedValue([{ ...mockApp, currentListingId: "listing-1" }]),
+    } as never);
+
     const res = await app.request("/api/apps", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -182,6 +192,7 @@ describe("POST /api/apps", () => {
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.packageName).toBe("com.example.myapp");
+    expect(body.currentListingId).toBe("listing-1");
   });
 });
 

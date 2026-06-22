@@ -125,6 +125,16 @@ adminRouter.post(
       .where(eq(releases.id, releaseId))
       .returning();
 
+    // Publish the APP itself on its first approved release. An app stays
+    // isPublished=false (invisible in search/storefront/federation) until
+    // a release has passed moderation — this is the gate that makes a
+    // security-reviewed app publicly discoverable. Scoped to isPublished
+    // =false so it's a no-op on subsequent approvals.
+    await db
+      .update(apps)
+      .set({ isPublished: true, updatedAt: new Date() })
+      .where(and(eq(apps.id, release.appId), eq(apps.isPublished, false)));
+
     await notifyQueue.add("notify", {
       type: "release_approved",
       releaseId,
