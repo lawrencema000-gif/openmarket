@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import {
   appListings,
@@ -123,7 +123,13 @@ federationRouter.get("/federation/index", async (c) => {
 
   // Build the catalog: published apps that aren't delisted, joined with
   // their current listing + the artifact of their current release.
-  // We pin signing-key fingerprint when present.
+  //
+  // The listing join is a LEFT JOIN, NOT inner: apps.currentListingId is
+  // nullable and can be transiently null (e.g. mid-edit), and an INNER
+  // JOIN would silently DROP an otherwise-published app from the entire
+  // federated catalog. Release + artifact stay INNER — an app genuinely
+  // can't federate without a published release+artifact, so excluding
+  // those is correct rather than data-lossy.
   const rows = await db
     .select({
       app: apps,
@@ -132,7 +138,7 @@ federationRouter.get("/federation/index", async (c) => {
       artifact: releaseArtifacts,
     })
     .from(apps)
-    .innerJoin(appListings, eq(appListings.id, apps.currentListingId))
+    .leftJoin(appListings, eq(appListings.id, apps.currentListingId))
     .innerJoin(releases, eq(releases.appId, apps.id))
     .innerJoin(releaseArtifacts, eq(releaseArtifacts.releaseId, releases.id))
     .where(
@@ -162,26 +168,58 @@ federationRouter.get("/federation/index", async (c) => {
     }
   }
 
+  // Fallback listing for any app whose currentListingId was null/missing.
+  // Mirror GET /apps/:id: fall back to the most recent listing for the
+  // app. One batched query covers all such apps.
+  const missingListingAppIds = Array.from(byApp.values())
+    .filter((r) => !r.listing)
+    .map((r) => r.app.id);
+  const fallbackListings = new Map<string, typeof appListings.$inferSelect>();
+  if (missingListingAppIds.length > 0) {
+    const fallbackRows = await db
+      .select()
+      .from(appListings)
+      .where(inArray(appListings.appId, missingListingAppIds))
+      .orderBy(desc(appListings.createdAt));
+    for (const l of fallbackRows) {
+      // ordered newest-first → first seen per app wins.
+      if (!fallbackListings.has(l.appId)) fallbackListings.set(l.appId, l);
+    }
+  }
+
   const payload: FederationIndexPayload = {
     version: FEDERATION_INDEX_VERSION,
     origin: FEDERATION_ORIGIN,
     displayName: FEDERATION_DISPLAY_NAME,
     sequence: Date.now(),
     producedAt: new Date().toISOString(),
-    apps: Array.from(byApp.values()).map(
-      ({ app, listing, release, artifact }) => ({
-        remoteAppId: app.id,
-        packageName: app.packageName,
-        title: listing.title,
-        shortDescription: listing.shortDescription,
-        iconUrl: listing.iconUrl,
-        category: listing.category,
-        versionCode: release.versionCode,
-        versionName: release.versionName,
-        apkSha256: artifact.sha256,
-        downloadUrl: `${FEDERATION_ORIGIN}/apps/${app.id}/download`,
-      }),
-    ),
+    apps: Array.from(byApp.values())
+      .map(({ app, listing, release, artifact }) => {
+        const resolvedListing = listing ?? fallbackListings.get(app.id) ?? null;
+        // An app with zero listings of any kind genuinely has nothing to
+        // advertise (no title) — skip it rather than emit an invalid
+        // entry that fails the federation schema downstream.
+        if (!resolvedListing) {
+          console.warn(
+            `[federation] skipping app ${app.id} (${app.packageName}) — ` +
+              "published with a release but no listing of any kind.",
+          );
+          return null;
+        }
+        return {
+          remoteAppId: app.id,
+          packageName: app.packageName,
+          title: resolvedListing.title,
+          shortDescription: resolvedListing.shortDescription,
+          iconUrl: resolvedListing.iconUrl,
+          category: resolvedListing.category,
+          versionCode: release.versionCode,
+          versionName: release.versionName,
+          apkSha256: artifact.sha256,
+          downloadUrl: `${FEDERATION_ORIGIN}/apps/${app.id}/download`,
+        };
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null),
   };
 
   const signature = signPayload(key.privateKeyEncrypted, payload);

@@ -33,6 +33,7 @@ vi.mock("../lib/db", () => ({
       chain.where = vi.fn().mockReturnValue(chain);
       chain.orderBy = vi.fn().mockReturnValue(chain);
       chain.innerJoin = vi.fn().mockReturnValue(chain);
+      chain.leftJoin = vi.fn().mockReturnValue(chain);
       chain.limit = vi.fn().mockResolvedValue([]);
       chain.then = (resolve: (v: unknown[]) => unknown) => resolve([]);
       return chain;
