@@ -146,6 +146,16 @@ export default function AppDetailPage({
           <h2 className="text-sm font-semibold text-gray-700">Releases</h2>
           <div className="flex items-center gap-2">
             <Link
+              href={`/apps/${id}/live`}
+              className="bg-white border border-gray-200 hover:border-violet-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors inline-flex items-center gap-1.5"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-60 animate-ping" />
+                <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              Live
+            </Link>
+            <Link
               href={`/apps/${id}/statistics`}
               className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
