@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
+import { getDeviceHash } from "@/lib/device";
 
 export function LibraryButton({ appId }: { appId: string }) {
   const { data: session, isPending } = useSession();
@@ -36,7 +37,9 @@ export function LibraryButton({ appId }: { appId: string }) {
     try {
       await apiFetch(`/api/users/me/library/${appId}`, {
         method: "POST",
-        body: JSON.stringify({ source: "web" }),
+        // Device hash lets the server attribute an affiliate conversion to
+        // an earlier ?ref= click from the same device.
+        body: JSON.stringify({ source: "web", deviceFingerprintHash: getDeviceHash() }),
       });
       setInLibrary(true);
     } catch (err) {

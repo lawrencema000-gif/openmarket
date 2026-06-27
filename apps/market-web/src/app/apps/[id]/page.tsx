@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -20,6 +21,7 @@ import { DataSafetyBlock } from "@/components/data-safety-block";
 import { BetaJoinButton } from "@/components/beta-join-button";
 import { PreRegisterButton } from "@/components/pre-register-button";
 import { ExperimentEvents } from "@/components/experiment-events";
+import { AffiliateRefCapture } from "@/components/affiliate-ref-capture";
 import { InstallBar } from "@/components/install-bar";
 import { PriceBadge } from "@/components/price-badge";
 import { PurchaseButton } from "@/components/purchase-button";
@@ -342,6 +344,11 @@ export default async function AppDetailPage({
       {app.experiment ? (
         <ExperimentEvents appId={app.id} experiment={app.experiment} />
       ) : null}
+      {/* P4-H: affiliate ?ref= capture. Suspense-wrapped because it reads
+          useSearchParams. Renders nothing. */}
+      <Suspense fallback={null}>
+        <AffiliateRefCapture appId={app.id} />
+      </Suspense>
       {/* Breadcrumb */}
       <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
         <nav className="flex items-center gap-1.5 text-sm text-gray-500">
