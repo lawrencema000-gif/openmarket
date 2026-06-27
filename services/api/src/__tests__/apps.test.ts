@@ -43,6 +43,11 @@ vi.mock("../lib/queue", () => ({
   searchIndexQueue: { add: vi.fn() },
 }));
 
+// Free-tier publishing gate is exercised in plan.test.ts; no-op here.
+vi.mock("../lib/plan", () => ({
+  assertPublishingAllowed: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { appsRouter } from "../routes/apps";
 import { db } from "../lib/db";
 

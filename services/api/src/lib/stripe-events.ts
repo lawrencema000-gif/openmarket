@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import {
   appSubscriptions,
   developerPayoutAccounts,
+  developers,
   iapPurchases,
   purchases,
 } from "@openmarket/db/schema";
@@ -182,6 +183,34 @@ async function handleCheckoutCompleted(
     where: eq(appSubscriptions.stripeCheckoutSessionId, sessionId),
   });
   if (!appSubRow) {
+    // Platform plan (free→paid model): we stash the checkout session id on
+    // developers.platformSubscriptionId when starting the upgrade. Match it
+    // and flip the developer to the paid plan.
+    const devRow = await db.query.developers.findFirst({
+      where: eq(developers.platformSubscriptionId, sessionId),
+    });
+    if (devRow) {
+      if (devRow.platformPlan === "paid") {
+        return {
+          applied: false,
+          reason: "platform plan already paid (idempotent no-op)",
+          purchaseId: devRow.id,
+        };
+      }
+      await db
+        .update(developers)
+        .set({
+          platformPlan: "paid",
+          platformSubscriptionId: subscriptionId ?? sessionId,
+          updatedAt: new Date(),
+        })
+        .where(eq(developers.id, devRow.id));
+      return {
+        applied: true,
+        reason: "platform-plan:upgraded",
+        purchaseId: devRow.id,
+      };
+    }
     return {
       applied: false,
       reason: `no purchase row for session ${sessionId}`,

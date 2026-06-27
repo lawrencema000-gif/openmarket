@@ -27,6 +27,7 @@ import { isInstallAllowedWithoutPin } from "@openmarket/contracts/parental-contr
 import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { resolveRunningExperiment } from "../lib/listing-experiments";
 import { syncAppToSearchIndex } from "../lib/search-index";
+import { assertPublishingAllowed } from "../lib/plan";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/admin";
 import { recordAdminAction } from "../lib/audit";
@@ -88,6 +89,10 @@ appsRouter.post(
     if (!developer) {
       throw new HTTPException(404, { message: "Developer profile not found" });
     }
+
+    // Free-tier gate: block NEW app creation once over a cap + grace
+    // expired + not on the paid plan (402). Existing apps keep running.
+    await assertPublishingAllowed(developer.id);
 
     // Check package name uniqueness
     const existingApp = await db.query.apps.findFirst({

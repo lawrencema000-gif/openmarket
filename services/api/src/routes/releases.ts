@@ -14,6 +14,7 @@ import {
   scanResults,
 } from "@openmarket/db/schema";
 import { requireAuth } from "../middleware/auth";
+import { assertPublishingAllowed } from "../lib/plan";
 import { createReleaseSchema } from "@openmarket/contracts/apps";
 import { completeUploadSchema } from "@openmarket/contracts/releases";
 import { ingestQueue } from "../lib/queue";
@@ -60,6 +61,10 @@ releasesRouter.post(
         message: "You do not own this app",
       });
     }
+
+    // Free-tier gate: block NEW releases once over a cap + grace expired +
+    // not on the paid plan (402). Existing releases are unaffected.
+    await assertPublishingAllowed(developer.id);
 
     const [release] = await db
       .insert(releases)

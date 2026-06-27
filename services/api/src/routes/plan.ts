@@ -1,38 +1,30 @@
 import { Hono } from "hono";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
-import { apps, installEvents } from "@openmarket/db/schema";
+import { developers } from "@openmarket/db/schema";
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
-import { findEffectiveDeveloperContext } from "../lib/team";
+import { findEffectiveDeveloperContext, roleSatisfies } from "../lib/team";
+import { computePlanStatus } from "../lib/plan";
+import { StripeNotConfiguredError, getStripeAdapter } from "../lib/stripe";
 import type { Variables } from "../lib/types";
 
 export const planRouter = new Hono<{ Variables: Variables }>();
 
-/**
- * Developer plan / usage status (free-until-threshold monetization model).
- *
- * OpenMarket launches free, then charges a developer once they cross a
- * usage threshold (published apps and/or total installs). This endpoint
- * computes a developer's current usage against the configurable free-tier
- * limits and reports where they stand. The dev-portal renders a banner
- * from it; enforcement (what happens when `over`) is a deliberate,
- * separate decision — this surfaces the signal without acting on it yet.
- *
- * Free-tier limits are env-tunable so the exact numbers can change without
- * a code deploy:
- *   FREE_TIER_MAX_APPS      (default 10)
- *   FREE_TIER_MAX_INSTALLS  (default 100000)
- */
+const DEV_PORTAL_URL = process.env.DEV_PORTAL_URL ?? "http://localhost:3002";
 
-function intEnv(key: string, fallback: number): number {
-  const raw = process.env[key];
+function platformPlanPriceCents(): number {
+  const raw = process.env.PLATFORM_PLAN_PRICE_CENTS;
   const n = raw ? parseInt(raw, 10) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : fallback;
+  return Number.isFinite(n) && n > 0 ? n : 2900; // default $29/mo
 }
 
-const APPROACH_RATIO = 0.8; // flag "approaching" at 80% of either limit
-
+/**
+ * Developer plan / usage status (free-until-threshold model). The
+ * computation (usage, grace window, enforcement) lives in lib/plan.ts so
+ * the publishing guard shares it. Read-only here; the dev-portal renders a
+ * banner + upgrade CTA from it.
+ */
 planRouter.get("/developers/me/plan", requireAuth, async (c) => {
   const user = c.get("user");
   const ctx = await findEffectiveDeveloperContext(user.email);
@@ -41,49 +33,61 @@ planRouter.get("/developers/me/plan", requireAuth, async (c) => {
       message: "No publisher account associated with this user",
     });
   }
+  const result = await computePlanStatus(ctx.developer.id);
+  return c.json(result);
+});
 
-  const maxApps = intEnv("FREE_TIER_MAX_APPS", 10);
-  const maxInstalls = intEnv("FREE_TIER_MAX_INSTALLS", 100_000);
-
-  // Count the developer's apps, then total successful installs across them.
-  const ownedApps = await db
-    .select({ id: apps.id })
-    .from(apps)
-    .where(eq(apps.developerId, ctx.developer.id));
-  const appIds = ownedApps.map((a) => a.id);
-
-  let installs = 0;
-  if (appIds.length > 0) {
-    const [row] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(installEvents)
-      .where(
-        and(inArray(installEvents.appId, appIds), eq(installEvents.success, true)),
-      );
-    installs = row?.count ?? 0;
+/**
+ * Start a checkout for the paid platform plan (flat monthly fee). The
+ * revenue-share component is taken separately at payout time
+ * (payouts.platformFeeBps). Owner-only.
+ *
+ * We stash the Checkout session id on developers.platformSubscriptionId so
+ * the webhook (handleCheckoutCompleted) can correlate the completed
+ * session back to this developer and flip platformPlan → "paid".
+ */
+planRouter.post("/developers/me/plan/subscribe", requireAuth, async (c) => {
+  const user = c.get("user");
+  const ctx = await findEffectiveDeveloperContext(user.email);
+  if (!ctx) {
+    throw new HTTPException(403, {
+      message: "No publisher account associated with this user",
+    });
+  }
+  if (!roleSatisfies(ctx.role, "owner")) {
+    throw new HTTPException(403, {
+      message: `Upgrading the plan requires owner role; you have ${ctx.role}`,
+    });
   }
 
-  const appsCount = appIds.length;
-  const overApps = appsCount > maxApps;
-  const overInstalls = installs > maxInstalls;
-  const over = overApps || overInstalls;
-  const approaching =
-    !over &&
-    (appsCount >= maxApps * APPROACH_RATIO ||
-      installs >= maxInstalls * APPROACH_RATIO);
+  const adapter = getStripeAdapter();
+  if (!adapter.isLive()) {
+    throw new HTTPException(503, {
+      message:
+        "Paid plans are not configured on this deploy (Stripe not enabled).",
+    });
+  }
 
-  const status: "free" | "approaching" | "over" = over
-    ? "over"
-    : approaching
-      ? "approaching"
-      : "free";
-
-  return c.json({
-    // v1 everyone is on the free plan; the paid tier ships with enforcement.
-    plan: "free" as const,
-    status,
-    usage: { apps: appsCount, installs },
-    limits: { maxApps, maxInstalls },
-    over: { apps: overApps, installs: overInstalls },
-  });
+  try {
+    const session = await adapter.createCheckoutSession({
+      purchaseId: `platform_${ctx.developer.id}`,
+      appId: ctx.developer.id,
+      appTitle: "OpenMarket platform plan (monthly)",
+      priceCents: platformPlanPriceCents(),
+      currency: "usd",
+      customerEmail: ctx.developer.email,
+      successUrl: `${DEV_PORTAL_URL}/dashboard?plan=upgraded`,
+      cancelUrl: `${DEV_PORTAL_URL}/dashboard?plan=cancelled`,
+    });
+    await db
+      .update(developers)
+      .set({ platformSubscriptionId: session.sessionId, updatedAt: new Date() })
+      .where(eq(developers.id, ctx.developer.id));
+    return c.json({ url: session.url });
+  } catch (err) {
+    if (err instanceof StripeNotConfiguredError) {
+      throw new HTTPException(503, { message: err.message });
+    }
+    throw err;
+  }
 });

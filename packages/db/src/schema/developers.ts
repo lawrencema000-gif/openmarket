@@ -59,6 +59,20 @@ export const developers = pgTable("developers", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   authProvider: text("auth_provider"),
   authProviderId: text("auth_provider_id"),
+  /**
+   * Free-until-threshold monetization (free→paid model).
+   *   - platformPlan: "free" (default) until the developer subscribes to
+   *     the paid platform plan, then "paid". The paid plan is a flat
+   *     monthly fee PLUS the revenue share already taken at payout time
+   *     (payouts.platformFeeBps).
+   *   - thresholdCrossedAt: stamped the first time the developer's usage
+   *     crosses a free-tier cap. The grace window runs from here; after it
+   *     expires, publishing is gated until they're on the paid plan.
+   *   - platformSubscriptionId: Stripe subscription id for the flat fee.
+   */
+  platformPlan: text("platform_plan").default("free").notNull(),
+  thresholdCrossedAt: timestamp("threshold_crossed_at", { withTimezone: true }),
+  platformSubscriptionId: text("platform_subscription_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
