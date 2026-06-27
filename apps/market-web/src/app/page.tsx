@@ -3,6 +3,10 @@ import { apiFetch } from "@/lib/api";
 import { SearchForm } from "@/components/search-form";
 import { ChartRail } from "@/components/chart-rail";
 import {
+  SponsoredRail,
+  type SponsoredPromotion,
+} from "@/components/sponsored-rail";
+import {
   Aurora,
   Eyebrow,
   FeatureIcon,
@@ -57,11 +61,23 @@ async function getChart(
   }
 }
 
+async function getPromoted(): Promise<SponsoredPromotion[]> {
+  try {
+    const r = await apiFetch<{ promotions: SponsoredPromotion[] }>(
+      "/api/promoted/active?surface=home&limit=3",
+    );
+    return r.promotions ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const [categories, trending, topNew] = await Promise.all([
+  const [categories, trending, topNew, promoted] = await Promise.all([
     getFeaturedCategories(),
     getChart("top-trending", "7d", 6),
     getChart("top-new", "30d", 6),
+    getPromoted(),
   ]);
 
   return (
@@ -201,6 +217,10 @@ export default async function HomePage() {
 
       {/* ───────────── Main content ───────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+
+        {/* Sponsored (P4-G) — labeled placements; impressions + clicks
+            tracked client-side. Hidden entirely when none are active. */}
+        {promoted.length > 0 && <SponsoredRail promotions={promoted} />}
 
         {/* Categories */}
         {categories.length > 0 && (
