@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
+import { PlanStatusBanner } from "@/components/plan-status-banner";
 import {
   Stat,
   Card,
@@ -119,6 +120,9 @@ export default function DashboardPage() {
           </p>
         </div>
       </section>
+
+      {/* Free-tier usage (free-until-threshold model) */}
+      <PlanStatusBanner />
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
