@@ -7,6 +7,7 @@ import {
   runBombDetectionAndFreeze,
 } from "../lib/review-moderation";
 import { restoreDueDmcaCounterNotices } from "../lib/dmca-jobs";
+import { previousMonthPeriod, runPayoutCycle } from "../lib/payout-cycle";
 import { recordSystemAction } from "../lib/audit";
 
 /**
@@ -57,4 +58,17 @@ cronRouter.get("/cron/dmca-restore-due", requireCron, async (c) => {
   const { restoredCount, results } = await restoreDueDmcaCounterNotices();
   await recordSystemAction({ action: "cron.dmca.restore-due", metadata: { restoredCount } });
   return c.json({ ok: true, job: "dmca-restore-due", restoredCount, results });
+});
+
+/**
+ * Monthly payout cycle (P4-D). Runs on the 1st for the PREVIOUS calendar
+ * month. Idempotent — the payouts unique index skips already-computed
+ * (developer, period, currency) rows, and Stripe transfers carry a
+ * per-payout idempotency key.
+ */
+cronRouter.get("/cron/payouts-run", requireCron, async (c) => {
+  const { from, to } = previousMonthPeriod();
+  const result = await runPayoutCycle(from, to);
+  await recordSystemAction({ action: "cron.payouts.run", metadata: { ...result } });
+  return c.json({ ok: true, job: "payouts-run", ...result });
 });

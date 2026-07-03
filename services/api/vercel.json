@@ -12,6 +12,7 @@
     { "path": "/api/cron/statistics-recompute", "schedule": "15 0 * * *" },
     { "path": "/api/cron/reviews-promote-due", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/reviews-detect-bombs", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/dmca-restore-due", "schedule": "30 1 * * *" }
+    { "path": "/api/cron/dmca-restore-due", "schedule": "30 1 * * *" },
+    { "path": "/api/cron/payouts-run", "schedule": "0 2 1 * *" }
   ]
 }
