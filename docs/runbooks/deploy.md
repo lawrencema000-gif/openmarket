@@ -324,6 +324,8 @@ routes guarded by a `CRON_SECRET` bearer (see `services/api/vercel.json`
 | `/api/cron/reviews-promote-due` | 15 min | reviews never go public |
 | `/api/cron/reviews-detect-bombs` | 15 min | review brigades go undetected |
 | `/api/cron/dmca-restore-due` | daily | §512(g) restore-window violation |
+| `/api/cron/payouts-run` | monthly (1st) | developers never get paid |
+| `/api/cron/accounts-hard-delete` | daily | deleted-account PII lingers (GDPR) |
 
 - **Set `CRON_SECRET`** (a long random string) in Vercel env. Vercel injects
   it as `Authorization: Bearer <CRON_SECRET>` on cron invocations.

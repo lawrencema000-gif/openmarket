@@ -8,6 +8,7 @@ import {
 } from "../lib/review-moderation";
 import { restoreDueDmcaCounterNotices } from "../lib/dmca-jobs";
 import { previousMonthPeriod, runPayoutCycle } from "../lib/payout-cycle";
+import { hardDeleteExpiredAccounts } from "../lib/account-cleanup";
 import { recordSystemAction } from "../lib/audit";
 
 /**
@@ -71,4 +72,14 @@ cronRouter.get("/cron/payouts-run", requireCron, async (c) => {
   const result = await runPayoutCycle(from, to);
   await recordSystemAction({ action: "cron.payouts.run", metadata: { ...result } });
   return c.json({ ok: true, job: "payouts-run", ...result });
+});
+
+/**
+ * GDPR hard-delete sweep — permanently remove accounts whose soft-delete
+ * grace window has elapsed. Without it, deleted users' PII lingers forever.
+ */
+cronRouter.get("/cron/accounts-hard-delete", requireCron, async (c) => {
+  const { deleted } = await hardDeleteExpiredAccounts();
+  await recordSystemAction({ action: "cron.accounts.hard-delete", metadata: { deleted } });
+  return c.json({ ok: true, job: "accounts-hard-delete", deleted });
 });
