@@ -11,7 +11,11 @@ import {
   scanResults,
   signingKeys,
 } from "@openmarket/db";
-import { runScan, type ScanBand, type ScanResult } from "./scanner.js";
+import { runScan, type ScanBand, type ScanResult, type ScannerInput } from "./scanner.js";
+import { clamScanFile, isClamConfigured, type ClamOutcome } from "./lib/clamav.js";
+import { vtLookupHash, type VtOutcome } from "./lib/virustotal.js";
+import { hashApkContents } from "./lib/apk-contents.js";
+import { downloadArtifact, StorageNotConfiguredError } from "./lib/storage.js";
 
 export interface ScanJobData {
   releaseId: string;
@@ -133,12 +137,72 @@ export async function processScanJob(
       ),
     );
 
-  // 6. Run the scanner.
-  const result = runScan({
+  // 6. Malware floor: pull the actual APK bytes and inspect them.
+  //
+  //   - ClamAV is the HARD gate. If it's configured but unreachable we
+  //     throw → BullMQ retries → the release stays unpublished. Never
+  //     fail-open past the AV.
+  //   - Content hashing (lib/*.so + classes*.dex) feeds the blocklist.
+  //   - VirusTotal is hash-lookup escalation; errors degrade to a
+  //     visibility finding instead of blocking the pipeline.
+  //   - No object storage configured (bare local dev) → we can't fetch
+  //     bytes; av stays "unconfigured", which the scanner converts into
+  //     a mandatory-review finding. Nothing silently auto-passes.
+  let av: ClamOutcome = { status: "unconfigured" };
+  let payloadSha256s: string[] = [];
+  if (artifact.storageBucket && artifact.storageKey) {
+    let downloaded: Awaited<ReturnType<typeof downloadArtifact>> | null = null;
+    try {
+      downloaded = await downloadArtifact({
+        bucket: "artifacts",
+        key: artifact.storageKey,
+      });
+    } catch (err) {
+      if (err instanceof StorageNotConfiguredError) {
+        console.warn(
+          "[scan-worker] storage not configured — scanning metadata only, AV unverified",
+        );
+      } else {
+        // Storage IS configured but the fetch failed → retry the job.
+        throw err;
+      }
+    }
+
+    if (downloaded) {
+      try {
+        // Fail-closed: ClamUnavailableError propagates → job retry.
+        av = await clamScanFile(downloaded.path);
+        if (!isClamConfigured()) {
+          console.warn(
+            "[scan-worker] CLAMD_HOST not set — APK bytes fetched but no AV engine ran",
+          );
+        }
+        try {
+          const contents = await hashApkContents(downloaded.path);
+          payloadSha256s = [
+            ...contents.nativeLibs.map((l) => l.sha256),
+            ...contents.dexFiles.map((d) => d.sha256),
+          ];
+        } catch (err) {
+          console.error("[scan-worker] APK content hashing failed:", err);
+        }
+      } finally {
+        await downloaded.cleanup();
+      }
+    }
+  }
+
+  let vt: VtOutcome = { status: "unconfigured" };
+  if (artifact.sha256) {
+    vt = await vtLookupHash(artifact.sha256);
+  }
+
+  // 7. Run the scanner.
+  const scannerInput: ScannerInput = {
     permissions,
     abis: metadata.abis ?? [],
     nativeLibs: metadata.nativeLibs ?? [],
-    nativeLibSha256s: [], // upgraded when scan-worker hashes lib/*.so itself
+    nativeLibSha256s: payloadSha256s,
     isDebugBuild: metadata.isDebugBuild,
     observedSigningFingerprint: metadata.signingKeyFingerprint,
     developerRegisteredFingerprints,
@@ -149,7 +213,13 @@ export async function processScanJob(
     })),
     selfPackageName: app.packageName,
     selfDeveloperId: app.developerId,
-  });
+    av,
+    vt:
+      vt.status === "known"
+        ? { status: "known", malicious: vt.malicious, suspicious: vt.suspicious }
+        : { status: vt.status },
+  };
+  const result = runScan(scannerInput);
 
   // 7. Persist scan_results.
   const scanStatusForBand: Record<ScanBand, "passed" | "flagged" | "failed"> = {

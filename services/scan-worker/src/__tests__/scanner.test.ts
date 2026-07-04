@@ -12,6 +12,10 @@ const baseInput: ScannerInput = {
   conflictingPackageNameApps: [],
   selfPackageName: "com.test.app",
   selfDeveloperId: "dev-1",
+  // Clean AV verdict so pre-malware-floor expectations still hold; the
+  // AV/VT behaviors get their own describe block below.
+  av: { status: "clean" },
+  vt: { status: "unknown" },
 };
 
 describe("runScan", () => {
@@ -237,6 +241,68 @@ describe("runScan", () => {
       });
       expect(r.summary).toMatch(/score \d+\/100/);
       expect(r.summary).toMatch(/band \w+/);
+    });
+  });
+
+  describe("malware floor (AV + VirusTotal)", () => {
+    it("an infected AV verdict alone forces the block band", () => {
+      const r = runScan({
+        ...baseInput,
+        av: { status: "infected", signature: "Win.Test.EICAR_HDB-1" },
+      });
+      const f = r.findings.find((x) => x.type === "malware_detected");
+      expect(f).toBeDefined();
+      expect(f!.severity).toBe("critical");
+      expect(r.band).toBe("block");
+    });
+
+    it("no AV engine at all can never auto-pass — forces at least review", () => {
+      const r = runScan({ ...baseInput, av: { status: "unconfigured" } });
+      expect(r.findings.find((x) => x.type === "av_not_configured")).toBeDefined();
+      expect(r.band).not.toBe("auto_pass");
+    });
+
+    it("treats a missing av field the same as unconfigured", () => {
+      const { av: _av, vt: _vt, ...withoutEngines } = baseInput;
+      const r = runScan(withoutEngines as ScannerInput);
+      expect(r.findings.find((x) => x.type === "av_not_configured")).toBeDefined();
+      expect(r.band).not.toBe("auto_pass");
+    });
+
+    it("3+ VirusTotal detections force the block band even when ClamAV is clean", () => {
+      const r = runScan({
+        ...baseInput,
+        vt: { status: "known", malicious: 5, suspicious: 2 },
+      });
+      expect(r.findings.find((x) => x.type === "virustotal_flagged")).toBeDefined();
+      expect(r.band).toBe("block");
+    });
+
+    it("1-2 VirusTotal detections escalate to human review, not auto-block", () => {
+      const r = runScan({
+        ...baseInput,
+        vt: { status: "known", malicious: 1 },
+      });
+      const f = r.findings.find((x) => x.type === "virustotal_suspicious");
+      expect(f).toBeDefined();
+      expect(r.band === "review" || r.band === "high_risk").toBe(true);
+      expect(r.band).not.toBe("block");
+    });
+
+    it("a VT outage degrades to a low-weight visibility finding", () => {
+      const r = runScan({ ...baseInput, vt: { status: "error" } });
+      const f = r.findings.find((x) => x.type === "virustotal_unavailable");
+      expect(f).toBeDefined();
+      expect(f!.weight).toBeLessThanOrEqual(10);
+      expect(r.band).toBe("auto_pass");
+    });
+
+    it("a VT-clean known file adds no findings", () => {
+      const r = runScan({
+        ...baseInput,
+        vt: { status: "known", malicious: 0, suspicious: 0 },
+      });
+      expect(r.findings.filter((f) => f.type.startsWith("virustotal"))).toHaveLength(0);
     });
   });
 });

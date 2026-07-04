@@ -6,13 +6,15 @@
  * Pulled out of the worker so we can unit-test every scoring path without
  * spinning up Postgres.
  *
- * The 6 scans the implementation plan calls for:
+ * The scans:
+ *   0. Malware engines — ClamAV verdict (hard gate; "no engine ran" can
+ *      never auto-pass) + VirusTotal hash-lookup escalation
  *   1. Permission analyzer (already in @openmarket/security-rules)
  *   2. Signing-key sanity (vs developer's registered fingerprints)
- *   3. Native lib scan (vs in-repo blocklist)
+ *   3. Native lib + dex hash scan (vs blocklist; hashes computed from
+ *      the actual APK contents by lib/apk-contents.ts)
  *   4. Repackaging detection (other apps w/ same packageName, different fp)
- *   5. VirusTotal — DEFERRED (network dep, gated on env)
- *   6. URL extraction — DEFERRED (string-extraction is heavy + noisy)
+ *   5. URL extraction — DEFERRED (string-extraction is heavy + noisy)
  *
  * Each finding has a `severity` and a `weight`. The risk score is the sum
  * of weights, clamped to [0, 100]. Categorical bands:
@@ -74,6 +76,22 @@ export interface ScannerInput {
   /** Self packageName + developerId so we don't flag ourselves. */
   selfPackageName: string;
   selfDeveloperId: string;
+  /**
+   * Antivirus verdict from ClamAV (the hard malware gate). When omitted
+   * or "unconfigured", the scanner adds a review-band finding — an APK
+   * that no AV engine has looked at must never auto-pass.
+   */
+  av?: { status: "clean" | "infected" | "unconfigured"; signature?: string };
+  /**
+   * VirusTotal hash-lookup escalation. "error" (rate limit / outage)
+   * degrades to a low-weight visibility finding, never a hard failure.
+   */
+  vt?: {
+    status: "unconfigured" | "unknown" | "error" | "known";
+    malicious?: number;
+    suspicious?: number;
+    totalEngines?: number;
+  };
 }
 
 export type ScanBand = "auto_pass" | "review" | "high_risk" | "block";
@@ -88,6 +106,59 @@ export interface ScanResult {
 
 export function runScan(input: ScannerInput): ScanResult {
   const findings: Finding[] = [];
+
+  // 0. Malware engines ─────────────────────────────────────────────────
+  // ClamAV verdict is the hard gate: infected → block band on its own.
+  // No engine at all → force at least the review band; a marketplace
+  // must never auto-publish an APK no scanner has actually inspected.
+  const av = input.av ?? { status: "unconfigured" as const };
+  if (av.status === "infected") {
+    findings.push({
+      type: "malware_detected",
+      severity: "critical",
+      message: `Antivirus engine detected malware: ${av.signature ?? "unknown signature"}`,
+      weight: 100,
+      details: { engine: "clamav", signature: av.signature },
+    });
+  } else if (av.status === "unconfigured") {
+    findings.push({
+      type: "av_not_configured",
+      severity: "medium",
+      message:
+        "No antivirus engine scanned this APK — malware status is UNVERIFIED. Manual review required.",
+      weight: 25,
+    });
+  }
+
+  const vt = input.vt ?? { status: "unconfigured" as const };
+  if (vt.status === "known") {
+    const malicious = vt.malicious ?? 0;
+    const suspicious = vt.suspicious ?? 0;
+    if (malicious >= 3) {
+      findings.push({
+        type: "virustotal_flagged",
+        severity: "critical",
+        message: `${malicious} VirusTotal engines flag this file as malicious.`,
+        weight: 100,
+        details: { malicious, suspicious },
+      });
+    } else if (malicious >= 1) {
+      findings.push({
+        type: "virustotal_suspicious",
+        severity: "high",
+        message: `${malicious} VirusTotal engine(s) flag this file as malicious — needs human review.`,
+        weight: 40,
+        details: { malicious, suspicious },
+      });
+    }
+  } else if (vt.status === "error") {
+    findings.push({
+      type: "virustotal_unavailable",
+      severity: "low",
+      message: "VirusTotal lookup failed — escalation layer was unavailable for this scan.",
+      weight: 5,
+    });
+  }
 
   // 1. Permission analyzer ─────────────────────────────────────────────
   const permWeight = scorePermissions(input.permissions);
