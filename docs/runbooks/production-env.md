@@ -49,8 +49,9 @@ Legend: **R** = required, **O** = optional / feature-gated.
 | `WEB_PUSH_DRIVER`, `WEB_BUNDLETOOL_DRIVER` | O | Adapter selectors (default = noop/stub). |
 | `SENTRY_DSN` (+ `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`) | O | Error tracking; no-op without DSN. |
 | `DB_POOL_MAX` | O | Connections per client. Default 5 on Vercel/Lambda, 10 elsewhere. |
-| `DB_IDLE_TIMEOUT_SEC` / `DB_CONNECT_TIMEOUT_SEC` / `DB_STATEMENT_TIMEOUT_MS` | O | Pool hygiene: 20s idle release / 10s connect fail-fast / 30s server-side query kill. |
-| `DB_DISABLE_PREPARE` | O | Set `1` behind a transaction-mode pooler that isn't auto-detected (Neon `-pooler` hosts and `pgbouncer=true` URLs are detected). |
+| `DB_IDLE_TIMEOUT_SEC` / `DB_CONNECT_TIMEOUT_SEC` | O | Pool hygiene: 20s idle release / 10s connect fail-fast. |
+| `DB_DISABLE_PREPARE` | O | Set `1` behind a transaction-mode pooler that isn't auto-detected (Neon `-pooler.`, Supabase `.pooler.` / port 6543, and `pgbouncer=true` URLs are auto-detected). |
+| **query timeout** | — | Set at the DB, not via env: `ALTER ROLE <app_role> SET statement_timeout = '30s';` — a startup-param timeout would be rejected by PgBouncer poolers. |
 | `INSTALL_DEDUP_WINDOW_DAYS` | O | Anti-fraud install dedup window (default 30): one countable install per app+user / app+device inside it. |
 
 ## notify-worker — `services/notify-worker` (Fly.io)

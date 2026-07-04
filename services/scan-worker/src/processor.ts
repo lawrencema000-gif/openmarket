@@ -122,9 +122,14 @@ export async function processScanJob(
       developerId: apps.developerId,
       signingFingerprint: artifactMetadata.signingKeyFingerprint,
     })
+    // Join order matters: `releases` must be introduced before
+    // `releaseArtifacts`, whose ON clause references releases.id. The
+    // previous order referenced releases.id before the table was joined,
+    // which Postgres rejects — every scan job (and every admin rescan)
+    // would have crashed here against a real database.
     .from(apps)
-    .innerJoin(releaseArtifacts, eq(releaseArtifacts.releaseId, releases.id))
     .innerJoin(releases, eq(releases.appId, apps.id))
+    .innerJoin(releaseArtifacts, eq(releaseArtifacts.releaseId, releases.id))
     .innerJoin(
       artifactMetadata,
       eq(artifactMetadata.artifactId, releaseArtifacts.id),
@@ -150,11 +155,14 @@ export async function processScanJob(
   //     a mandatory-review finding. Nothing silently auto-passes.
   let av: ClamOutcome = { status: "unconfigured" };
   let payloadSha256s: string[] = [];
+  let contentHashingFailed = false;
   if (artifact.storageBucket && artifact.storageKey) {
     let downloaded: Awaited<ReturnType<typeof downloadArtifact>> | null = null;
     try {
       downloaded = await downloadArtifact({
-        bucket: "artifacts",
+        // Use the bucket recorded on the artifact, not a hardcoded name,
+        // so this keeps working if the storage layout ever changes.
+        bucket: artifact.storageBucket,
         key: artifact.storageKey,
       });
     } catch (err) {
@@ -184,6 +192,9 @@ export async function processScanJob(
             ...contents.dexFiles.map((d) => d.sha256),
           ];
         } catch (err) {
+          // Surface as a finding (below) rather than silently skipping the
+          // blocklist layer — a hashing failure shouldn't be invisible.
+          contentHashingFailed = true;
           console.error("[scan-worker] APK content hashing failed:", err);
         }
       } finally {
@@ -214,6 +225,7 @@ export async function processScanJob(
     selfPackageName: app.packageName,
     selfDeveloperId: app.developerId,
     av,
+    contentHashError: contentHashingFailed,
     vt:
       vt.status === "known"
         ? { status: "known", malicious: vt.malicious, suspicious: vt.suspicious }
@@ -241,23 +253,41 @@ export async function processScanJob(
   });
 
   // 8. Advance release status based on band.
+  //
+  // A RE-SCAN of an already-live release must not silently demote it: an
+  // admin re-scanning a published app after a signature-DB update should
+  // see it stay published on a clean result, and get delisted only on a
+  // block. Otherwise the rescan feature is a self-inflicted outage — it
+  // would yank every healthy live release into "review".
+  const isLive =
+    release.status === "published" || release.status === "staged_rollout";
+
   let newReleaseStatus: string;
   if (result.band === "block") {
-    newReleaseStatus = "draft";
+    // Block always wins, even for a live release: reject the artifact and
+    // pull the release. (Delist, not draft, when it was already public so
+    // the app-level takedown/search gates treat it as removed content.)
+    newReleaseStatus = isLive ? "delisted" : "draft";
     await db
       .update(releaseArtifacts)
       .set({ uploadStatus: "rejected" })
       .where(eq(releaseArtifacts.id, artifactId));
+  } else if (isLive) {
+    // Clean/flagged re-scan of a live release → leave it live. Do NOT
+    // demote a published app just because we re-checked it.
+    newReleaseStatus = release.status;
   } else {
-    // auto_pass + review + high_risk all land in "review" for v1; an
-    // autopromote cron in P2 will move auto_pass straight to "published".
+    // Fresh scan of a not-yet-live release: auto_pass + review + high_risk
+    // all land in "review" for v1; an autopromote cron promotes auto_pass.
     newReleaseStatus = "review";
   }
 
-  await db
-    .update(releases)
-    .set({ status: newReleaseStatus as never, updatedAt: new Date() })
-    .where(eq(releases.id, releaseId));
+  if (newReleaseStatus !== release.status) {
+    await db
+      .update(releases)
+      .set({ status: newReleaseStatus as never, updatedAt: new Date() })
+      .where(eq(releases.id, releaseId));
+  }
 
   // 9. Audit event.
   try {

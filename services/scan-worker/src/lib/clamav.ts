@@ -23,7 +23,14 @@ import net from "node:net";
 export type ClamOutcome =
   | { status: "clean" }
   | { status: "infected"; signature: string }
-  | { status: "unconfigured" };
+  | { status: "unconfigured" }
+  /**
+   * clamd refused to scan the file for a DETERMINISTIC reason (most
+   * commonly the APK exceeds StreamMaxLength). Retrying won't help, so
+   * this is NOT thrown as ClamUnavailableError — it's a terminal outcome
+   * the scanner converts into a mandatory-review finding.
+   */
+  | { status: "unscannable"; reason: string };
 
 export class ClamUnavailableError extends Error {
   constructor(message: string) {
@@ -48,10 +55,15 @@ export async function clamScanFile(filePath: string): Promise<ClamOutcome> {
     const socket = net.connect({ host, port });
     let response = "";
     let settled = false;
+    // Hoisted so the fail()/close handlers can always tear down the open
+    // fd — a socket death while the stream is paused for backpressure
+    // would otherwise leak it.
+    let fileStream: ReturnType<typeof createReadStream> | null = null;
 
     const fail = (message: string) => {
       if (settled) return;
       settled = true;
+      fileStream?.destroy();
       socket.destroy();
       reject(new ClamUnavailableError(message));
     };
@@ -62,11 +74,12 @@ export async function clamScanFile(filePath: string): Promise<ClamOutcome> {
     socket.on("connect", () => {
       socket.write("zINSTREAM\0");
 
-      const fileStream = createReadStream(filePath, {
+      const stream = createReadStream(filePath, {
         highWaterMark: 64 * 1024,
       });
-      fileStream.on("error", (err) => fail(`read error: ${err.message}`));
-      fileStream.on("data", (chunk: string | Buffer) => {
+      fileStream = stream;
+      stream.on("error", (err) => fail(`read error: ${err.message}`));
+      stream.on("data", (chunk: string | Buffer) => {
         const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
         const size = Buffer.alloc(4);
         size.writeUInt32BE(buf.length, 0);
@@ -74,11 +87,11 @@ export async function clamScanFile(filePath: string): Promise<ClamOutcome> {
         // buffer is full, resume on drain.
         const ok = socket.write(Buffer.concat([size, buf]));
         if (!ok) {
-          fileStream.pause();
-          socket.once("drain", () => fileStream.resume());
+          stream.pause();
+          socket.once("drain", () => stream.resume());
         }
       });
-      fileStream.on("end", () => {
+      stream.on("end", () => {
         const zero = Buffer.alloc(4);
         zero.writeUInt32BE(0, 0);
         socket.write(zero);
@@ -92,6 +105,7 @@ export async function clamScanFile(filePath: string): Promise<ClamOutcome> {
     socket.on("close", () => {
       if (settled) return;
       settled = true;
+      fileStream?.destroy();
       const text = response.replace(/\0/g, "").trim();
       if (text.endsWith("OK")) {
         resolve({ status: "clean" });
@@ -102,7 +116,20 @@ export async function clamScanFile(filePath: string): Promise<ClamOutcome> {
         resolve({ status: "infected", signature: found[1]!.trim() });
         return;
       }
-      // "INSTREAM size limit exceeded", "ERROR", empty response, …
+      // Size-limit is DETERMINISTIC — retrying the same oversized APK
+      // will always hit it. Resolve to a terminal "unscannable" outcome
+      // (→ mandatory review) instead of throwing a retryable error and
+      // spinning the job through its retry budget with no resolution.
+      // Operators should raise clamd's StreamMaxLength above the 500MB
+      // upload cap to avoid this path entirely.
+      if (/size limit/i.test(text)) {
+        resolve({
+          status: "unscannable",
+          reason: "APK exceeds clamd StreamMaxLength — raise it above the upload cap",
+        });
+        return;
+      }
+      // "ERROR", empty response, … → genuinely unexpected → retry.
       reject(new ClamUnavailableError(`unexpected clamd response: "${text}"`));
     });
   });

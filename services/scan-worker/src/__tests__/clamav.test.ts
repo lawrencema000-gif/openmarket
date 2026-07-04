@@ -93,8 +93,20 @@ describe("clamScanFile", () => {
     }
   });
 
-  it("throws (fail-closed) on a protocol error response", async () => {
+  it("returns a deterministic 'unscannable' outcome on the size limit (not a retryable throw)", async () => {
     const fake = await startFakeClamd("INSTREAM size limit exceeded. ERROR\0");
+    process.env.CLAMD_HOST = "127.0.0.1";
+    process.env.CLAMD_PORT = String(fake.port);
+    try {
+      const outcome = await clamScanFile(file);
+      expect(outcome.status).toBe("unscannable");
+    } finally {
+      fake.close();
+    }
+  });
+
+  it("throws (fail-closed) on a genuinely unexpected response", async () => {
+    const fake = await startFakeClamd("SOME GARBAGE\0");
     process.env.CLAMD_HOST = "127.0.0.1";
     process.env.CLAMD_PORT = String(fake.port);
     try {

@@ -77,11 +77,22 @@ export interface ScannerInput {
   selfPackageName: string;
   selfDeveloperId: string;
   /**
-   * Antivirus verdict from ClamAV (the hard malware gate). When omitted
-   * or "unconfigured", the scanner adds a review-band finding — an APK
-   * that no AV engine has looked at must never auto-pass.
+   * Antivirus verdict from ClamAV (the hard malware gate). When omitted,
+   * "unconfigured", or "unscannable", the scanner adds a review-band
+   * finding — an APK that no AV engine actually inspected must never
+   * auto-pass.
    */
-  av?: { status: "clean" | "infected" | "unconfigured"; signature?: string };
+  av?: {
+    status: "clean" | "infected" | "unconfigured" | "unscannable";
+    signature?: string;
+    reason?: string;
+  };
+  /**
+   * True when the APK's contents could not be hashed (corrupt zip, read
+   * error). Surfaces a visibility finding — the native-lib/dex blocklist
+   * layer was skipped, though ClamAV still scanned the raw bytes.
+   */
+  contentHashError?: boolean;
   /**
    * VirusTotal hash-lookup escalation. "error" (rate limit / outage)
    * degrades to a low-weight visibility finding, never a hard failure.
@@ -127,6 +138,23 @@ export function runScan(input: ScannerInput): ScanResult {
       message:
         "No antivirus engine scanned this APK — malware status is UNVERIFIED. Manual review required.",
       weight: 25,
+    });
+  } else if (av.status === "unscannable") {
+    findings.push({
+      type: "av_unscannable",
+      severity: "medium",
+      message: `Antivirus could not scan this APK (${av.reason ?? "unscannable"}) — malware status UNVERIFIED. Manual review required.`,
+      weight: 25,
+    });
+  }
+
+  if (input.contentHashError) {
+    findings.push({
+      type: "content_hash_failed",
+      severity: "low",
+      message:
+        "Could not hash the APK's native libs / dex files — the known-bad blocklist layer was skipped for this scan (AV still ran on the raw file).",
+      weight: 5,
     });
   }
 

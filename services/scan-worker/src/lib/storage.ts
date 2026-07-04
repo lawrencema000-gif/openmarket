@@ -107,32 +107,39 @@ export async function downloadArtifact(opts: {
     );
   }
 
-  const tmpRoot = await mkdir(join(tmpdir(), `om-scan-${Date.now()}-${Math.random().toString(36).slice(2)}`), {
-    recursive: true,
-  });
-  const dir = tmpRoot ?? "";
+  const dir = join(
+    tmpdir(),
+    `om-scan-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
+  await mkdir(dir, { recursive: true });
   const filePath = join(dir, "artifact.apk");
 
-  const obj = await client.send(
-    new GetObjectCommand({ Bucket: opts.bucket, Key: opts.key }),
-  );
-  const body = obj.Body;
-  if (!body) {
-    throw new Error("Storage GET returned empty body");
+  const cleanup = async () => {
+    try {
+      await rm(dir, { recursive: true, force: true });
+    } catch {
+      // ignore cleanup failures
+    }
+  };
+
+  // Any failure AFTER the temp dir exists (empty body, GET error, disk
+  // pipeline error) must remove it — otherwise a partial APK (up to the
+  // 600MB cap) leaks on every failed scan and eventually fills disk.
+  try {
+    const obj = await client.send(
+      new GetObjectCommand({ Bucket: opts.bucket, Key: opts.key }),
+    );
+    const body = obj.Body;
+    if (!body) {
+      throw new Error("Storage GET returned empty body");
+    }
+
+    // Body is a Readable in Node runtime. Stream to disk.
+    await pipeline(body as Readable, createWriteStream(filePath));
+  } catch (err) {
+    await cleanup();
+    throw err;
   }
 
-  // Body is a Readable in Node runtime. Stream to disk.
-  await pipeline(body as Readable, createWriteStream(filePath));
-
-  return {
-    path: filePath,
-    size,
-    cleanup: async () => {
-      try {
-        await rm(dir, { recursive: true, force: true });
-      } catch {
-        // ignore cleanup failures
-      }
-    },
-  };
+  return { path: filePath, size, cleanup };
 }

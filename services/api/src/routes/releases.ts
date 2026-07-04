@@ -175,8 +175,15 @@ releasesRouter.post(
   },
 );
 
-// Generate a short-lived signed download URL for an artifact.
-// Public-ish: requires auth (we'll loosen for the Android client via API token in P2-O).
+// Generate a short-lived signed download URL for an artifact — OWNER ONLY.
+//
+// This is the developer-preview path (dev-portal "download my build"). It
+// is deliberately restricted to the developer who owns the artifact: it
+// does NOT apply the delist / publish / rollout-cohort gates, so exposing
+// it to arbitrary authenticated users would let a taken-down (malware)
+// app keep shipping bytes, bypassing the takedown kill-switch. Public and
+// device downloads go through GET /api/device/artifacts/:id/download-url,
+// which enforces those gates.
 releasesRouter.get(
   "/artifacts/:artifactId/download",
   requireAuth,
@@ -184,10 +191,13 @@ releasesRouter.get(
     if (!isStorageConfigured()) {
       throw new HTTPException(503, { message: "Object storage not configured" });
     }
+    const user = c.get("user");
     const artifactId = c.req.param("artifactId") as string;
-    const artifact = await db.query.releaseArtifacts.findFirst({
+
+    const artifact = (await db.query.releaseArtifacts.findFirst({
       where: eq(releaseArtifacts.id, artifactId),
-    });
+      with: { release: { with: { app: true } } },
+    })) as any;
     if (!artifact || !artifact.storageKey || !artifact.storageBucket) {
       throw new HTTPException(404, { message: "Artifact not found" });
     }
@@ -195,8 +205,19 @@ releasesRouter.get(
       throw new HTTPException(409, { message: "Artifact not yet available" });
     }
 
+    // Ownership gate: the caller must be the developer who owns the app.
+    const developer = await db.query.developers.findFirst({
+      where: eq(developers.email, user.email),
+    });
+    if (!developer || artifact.release?.app?.developerId !== developer.id) {
+      throw new HTTPException(403, {
+        message:
+          "This download endpoint is for the owning developer. Install through the store client.",
+      });
+    }
+
     const url = await getSignedDownloadUrl({
-      bucket: "artifacts",
+      bucket: artifact.storageBucket,
       key: artifact.storageKey,
       expiresInSeconds: 300,
       contentDisposition: `attachment; filename="${artifact.id}.${artifact.artifactType}"`,

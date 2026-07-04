@@ -18,7 +18,10 @@ import {
 } from "@openmarket/db/schema";
 import { requireAdmin } from "../middleware/admin";
 import { notifyQueue, scanQueue } from "../lib/queue";
-import { appendTransparencyEvent } from "../lib/transparency";
+import {
+  appendTransparencyEvent,
+  CURRENT_CONTENT_POLICY_VERSION,
+} from "../lib/transparency";
 import { enqueueEmail } from "../lib/email";
 import { recordAdminAction } from "../lib/audit";
 import { dispatchReleaseToLibrary } from "../lib/push";
@@ -729,11 +732,24 @@ adminRouter.post(
       return c.json({ success: true, alreadyDelisted: true, haltedReleases: [] });
     }
 
+    // Append the PUBLIC transparency record FIRST, before mutating any
+    // state. If this throws, nothing is delisted yet and the admin can
+    // retry cleanly — we never end up with an app pulled from the store
+    // but missing from the public log (the DSA record and the action
+    // must not diverge). appendTransparencyEvent runs its own
+    // serializable tx, so it can't join the delist tx below.
+    await appendTransparencyEvent({
+      eventType: "app_takedown",
+      targetType: "app",
+      targetId: appId,
+      reason,
+    });
+
     const haltedReleases: string[] = [];
     await db.transaction(async (tx) => {
       await tx
         .update(apps)
-        .set({ isDelisted: true, updatedAt: new Date() })
+        .set({ isDelisted: true, delistReason: reason, updatedAt: new Date() })
         .where(eq(apps.id, appId));
 
       const activeReleases = await tx
@@ -773,12 +789,38 @@ adminRouter.post(
       console.error("[admin] search index sync after takedown failed:", err);
     }
 
-    await appendTransparencyEvent({
-      eventType: "app_takedown",
-      targetType: "app",
-      targetId: appId,
-      reason,
-    });
+    // Notify the developer with a real templated email (not the loosely
+    // shaped {type} notify job the older delist paths enqueue). Fire-and-
+    // forget so a queue hiccup can't fail the takedown itself.
+    try {
+      const developer = await db.query.developers.findFirst({
+        where: eq(developers.id, app.developerId),
+      });
+      const listing = app.currentListingId
+        ? await db.query.appListings.findFirst({
+            where: eq(appListings.id, app.currentListingId),
+          })
+        : null;
+      const webBase = process.env.WEB_BASE_URL ?? "https://openmarket.app";
+      const devBase = process.env.DEV_PORTAL_URL ?? "https://dev.openmarket.app";
+      if (developer?.email) {
+        await enqueueEmail({
+          template: "developer-takedown",
+          to: developer.email,
+          props: {
+            appName: listing?.title ?? app.packageName,
+            reason,
+            ruleVersion: CURRENT_CONTENT_POLICY_VERSION,
+            rulesUrl: `${webBase}/content-policy`,
+            appealUrl: `${devBase}/appeals/new`,
+            effectiveAt: new Date().toISOString().slice(0, 10),
+          },
+          idempotencyKey: `takedown:${appId}`,
+        });
+      }
+    } catch (err) {
+      console.error("[admin] takedown developer notification enqueue failed:", err);
+    }
 
     await recordAdminAction({
       c,

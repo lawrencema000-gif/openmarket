@@ -15,12 +15,19 @@ import * as schema from "./schema/index";
  *                           serverless, 10 elsewhere)
  *   DB_IDLE_TIMEOUT_SEC     release idle connections (default 20s)
  *   DB_CONNECT_TIMEOUT_SEC  fail fast when the DB is unreachable (10s)
- *   DB_STATEMENT_TIMEOUT_MS server-side kill for runaway queries (30s)
  *
  * Prepared statements are DISABLED when the connection string points at
- * a transaction-mode pooler (PgBouncer/Neon pooled endpoints), which
- * breaks named prepares. Detection: `-pooler` in the host (Neon
- * convention), a `pgbouncer=true` query param, or DB_DISABLE_PREPARE=1.
+ * a transaction-mode pooler (PgBouncer / Neon or Supabase pooled
+ * endpoints), which breaks named prepares. Detection covers Neon
+ * (`-pooler.`), Supabase (`.pooler.` / port 6543), a `pgbouncer=true`
+ * query param, or the explicit DB_DISABLE_PREPARE=1 override.
+ *
+ * NOTE: we deliberately do NOT set `statement_timeout` as a client
+ * startup parameter. PgBouncer-based transaction poolers reject unknown
+ * startup parameters, which would kill every connection in exactly the
+ * pooled serverless deployment this tuning targets. Set the query
+ * timeout at the database/role level instead (works through any pooler):
+ *   ALTER ROLE <app_role> SET statement_timeout = '30s';
  */
 export function createDb(connectionString: string) {
   const int = (name: string, fallback: number): number => {
@@ -33,8 +40,9 @@ export function createDb(connectionString: string) {
     !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
   const viaPooler =
-    /-pooler\./.test(connectionString) ||
+    /pooler\./.test(connectionString) || // Neon -pooler. + Supabase .pooler.
     /[?&]pgbouncer=true/.test(connectionString) ||
+    /:6543(\/|\?|$)/.test(connectionString) || // Supabase transaction-pooler port
     process.env.DB_DISABLE_PREPARE === "1";
 
   const client = postgres(connectionString, {
@@ -42,9 +50,6 @@ export function createDb(connectionString: string) {
     idle_timeout: int("DB_IDLE_TIMEOUT_SEC", 20),
     connect_timeout: int("DB_CONNECT_TIMEOUT_SEC", 10),
     prepare: !viaPooler,
-    connection: {
-      statement_timeout: int("DB_STATEMENT_TIMEOUT_MS", 30_000),
-    },
   });
   return drizzle(client, { schema });
 }
