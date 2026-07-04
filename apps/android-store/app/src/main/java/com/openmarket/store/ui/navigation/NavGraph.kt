@@ -32,9 +32,27 @@ data class BottomNavItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavGraph() {
+fun NavGraph(
+    navTarget: String? = null,
+    onNavTargetHandled: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    // Deep-link/notification routing: when MainActivity hands us a target
+    // (e.g. from the "updates available" notification), navigate there once.
+    LaunchedEffect(navTarget) {
+        when (navTarget) {
+            "my_apps" -> {
+                navController.navigate(MyAppsRoute) {
+                    popUpTo(HomeRoute) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+                onNavTargetHandled()
+            }
+        }
+    }
 
     val bottomNavItems = listOf(
         BottomNavItem("Home", { Icon(Icons.Default.Home, "Home") }, HomeRoute),

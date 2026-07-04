@@ -101,10 +101,12 @@ fun AppDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = installState is InstallState.Idle ||
                         installState is InstallState.Failed ||
-                        installState is InstallState.NeedsPermission,
+                        installState is InstallState.NeedsPermission ||
+                        installState is InstallState.UpdateAvailable,
                 ) {
                     when (installState) {
                         is InstallState.Idle -> Text("Install")
+                        is InstallState.UpdateAvailable -> Text("Update")
                         is InstallState.NeedsPermission -> Text("Install")
                         is InstallState.Preparing -> Text("Preparing…")
                         is InstallState.Downloading -> {
@@ -145,7 +147,7 @@ fun AppDetailScreen(
             // once, in system settings, before any install can start.
             if (installState is InstallState.NeedsPermission) {
                 AlertDialog(
-                    onDismissRequest = { /* keep visible until a choice is made */ },
+                    onDismissRequest = viewModel::loadAppDetail,
                     title = { Text("Allow installs") },
                     text = {
                         Text(

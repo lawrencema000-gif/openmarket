@@ -14,6 +14,7 @@ import com.openmarket.store.data.repository.AppRepository
 import com.openmarket.store.data.repository.DeviceRepository
 import com.openmarket.store.installer.DownloadManager
 import com.openmarket.store.installer.DownloadState
+import com.openmarket.store.installer.InstalledPackages
 import com.openmarket.store.installer.PackageInstallerManager
 import com.openmarket.store.ui.navigation.AppDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,6 +35,8 @@ data class AppDetailUiState(
 
 sealed class InstallState {
     data object Idle : InstallState()
+    /** Installed, but a newer release is rolled out to this device. */
+    data object UpdateAvailable : InstallState()
     /** User must grant "install unknown apps" to us first. */
     data object NeedsPermission : InstallState()
     /** Resolving release + signed URL. */
@@ -52,6 +55,7 @@ class AppDetailViewModel @Inject constructor(
     private val deviceRepository: DeviceRepository,
     private val downloadManager: DownloadManager,
     private val installer: PackageInstallerManager,
+    private val installedPackages: InstalledPackages,
     private val installedAppsDao: InstalledAppsDao,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -77,18 +81,46 @@ class AppDetailViewModel @Inject constructor(
             val reviewsResult = repository.getAppReviews(appId)
 
             val app = appResult.getOrNull()
-            // If we already installed this app, start from Installed
-            // instead of dangling an "Install" button.
-            val installedEntity = app?.let { installedAppsDao.getInstalledApp(it.packageName) }
+            val releases = releasesResult.getOrElse { emptyList() }
 
             _uiState.value = AppDetailUiState(
                 app = app,
-                releases = releasesResult.getOrElse { emptyList() },
+                releases = releases,
                 reviews = reviewsResult.getOrElse { emptyList() },
                 isLoading = false,
                 error = appResult.exceptionOrNull()?.message,
-                installState = if (installedEntity != null) InstallState.Installed else InstallState.Idle,
+                installState = app?.let { resolveInstallState(it.packageName, releases) }
+                    ?: InstallState.Idle,
             )
+        }
+    }
+
+    /**
+     * Derive the install button state from the DEVICE's real package
+     * state (not the Room mirror, which drifts). Installed-and-current →
+     * Installed; installed-but-behind the latest published release →
+     * UpdateAvailable (button stays enabled so the update can actually be
+     * installed); not installed → Idle. Also reconciles Room so MyApps
+     * stops showing apps the user removed elsewhere.
+     */
+    private suspend fun resolveInstallState(
+        packageName: String,
+        releases: List<ReleaseResponse>,
+    ): InstallState {
+        val installedVersion = installedPackages.installedVersionCode(packageName)
+        if (installedVersion == null) {
+            // Reconcile: the user may have uninstalled outside the store.
+            installedAppsDao.deleteByPackageName(packageName)
+            return InstallState.Idle
+        }
+        val latest = releases
+            .filter { it.channel == "stable" }
+            .maxOfOrNull { it.versionCode }
+            ?: releases.maxOfOrNull { it.versionCode }
+        return if (latest != null && installedVersion < latest) {
+            InstallState.UpdateAvailable
+        } else {
+            InstallState.Installed
         }
     }
 

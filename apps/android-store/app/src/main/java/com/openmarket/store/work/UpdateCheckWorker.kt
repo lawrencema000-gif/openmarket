@@ -46,21 +46,30 @@ class UpdateCheckWorker @AssistedInject constructor(
         const val WORK_NAME = "openmarket-update-check"
         private const val CHANNEL_ID = "app_updates"
         private const val NOTIFICATION_ID = 1001
+        private const val MAX_PACKAGES_PER_REQUEST = 100
     }
 
     override suspend fun doWork(): Result {
         val installed = dao.getAllInstalledAppsOnce()
         if (installed.isEmpty()) return Result.success()
 
-        val response = repository.checkUpdates(
-            UpdateCheckRequest(
-                deviceId = deviceRepository.deviceId(),
-                packages = installed.map { PackageVersion(it.packageName, it.versionCode) },
-            ),
-        ).getOrElse { return Result.retry() }
+        val deviceId = deviceRepository.deviceId()
+
+        // The endpoint caps a batch at 100 packages; a user with more
+        // store-installed apps would 400 the whole request. Chunk so heavy
+        // users still get update checks.
+        val updatedPackages = HashMap<String, com.openmarket.store.data.api.models.InstallInfo>()
+        for (batch in installed.chunked(MAX_PACKAGES_PER_REQUEST)) {
+            val response = repository.checkUpdates(
+                UpdateCheckRequest(
+                    deviceId = deviceId,
+                    packages = batch.map { PackageVersion(it.packageName, it.versionCode) },
+                ),
+            ).getOrElse { return Result.retry() }
+            for (update in response.updates) updatedPackages[update.packageName] = update
+        }
 
         var newlyAvailable = 0
-        val updatedPackages = response.updates.associateBy { it.packageName }
         for (app in installed) {
             val update = updatedPackages[app.packageName]
             if (update != null && update.versionCode > app.versionCode) {
@@ -97,7 +106,12 @@ class UpdateCheckWorker @AssistedInject constructor(
         val tapIntent = PendingIntent.getActivity(
             applicationContext,
             0,
-            Intent(applicationContext, MainActivity::class.java),
+            Intent(applicationContext, MainActivity::class.java).apply {
+                // Land the user on "My Apps", where the update chips are —
+                // not the Home tab. MainActivity reads this extra.
+                putExtra(MainActivity.EXTRA_NAV_TARGET, MainActivity.NAV_TARGET_MY_APPS)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 

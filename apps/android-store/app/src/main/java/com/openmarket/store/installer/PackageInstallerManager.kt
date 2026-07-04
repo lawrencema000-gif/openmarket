@@ -63,35 +63,40 @@ class PackageInstallerManager @Inject constructor(
 
         val sessionId = installer.createSession(params)
         try {
-            withContext(Dispatchers.IO) {
-                installer.openSession(sessionId).use { session ->
-                    session.openWrite("base.apk", 0, apkFile.length()).use { output ->
-                        apkFile.inputStream().use { input -> input.copyTo(output) }
-                        session.fsync(output)
-                    }
-
-                    val statusIntent = Intent(context, InstallResultReceiver::class.java)
-                        .setAction(InstallResultReceiver.ACTION_INSTALL_STATUS)
-                        .setPackage(context.packageName)
-                    // FLAG_MUTABLE is required: PackageInstaller appends the
-                    // status extras (and the confirmation intent) to this.
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        sessionId,
-                        statusIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
-                    )
-                    session.commit(pendingIntent.intentSender)
-                }
-            }
-
-            // Subscribe with UNDISPATCHED so collection starts before we
-            // could possibly miss a fast broadcast, then await the result
-            // for THIS session only.
+            // Subscribe to the result flow BEFORE committing. The
+            // PackageInstaller status broadcast (and the resulting
+            // InstallEvents emission) can arrive the instant commit()
+            // returns; MutableSharedFlow(replay=0) drops emissions with no
+            // active subscriber, so subscribing after commit races the
+            // broadcast and would hang for the full timeout. Starting the
+            // collector UNDISPATCHED guarantees it's live before commit.
             return coroutineScope {
                 val waiter = async(start = CoroutineStart.UNDISPATCHED) {
                     InstallEvents.results.first { it.sessionId == sessionId }
                 }
+
+                withContext(Dispatchers.IO) {
+                    installer.openSession(sessionId).use { session ->
+                        session.openWrite("base.apk", 0, apkFile.length()).use { output ->
+                            apkFile.inputStream().use { input -> input.copyTo(output) }
+                            session.fsync(output)
+                        }
+
+                        val statusIntent = Intent(context, InstallResultReceiver::class.java)
+                            .setAction(InstallResultReceiver.ACTION_INSTALL_STATUS)
+                            .setPackage(context.packageName)
+                        // FLAG_MUTABLE is required: PackageInstaller appends
+                        // the status extras (and the confirmation intent).
+                        val pendingIntent = PendingIntent.getBroadcast(
+                            context,
+                            sessionId,
+                            statusIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
+                        )
+                        session.commit(pendingIntent.intentSender)
+                    }
+                }
+
                 withTimeout(RESULT_TIMEOUT_MS) { waiter.await() }
             }
         } catch (e: Exception) {

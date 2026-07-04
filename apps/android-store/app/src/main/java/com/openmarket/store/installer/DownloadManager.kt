@@ -40,10 +40,16 @@ class DownloadManager @Inject constructor(
         expectedSha256: String,
         fileName: String,
     ): Flow<DownloadState> = callbackFlow {
-        val outputFile = File(context.getExternalFilesDir("apks") ?: context.filesDir, fileName)
+        // App-private internal storage, NOT getExternalFilesDir(): on
+        // API 26-29 external app dirs are readable/writable by any app
+        // holding WRITE_EXTERNAL_STORAGE, opening a TOCTOU window between
+        // our SHA-256 verify and the installer streaming the bytes. cacheDir
+        // is truly private; we delete the file right after install anyway.
+        val apkDir = File(context.cacheDir, "apks")
+        val outputFile = File(apkDir, fileName)
         try {
             send(DownloadState.Downloading(null))
-            outputFile.parentFile?.mkdirs()
+            apkDir.mkdirs()
 
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.connectTimeout = 15_000
