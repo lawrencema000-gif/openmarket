@@ -68,7 +68,7 @@ fun NavGraph() {
             composable<HomeRoute> { HomeScreen(onAppClick = { navController.navigate(AppDetailRoute(it)) }) }
             composable<SearchRoute> { SearchScreen(onAppClick = { navController.navigate(AppDetailRoute(it)) }) }
             composable<AppDetailRoute> { AppDetailScreen() }
-            composable<MyAppsRoute> { MyAppsScreen() }
+            composable<MyAppsRoute> { MyAppsScreen(onAppClick = { navController.navigate(AppDetailRoute(it)) }) }
             composable<SettingsRoute> { SettingsScreen() }
         }
     }

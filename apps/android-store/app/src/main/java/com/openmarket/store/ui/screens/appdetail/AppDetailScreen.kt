@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
@@ -43,7 +44,7 @@ fun AppDetailScreen(
         return
     }
 
-    val app = uiState.app
+    val app = uiState.app ?: return
     val listing = app.listing
 
     LazyColumn(
@@ -92,18 +93,75 @@ fun AppDetailScreen(
         // Install Button
         item {
             val installState = uiState.installState
-            Button(
-                onClick = viewModel::install,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = installState == InstallState.Idle || installState == InstallState.Failed(""),
-            ) {
-                when (installState) {
-                    is InstallState.Idle -> Text("Install")
-                    is InstallState.Downloading -> Text("Downloading… ${(installState.progress * 100).toInt()}%")
-                    is InstallState.Installing -> Text("Installing…")
-                    is InstallState.Installed -> Text("Installed")
-                    is InstallState.Failed -> Text("Retry Install")
+            val context = LocalContext.current
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = viewModel::install,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = installState is InstallState.Idle ||
+                        installState is InstallState.Failed ||
+                        installState is InstallState.NeedsPermission,
+                ) {
+                    when (installState) {
+                        is InstallState.Idle -> Text("Install")
+                        is InstallState.NeedsPermission -> Text("Install")
+                        is InstallState.Preparing -> Text("Preparing…")
+                        is InstallState.Downloading -> {
+                            val pct = installState.progress
+                            Text(if (pct != null) "Downloading… ${(pct * 100).toInt()}%" else "Downloading…")
+                        }
+                        is InstallState.Verifying -> Text("Verifying…")
+                        is InstallState.Installing -> Text("Installing…")
+                        is InstallState.Installed -> Text("Installed")
+                        is InstallState.Failed -> Text("Retry Install")
+                    }
                 }
+
+                when (installState) {
+                    is InstallState.Downloading -> {
+                        val pct = installState.progress
+                        if (pct != null) {
+                            LinearProgressIndicator(
+                                progress = { pct },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        } else {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                    is InstallState.Preparing, is InstallState.Verifying, is InstallState.Installing ->
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    is InstallState.Failed -> Text(
+                        text = installState.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    else -> Unit
+                }
+            }
+
+            // Android requires the user to allow installs from this store
+            // once, in system settings, before any install can start.
+            if (installState is InstallState.NeedsPermission) {
+                AlertDialog(
+                    onDismissRequest = { /* keep visible until a choice is made */ },
+                    title = { Text("Allow installs") },
+                    text = {
+                        Text(
+                            "To install apps, Android needs you to allow installs " +
+                                "from OpenMarket in system settings. This is a one-time step.",
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            context.startActivity(viewModel.unknownSourcesIntent())
+                        }) { Text("Open settings") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = viewModel::loadAppDetail) { Text("Not now") }
+                    },
+                )
             }
         }
 

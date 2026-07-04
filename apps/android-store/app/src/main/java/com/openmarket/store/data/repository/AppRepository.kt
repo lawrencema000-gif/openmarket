@@ -28,4 +28,18 @@ class AppRepository(private val api: OpenMarketApi) {
     suspend fun getAppReviews(appId: String): Result<List<ReviewResponse>> = runCatching {
         api.getAppReviews(appId)
     }
+
+    suspend fun getInstallInfo(appId: String, deviceId: String): Result<InstallInfo> = runCatching {
+        api.getInstallInfo(appId, deviceId)
+    }
+
+    suspend fun getDownloadUrl(artifactId: String, deviceId: String): Result<DownloadUrlResponse> =
+        runCatching { api.getDownloadUrl(artifactId, deviceId) }
+
+    suspend fun checkUpdates(request: UpdateCheckRequest): Result<UpdateCheckResponse> =
+        runCatching { api.checkUpdates(request) }
+
+    /** Best-effort: requires a signed-in session; failures are swallowed upstream. */
+    suspend fun recordInstall(appId: String, versionCode: Int, deviceId: String): Result<Unit> =
+        runCatching { api.recordInstall(appId, versionCode, deviceId) }
 }

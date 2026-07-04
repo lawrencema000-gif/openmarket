@@ -1,74 +1,111 @@
 package com.openmarket.store.installer
 
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.isActive
 import java.io.File
+import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import javax.inject.Inject
+import javax.inject.Singleton
 
 sealed class DownloadState {
-    data object Idle : DownloadState()
-    data class Downloading(val progress: Float) : DownloadState()
-    data class Verifying(val progress: Float = 1f) : DownloadState()
+    /** progress is null while the server hasn't told us a content length. */
+    data class Downloading(val progress: Float?) : DownloadState()
+    data object Verifying : DownloadState()
     data class Complete(val file: File) : DownloadState()
     data class Failed(val error: String) : DownloadState()
 }
 
-class DownloadManager(private val context: Context) {
+@Singleton
+class DownloadManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+) {
 
+    /**
+     * Download an APK to app-private storage, then verify its SHA-256
+     * against the marketplace-recorded digest. A mismatched digest is a
+     * hard failure — the file is deleted, never handed to the installer.
+     */
     fun downloadApk(
         url: String,
         expectedSha256: String,
         fileName: String,
-    ): Flow<DownloadState> = flow {
-        emit(DownloadState.Downloading(0f))
-
+    ): Flow<DownloadState> = callbackFlow {
+        val outputFile = File(context.getExternalFilesDir("apks") ?: context.filesDir, fileName)
         try {
-            val file = withContext(Dispatchers.IO) {
-                val outputFile = File(context.getExternalFilesDir("apks"), fileName)
-                outputFile.parentFile?.mkdirs()
+            send(DownloadState.Downloading(null))
+            outputFile.parentFile?.mkdirs()
 
-                val connection = URL(url).openConnection()
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.connectTimeout = 15_000
+            connection.readTimeout = 30_000
+            connection.instanceFollowRedirects = true
+            try {
+                val code = connection.responseCode
+                if (code !in 200..299) throw IOException("Download failed with HTTP $code")
+
                 val totalSize = connection.contentLengthLong
                 var downloaded = 0L
+                var lastPercent = -1
 
-                connection.getInputStream().use { input ->
+                connection.inputStream.use { input ->
                     outputFile.outputStream().use { output ->
-                        val buffer = ByteArray(8192)
-                        var bytesRead: Int
-                        while (input.read(buffer).also { bytesRead = it } != -1) {
-                            output.write(buffer, 0, bytesRead)
-                            downloaded += bytesRead
+                        val buffer = ByteArray(64 * 1024)
+                        while (isActive) {
+                            val read = input.read(buffer)
+                            if (read == -1) break
+                            output.write(buffer, 0, read)
+                            downloaded += read
+                            if (totalSize > 0) {
+                                val percent = ((downloaded * 100) / totalSize).toInt()
+                                if (percent != lastPercent) {
+                                    lastPercent = percent
+                                    trySend(DownloadState.Downloading(percent / 100f))
+                                }
+                            }
                         }
                     }
                 }
-                outputFile
+                if (totalSize > 0 && downloaded != totalSize) {
+                    throw IOException("Connection dropped mid-download ($downloaded/$totalSize bytes)")
+                }
+            } finally {
+                connection.disconnect()
             }
 
-            emit(DownloadState.Verifying())
-
-            val sha256 = withContext(Dispatchers.IO) {
-                computeSha256(file)
-            }
-
+            send(DownloadState.Verifying)
+            val sha256 = computeSha256(outputFile)
             if (sha256.equals(expectedSha256, ignoreCase = true)) {
-                emit(DownloadState.Complete(file))
+                send(DownloadState.Complete(outputFile))
             } else {
-                file.delete()
-                emit(DownloadState.Failed("SHA-256 verification failed"))
+                outputFile.delete()
+                send(DownloadState.Failed("Checksum mismatch — the download was corrupted or tampered with"))
             }
+        } catch (e: CancellationException) {
+            outputFile.delete()
+            throw e
         } catch (e: Exception) {
-            emit(DownloadState.Failed(e.message ?: "Download failed"))
+            outputFile.delete()
+            send(DownloadState.Failed(e.message ?: "Download failed"))
+        } finally {
+            close()
         }
-    }
+        awaitClose { }
+    }.flowOn(Dispatchers.IO)
 
     private fun computeSha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
         file.inputStream().use { input ->
-            val buffer = ByteArray(8192)
+            val buffer = ByteArray(64 * 1024)
             var bytesRead: Int
             while (input.read(buffer).also { bytesRead = it } != -1) {
                 digest.update(buffer, 0, bytesRead)

@@ -40,3 +40,11 @@ supabase/
 
 # Preview screenshots from local dev runs
 .preview/
+
+# Android (apps/android-store)
+apps/android-store/local.properties
+apps/android-store/**/build/
+apps/android-store/.gradle/
+apps/android-store/keystore.properties
+apps/android-store/*.jks
+apps/android-store/*.keystore
