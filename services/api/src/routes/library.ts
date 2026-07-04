@@ -4,19 +4,16 @@ import { and, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import {
-  appPricing,
   apps,
   appListings,
-  installEvents,
   libraryEntries,
   releases,
   users,
 } from "@openmarket/db/schema";
-import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 import { fanOutFamilyShareToMembers } from "../lib/family-sharing";
-import { recordAffiliateConversion } from "../lib/affiliate-attribution";
+import { recordInstallSignal } from "../lib/install-signal";
 import type { Variables } from "../lib/types";
 
 export const libraryRouter = new Hono<{ Variables: Variables }>();
@@ -32,68 +29,9 @@ const recordInstallSchema = z.object({
   deviceFingerprintHash: z.string().min(8).max(128).optional(),
 });
 
-/**
- * Record an install_event and attempt affiliate attribution. Fire-and-
- * forget — never blocks or fails the install. Centralized so both the
- * fresh-install and reinstall paths feed analytics + the affiliate
- * conversion pipeline.
- */
-async function recordInstallSignal(opts: {
-  appId: string;
-  userId: string;
-  versionCode: number;
-  source: "store_app" | "web" | "direct";
-  deviceFingerprintHash?: string | null;
-}): Promise<void> {
-  const [event] = await db
-    .insert(installEvents)
-    .values({
-      appId: opts.appId,
-      userId: opts.userId,
-      deviceFingerprintHash: opts.deviceFingerprintHash ?? null,
-      installedVersionCode: opts.versionCode,
-      source: opts.source,
-      success: true,
-    })
-    .returning({ id: installEvents.id });
-
-  if (event && opts.deviceFingerprintHash) {
-    // Resolve the app's list price so bps-based affiliate commissions are
-    // computed against a real amount (free apps → null → 0, which only
-    // affects bps programs; flat-commission programs are unaffected).
-    let installPriceCents = 0;
-    let currency: string | undefined;
-    try {
-      const pricingRows = await db
-        .select({
-          countryCode: appPricing.countryCode,
-          priceCents: appPricing.priceCents,
-          currency: appPricing.currency,
-          active: appPricing.active,
-        })
-        .from(appPricing)
-        .where(eq(appPricing.appId, opts.appId));
-      // Default-country list price; per-country attribution pricing is a
-      // future refinement (install payload carries no country today).
-      const resolved = resolvePriceForCountry(pricingRows, null);
-      if (resolved) {
-        installPriceCents = resolved.priceCents;
-        currency = resolved.currency;
-      }
-    } catch (err) {
-      console.error("[library] price resolution for attribution failed", err);
-    }
-
-    await recordAffiliateConversion({
-      appId: opts.appId,
-      installEventId: event.id,
-      deviceFingerprintHash: opts.deviceFingerprintHash,
-      installPriceCents,
-      currency,
-    });
-  }
-}
-
+// recordInstallSignal (analytics + affiliate attribution, with the
+// anti-fraud dedup gate) lives in ../lib/install-signal so it can be
+// unit-tested without the router.
 async function profileForAuthUser(authUserId: string, email: string) {
   // Mirror of the helper in routes/users.ts but local — keeps the import
   // graph small. Idempotent on email.

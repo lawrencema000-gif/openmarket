@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { and, eq, desc, asc, sql } from "drizzle-orm";
+import { and, eq, desc, asc, inArray, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../lib/db";
@@ -9,6 +9,7 @@ import {
   apps,
   appListings,
   releases,
+  releaseRollouts,
   reviews,
   developers,
   moderationActions,
@@ -16,7 +17,8 @@ import {
   scanResults,
 } from "@openmarket/db/schema";
 import { requireAdmin } from "../middleware/admin";
-import { notifyQueue } from "../lib/queue";
+import { notifyQueue, scanQueue } from "../lib/queue";
+import { appendTransparencyEvent } from "../lib/transparency";
 import { enqueueEmail } from "../lib/email";
 import { recordAdminAction } from "../lib/audit";
 import { dispatchReleaseToLibrary } from "../lib/push";
@@ -697,4 +699,140 @@ adminRouter.get("/admin/reviews/bomb-signals", requireAdmin, async (c) => {
   };
   const verdicts = await findReviewBombs(watchConfig);
   return c.json({ items: verdicts });
+});
+
+// ───────── Emergency takedown + re-scan (malware response path) ─────────
+
+const takedownSchema = z.object({
+  reason: z.string().min(10, "Takedown reason must be substantive").max(2000),
+});
+
+/**
+ * POST /admin/apps/:id/takedown — the kill switch.
+ *
+ * One call, atomically: delists the app, halts every live/paused rollout
+ * (so the device delivery endpoints refuse further downloads), pushes the
+ * search index, and appends a public transparency event. This is the
+ * response path when a published app turns out to be malicious.
+ */
+adminRouter.post(
+  "/admin/apps/:id/takedown",
+  requireAdmin,
+  zValidator("json", takedownSchema),
+  async (c) => {
+    const appId = c.req.param("id") as string;
+    const { reason } = c.req.valid("json");
+
+    const app = await db.query.apps.findFirst({ where: eq(apps.id, appId) });
+    if (!app) throw new HTTPException(404, { message: "App not found" });
+    if (app.isDelisted) {
+      return c.json({ success: true, alreadyDelisted: true, haltedReleases: [] });
+    }
+
+    const haltedReleases: string[] = [];
+    await db.transaction(async (tx) => {
+      await tx
+        .update(apps)
+        .set({ isDelisted: true, updatedAt: new Date() })
+        .where(eq(apps.id, appId));
+
+      const activeReleases = await tx
+        .select({
+          id: releases.id,
+          rolloutPercentage: releases.rolloutPercentage,
+        })
+        .from(releases)
+        .where(
+          and(
+            eq(releases.appId, appId),
+            inArray(releases.rolloutStatus, ["live", "paused"]),
+          ),
+        );
+
+      for (const rel of activeReleases) {
+        await tx
+          .update(releases)
+          .set({ rolloutStatus: "halted", updatedAt: new Date() })
+          .where(eq(releases.id, rel.id));
+        await tx.insert(releaseRollouts).values({
+          releaseId: rel.id,
+          percentage: rel.rolloutPercentage ?? 100,
+          status: "halted",
+          reason: `App takedown: ${reason}`,
+          actorId: null,
+        });
+        haltedReleases.push(rel.id);
+      }
+    });
+
+    // Search stays consistent even if this sync fails — the search route
+    // re-checks isDelisted against Postgres on every request.
+    try {
+      await syncAppToSearchIndex(appId);
+    } catch (err) {
+      console.error("[admin] search index sync after takedown failed:", err);
+    }
+
+    await appendTransparencyEvent({
+      eventType: "app_takedown",
+      targetType: "app",
+      targetId: appId,
+      reason,
+    });
+
+    await recordAdminAction({
+      c,
+      action: "app.takedown",
+      targetType: "app",
+      targetId: appId,
+      metadata: { reason, haltedReleases },
+    });
+
+    return c.json({ success: true, alreadyDelisted: false, haltedReleases });
+  },
+);
+
+/**
+ * POST /admin/releases/:id/rescan — re-enqueue the security scan for a
+ * release's latest verified artifact. Used after signature-database
+ * updates (new ClamAV defs, fresh VirusTotal verdicts) to re-check apps
+ * that were already scanned — malware defense is continuous, not
+ * one-shot at upload time.
+ */
+adminRouter.post("/admin/releases/:id/rescan", requireAdmin, async (c) => {
+  const releaseId = c.req.param("id") as string;
+
+  const release = await db.query.releases.findFirst({
+    where: eq(releases.id, releaseId),
+  });
+  if (!release) throw new HTTPException(404, { message: "Release not found" });
+
+  const [artifact] = await db
+    .select()
+    .from(releaseArtifacts)
+    .where(
+      and(
+        eq(releaseArtifacts.releaseId, releaseId),
+        eq(releaseArtifacts.uploadStatus, "verified"),
+      ),
+    )
+    .orderBy(desc(releaseArtifacts.createdAt))
+    .limit(1);
+  if (!artifact) {
+    throw new HTTPException(404, {
+      message: "Release has no verified artifact to re-scan",
+    });
+  }
+
+  await scanQueue.add("scan", { releaseId, artifactId: artifact.id });
+
+  await recordAdminAction({
+    c,
+    action: "release.rescan",
+    targetType: "release",
+    targetId: releaseId,
+    metadata: { artifactId: artifact.id },
+  });
+
+  return c.json({ success: true, enqueued: { releaseId, artifactId: artifact.id } });
 });

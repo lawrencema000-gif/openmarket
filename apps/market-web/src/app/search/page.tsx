@@ -19,24 +19,28 @@ const EXCLUDABLE_FILTERS: Array<{ slug: string; label: string }> = [
   { slug: "nonFreeNet", label: "Closed network" },
 ];
 
-interface AppListing {
+/**
+ * One Meilisearch document as returned by GET /api/search — the shape
+ * indexed in services/api/src/lib/search-index.ts. Field names must
+ * track that doc builder, not an imagined REST resource.
+ */
+interface SearchHit {
   id: string;
-  name: string;
+  packageName: string;
+  title: string;
   shortDescription?: string;
   iconUrl?: string;
   category?: string;
+  developerName?: string;
   trustTier?: string;
   isExperimental?: boolean;
-  rating?: number;
-  developer?: {
-    id: string;
-    name: string;
-  };
+  /** avgRating × 100 (e.g. 437 = 4.37 stars); 0 when unrated. */
+  ratingScore?: number;
 }
 
 interface SearchResult {
-  apps: AppListing[];
-  total: number;
+  hits: SearchHit[];
+  totalHits: number;
   page: number;
   limit: number;
 }
@@ -133,7 +137,7 @@ export default async function SearchPage({
     getCategories(),
     q
       ? searchApps({ ...baseParams, page, limit: "21" })
-      : Promise.resolve({ apps: [], total: 0, page: 1, limit: 21 } as SearchResult),
+      : Promise.resolve({ hits: [], totalHits: 0, page: 1, limit: 21 } as SearchResult),
     !q ? getPopularQueries() : Promise.resolve([] as PopularQuery[]),
   ]);
 
@@ -141,8 +145,8 @@ export default async function SearchPage({
   const popular =
     popularQueries.status === "fulfilled" ? popularQueries.value : [];
   const result = searchResult.status === "fulfilled" ? searchResult.value : null;
-  const apps = result?.apps ?? [];
-  const total = result?.total ?? 0;
+  const apps = result?.hits ?? [];
+  const total = result?.totalHits ?? 0;
   const currentPage = result?.page ?? 1;
   const limit = result?.limit ?? 21;
   const totalPages = Math.ceil(total / limit);
@@ -274,14 +278,14 @@ export default async function SearchPage({
             <Link key={app.id} href={`/apps/${app.id}`} className="block">
               <AppCard
                 id={app.id}
-                title={app.name}
+                title={app.title}
                 iconUrl={app.iconUrl ?? ""}
-                developerName={app.developer?.name ?? "Unknown Developer"}
+                developerName={app.developerName || "Unknown Developer"}
                 shortDescription={app.shortDescription ?? ""}
                 category={app.category ?? ""}
                 trustTier={app.trustTier ?? "new"}
                 isExperimental={app.isExperimental}
-                rating={app.rating}
+                rating={app.ratingScore ? app.ratingScore / 100 : undefined}
                 variant="grid"
               />
             </Link>

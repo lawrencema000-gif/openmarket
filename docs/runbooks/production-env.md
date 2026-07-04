@@ -48,6 +48,10 @@ Legend: **R** = required, **O** = optional / feature-gated.
 | `FEDERATION_ORIGIN` / `FEDERATION_DISPLAY_NAME` | O | Federated index identity. |
 | `WEB_PUSH_DRIVER`, `WEB_BUNDLETOOL_DRIVER` | O | Adapter selectors (default = noop/stub). |
 | `SENTRY_DSN` (+ `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`) | O | Error tracking; no-op without DSN. |
+| `DB_POOL_MAX` | O | Connections per client. Default 5 on Vercel/Lambda, 10 elsewhere. |
+| `DB_IDLE_TIMEOUT_SEC` / `DB_CONNECT_TIMEOUT_SEC` / `DB_STATEMENT_TIMEOUT_MS` | O | Pool hygiene: 20s idle release / 10s connect fail-fast / 30s server-side query kill. |
+| `DB_DISABLE_PREPARE` | O | Set `1` behind a transaction-mode pooler that isn't auto-detected (Neon `-pooler` hosts and `pgbouncer=true` URLs are detected). |
+| `INSTALL_DEDUP_WINDOW_DAYS` | O | Anti-fraud install dedup window (default 30): one countable install per app+user / app+device inside it. |
 
 ## notify-worker — `services/notify-worker` (Fly.io)
 
@@ -81,8 +85,17 @@ Legend: **R** = required, **O** = optional / feature-gated.
 |---|---|---|
 | `DATABASE_URL` | **R** | Pooled Neon. |
 | `REDIS_URL` | **R** | Same instance as the API. |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | **R** | APK download for AV scan + content hashing. (`S3_*` aliases accepted.) |
+| `CLAMD_HOST` | **R** for malware gate | clamd host (run the official `clamav/clamav` image as a Fly app). Unset → every scan lands in manual review (`av_not_configured`), nothing auto-passes. |
+| `CLAMD_PORT` | O | Default 3310. |
+| `CLAMD_TIMEOUT_MS` | O | Socket timeout, default 120000. |
+| `VIRUSTOTAL_API_KEY` | O (recommended) | Hash-lookup escalation. Errors degrade gracefully; never the sole gate (VT ToS). |
 | `WORKER_CONCURRENCY` | O | Default 5. |
 | `SENTRY_DSN` | O | Error tracking. |
+
+Fail-closed semantics: if `CLAMD_HOST` is set but clamd is unreachable, scan
+jobs retry and the release stays unpublished — an outage can never wave an
+unscanned APK through.
 
 ## search-worker — `services/search-worker` (Fly.io)
 
