@@ -149,7 +149,7 @@ export default function ParentalControlsPage() {
 
   if (loading || isPending)
     return (
-      <div className="max-w-3xl mx-auto px-6 py-10 text-sm text-gray-500">
+      <div className="max-w-3xl mx-auto px-6 py-10 text-sm text-om-ink-soft">
         Loading…
       </div>
     );
@@ -160,13 +160,13 @@ export default function ParentalControlsPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
       <div>
-        <Link href="/account" className="text-xs text-blue-600 hover:underline">
+        <Link href="/account" className="text-xs text-om-primary hover:underline">
           ← Back to account
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">
           Parental controls
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-om-ink-soft mt-1">
           {isChild
             ? "Your account is supervised. Some apps may require a parent's PIN to install."
             : "Set a PIN and content-rating ceiling, then link a child account for supervision."}
@@ -180,9 +180,9 @@ export default function ParentalControlsPage() {
       ) : null}
 
       {!isChild ? (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-900">PIN + rating</h2>
-          <p className="text-xs text-gray-500">
+        <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-om-ink">PIN + rating</h2>
+          <p className="text-xs text-om-ink-soft">
             Status: PIN is{" "}
             <strong>{data.pinSet ? "set" : "not yet set"}</strong>.
             {data.lockedUntil ? (
@@ -194,7 +194,7 @@ export default function ParentalControlsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-om-ink-mute">
                 {data.pinSet ? "Change PIN" : "Set PIN"}
               </span>
               <input
@@ -204,11 +204,11 @@ export default function ParentalControlsPage() {
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))}
                 placeholder="4–8 digits"
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm font-mono tracking-widest"
+                className="mt-1 block w-full rounded-md border-om-line text-sm font-mono tracking-widest"
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-om-ink-mute">
                 Confirm PIN
               </span>
               <input
@@ -217,19 +217,19 @@ export default function ParentalControlsPage() {
                 maxLength={8}
                 value={confirmPin}
                 onChange={(e) => setConfirmPin(e.target.value.replace(/[^0-9]/g, ""))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm font-mono tracking-widest"
+                className="mt-1 block w-full rounded-md border-om-line text-sm font-mono tracking-widest"
               />
             </label>
           </div>
 
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs font-medium text-om-ink-mute">
               Max content rating for linked children
             </span>
             <select
               value={rating}
               onChange={(e) => setRating(e.target.value as Rating)}
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+              className="mt-1 block w-full rounded-md border-om-line text-sm"
             >
               {(Object.keys(RATING_LABELS) as Rating[]).map((r) => (
                 <option key={r} value={r}>
@@ -242,7 +242,7 @@ export default function ParentalControlsPage() {
           <button
             type="button"
             onClick={() => void savePinAndRating()}
-            className="rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2"
+            className="rounded-md bg-om-primary hover:bg-om-primary-deep text-white text-sm font-medium px-4 py-2"
           >
             Save settings
           </button>
@@ -257,8 +257,8 @@ export default function ParentalControlsPage() {
       ) : null}
 
       {!isChild ? (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-900">Linked children</h2>
+        <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-om-ink">Linked children</h2>
           {data.children && data.children.length > 0 ? (
             <ul className="divide-y divide-gray-100">
               {data.children.map((ch) => (
@@ -267,10 +267,10 @@ export default function ParentalControlsPage() {
                   className="py-2 flex items-baseline justify-between gap-2"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-om-ink truncate">
                       {ch.displayName ?? ch.email}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-om-ink-soft">
                       Linked {new Date(ch.linkedAt).toLocaleDateString()}
                       {ch.unlinkedAt
                         ? ` · unlinked ${new Date(ch.unlinkedAt).toLocaleDateString()}`
@@ -290,11 +290,11 @@ export default function ParentalControlsPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-gray-500 italic">No children linked yet.</p>
+            <p className="text-xs text-om-ink-soft italic">No children linked yet.</p>
           )}
 
-          <div className="border-t border-gray-100 pt-4 space-y-2">
-            <p className="text-xs font-medium text-gray-700">
+          <div className="border-t border-om-line-soft pt-4 space-y-2">
+            <p className="text-xs font-medium text-om-ink-mute">
               Invite a child
             </p>
             <div className="flex flex-wrap gap-2">
@@ -303,13 +303,13 @@ export default function ParentalControlsPage() {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="child's openmarket email"
-                className="flex-1 rounded-md border-gray-300 text-sm"
+                className="flex-1 rounded-md border-om-line text-sm"
               />
               <button
                 type="button"
                 onClick={() => void invite()}
                 disabled={!inviteEmail || !data.pinSet}
-                className="text-xs font-medium px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="text-xs font-medium px-3 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
               >
                 Generate token
               </button>
@@ -320,7 +320,7 @@ export default function ParentalControlsPage() {
               </p>
             )}
             {linkToken && (
-              <p className="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-md p-2 font-mono break-all">
+              <p className="text-xs text-om-ink-mute bg-om-surface-tint border border-om-line rounded-md p-2 font-mono break-all">
                 Hand this token to the child: <strong>{linkToken}</strong>
               </p>
             )}
@@ -328,11 +328,11 @@ export default function ParentalControlsPage() {
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">
+      <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink">
           Accept a parental link
         </h2>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-om-ink-soft">
           If your parent gave you a link token, paste it here to become a
           supervised child account.
         </p>
@@ -342,13 +342,13 @@ export default function ParentalControlsPage() {
             value={acceptToken}
             onChange={(e) => setAcceptToken(e.target.value)}
             placeholder="om_link_..."
-            className="flex-1 rounded-md border-gray-300 text-sm font-mono"
+            className="flex-1 rounded-md border-om-line text-sm font-mono"
           />
           <button
             type="button"
             onClick={() => void acceptLink()}
             disabled={!acceptToken}
-            className="text-xs font-medium px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="text-xs font-medium px-3 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
           >
             Accept
           </button>

@@ -96,22 +96,10 @@
     --om-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.5);
     --om-shadow-lift: 0 10px 30px -12px rgb(0 0 0 / 0.6);
   }
-
-  /* Decorative app background + skeleton shimmer are hardcoded light
-     gradients; retint for dark so they don't glow white behind content. */
-  .om-bg-app {
-    background:
-      radial-gradient(ellipse at top left, rgb(30 27 55) 0%, transparent 60%),
-      radial-gradient(ellipse at top right, rgb(23 20 48) 0%, transparent 60%),
-      rgb(2 6 23);
-  }
-  .om-skeleton {
-    background: linear-gradient(90deg,
-      rgb(30 41 59) 0%,
-      rgb(51 65 85) 50%,
-      rgb(30 41 59) 100%);
-    background-size: 200% 100%;
-  }
+  /* NOTE: .om-bg-app / .om-skeleton dark overrides are defined at the END
+     of this file — they must come AFTER the base rules to win on source
+     order (same specificity). Defining them here would lose to the later
+     base definitions and leave the page background light in dark mode. */
 }
 
 /* ───────────────────────────────────────────────────────────────────
@@ -189,7 +177,9 @@
   background-color: rgb(var(--om-glass-bg) / 0.82);
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
-  border: 1px solid rgb(255 255 255 / 0.6);
+  /* Token-based border so it doesn't render as a glaring white line on
+     dark surfaces (glass-border flips to slate-400 in dark mode). */
+  border: 1px solid rgb(var(--om-glass-border) / 0.6);
 }
 
 .om-text-gradient {
@@ -295,4 +285,27 @@
     rgb(241 245 249) 100%);
   background-size: 200% 100%;
   animation: om-shimmer 1.6s linear infinite;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ *  Dark-mode overrides for the decorative custom utilities. These MUST
+ *  live at the end of the file — after the base .om-bg-app / .om-skeleton
+ *  definitions above — so that when prefers-color-scheme:dark matches,
+ *  these later same-specificity rules win. (Placing them up in the token
+ *  @media block left the page background stuck on the light gradient.)
+ * ─────────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .om-bg-app {
+    background:
+      radial-gradient(ellipse at top left, rgb(30 27 55) 0%, transparent 60%),
+      radial-gradient(ellipse at top right, rgb(23 20 48) 0%, transparent 60%),
+      rgb(2 6 23);
+  }
+  .om-skeleton {
+    background: linear-gradient(90deg,
+      rgb(30 41 59) 0%,
+      rgb(51 65 85) 50%,
+      rgb(30 41 59) 100%);
+    background-size: 200% 100%;
+  }
 }

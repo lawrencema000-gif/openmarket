@@ -84,9 +84,9 @@ export default async function DistributionPage({
   if (result.kind === "gone") {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900">Link unavailable</h1>
-        <p className="text-sm text-gray-600">{result.reason}</p>
-        <p className="text-xs text-gray-400">
+        <h1 className="text-2xl font-bold text-om-ink">Link unavailable</h1>
+        <p className="text-sm text-om-ink-mute">{result.reason}</p>
+        <p className="text-xs text-om-ink-soft">
           Ask the developer for a new share link.
         </p>
       </div>
@@ -103,20 +103,20 @@ export default async function DistributionPage({
           <img
             src={app.iconUrl}
             alt=""
-            className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0"
+            className="w-16 h-16 rounded-xl object-cover border border-om-line shrink-0"
           />
         ) : (
-          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 shrink-0" />
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-om-primary/15 to-om-primary/25 shrink-0" />
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-xs uppercase tracking-wide font-semibold text-indigo-600">
+          <p className="text-xs uppercase tracking-wide font-semibold text-om-primary">
             Private distribution channel
           </p>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">{channel.name}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-om-ink mt-1">{channel.name}</h1>
+          <p className="text-sm text-om-ink-soft mt-0.5">
             for <strong>{app.title}</strong>
             {app.packageName ? (
-              <span className="ml-2 font-mono text-xs text-gray-400">
+              <span className="ml-2 font-mono text-xs text-om-ink-soft">
                 {app.packageName}
               </span>
             ) : null}
@@ -125,7 +125,7 @@ export default async function DistributionPage({
       </header>
 
       {channel.description ? (
-        <section className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+        <section className="rounded-xl border border-om-line bg-om-surface p-4 text-sm text-om-ink-mute whitespace-pre-wrap leading-relaxed">
           {channel.description}
         </section>
       ) : null}
@@ -144,11 +144,11 @@ export default async function DistributionPage({
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold text-gray-900 mb-3">
+        <h2 className="text-sm font-semibold text-om-ink mb-3">
           Available builds
         </h2>
         {releases.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-om-ink-soft italic">
             No builds are pinned to this channel yet.
           </p>
         ) : (
@@ -156,28 +156,28 @@ export default async function DistributionPage({
             {releases.map((r) => (
               <li
                 key={r.id}
-                className="rounded-xl border border-gray-200 bg-white p-4 space-y-2"
+                className="rounded-xl border border-om-line bg-om-surface p-4 space-y-2"
               >
                 <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-om-ink">
                     v{r.versionName}{" "}
-                    <span className="text-xs text-gray-400 font-mono">
+                    <span className="text-xs text-om-ink-soft font-mono">
                       (build {r.versionCode})
                     </span>
                   </p>
-                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-om-line-soft text-om-ink-mute">
                     {r.channel} · {r.status}
                   </span>
                 </div>
                 {r.releaseNotes ? (
-                  <p className="text-xs text-gray-600 whitespace-pre-wrap">
+                  <p className="text-xs text-om-ink-mute whitespace-pre-wrap">
                     {r.releaseNotes}
                   </p>
                 ) : null}
                 {r.apkUrl ? (
                   <a
                     href={r.apkUrl}
-                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5"
+                    className="inline-flex items-center gap-2 rounded-lg bg-om-primary hover:bg-om-primary-deep text-white text-xs font-semibold px-3 py-1.5"
                   >
                     Download APK
                   </a>
@@ -187,7 +187,7 @@ export default async function DistributionPage({
                   </p>
                 )}
                 {r.apkSha256 ? (
-                  <p className="text-[10px] font-mono text-gray-400 break-all">
+                  <p className="text-[10px] font-mono text-om-ink-soft break-all">
                     SHA256 {r.apkSha256}
                   </p>
                 ) : null}
@@ -197,8 +197,8 @@ export default async function DistributionPage({
         )}
       </section>
 
-      <p className="text-[11px] text-gray-400 text-center pt-4 border-t border-gray-100">
-        <Link href="/" className="hover:text-gray-600">
+      <p className="text-[11px] text-om-ink-soft text-center pt-4 border-t border-om-line-soft">
+        <Link href="/" className="hover:text-om-ink-mute">
           OpenMarket home
         </Link>
         {" — "}

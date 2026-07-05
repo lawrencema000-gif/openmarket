@@ -82,7 +82,7 @@ export default async function CategoryDetailPage({
           description="The OpenMarket API is temporarily unreachable. Try again in a minute."
         />
         <p className="mt-6 text-sm">
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
+          <Link href="/" className="text-om-primary hover:text-om-primary">
             ← Back home
           </Link>
         </p>
@@ -94,12 +94,12 @@ export default async function CategoryDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <nav className="text-sm text-gray-500 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-gray-900">Home</Link>
+      <nav className="text-sm text-om-ink-soft flex items-center gap-1.5">
+        <Link href="/" className="hover:text-om-ink">Home</Link>
         <span>/</span>
-        <Link href="/categories" className="hover:text-gray-900">Categories</Link>
+        <Link href="/categories" className="hover:text-om-ink">Categories</Link>
         <span>/</span>
-        <span className="text-gray-900 font-medium">{category.name}</span>
+        <span className="text-om-ink font-medium">{category.name}</span>
       </nav>
 
       <header className="flex items-start gap-4">
@@ -111,26 +111,26 @@ export default async function CategoryDetailPage({
           {category.icon ?? "📦"}
         </span>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-om-ink">
             {category.name}
           </h1>
           {category.description ? (
-            <p className="mt-2 text-gray-600 max-w-2xl">{category.description}</p>
+            <p className="mt-2 text-om-ink-mute max-w-2xl">{category.description}</p>
           ) : null}
         </div>
       </header>
 
       {apps.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-12 text-center">
-          <p className="text-base font-semibold text-gray-900">
+        <div className="rounded-xl border border-om-line bg-om-surface-tint px-6 py-12 text-center">
+          <p className="text-base font-semibold text-om-ink">
             No published apps in this category yet.
           </p>
-          <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto">
+          <p className="mt-2 text-sm text-om-ink-mute max-w-md mx-auto">
             Be the first — or browse another category.
           </p>
           <Link
             href="/categories"
-            className="mt-4 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="mt-4 inline-block rounded-md bg-om-primary px-4 py-2 text-sm font-semibold text-white hover:bg-om-primary-deep"
           >
             All categories
           </Link>
@@ -141,29 +141,29 @@ export default async function CategoryDetailPage({
             <li key={app.id}>
               <Link
                 href={`/apps/${app.id}`}
-                className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:shadow hover:border-blue-300 transition-all"
+                className="flex items-start gap-3 rounded-xl border border-om-line bg-om-surface p-4 hover:shadow hover:border-om-primary/40 transition-all"
               >
                 {app.iconUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={app.iconUrl}
                     alt={app.title ?? app.packageName}
-                    className="h-14 w-14 rounded-xl object-cover bg-gray-100 flex-shrink-0"
+                    className="h-14 w-14 rounded-xl object-cover bg-om-line-soft flex-shrink-0"
                   />
                 ) : (
-                  <span className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-semibold text-lg flex-shrink-0">
+                  <span className="h-14 w-14 rounded-xl bg-gradient-to-br from-om-primary/15 to-om-primary/20 flex items-center justify-center text-om-primary font-semibold text-lg flex-shrink-0">
                     {(app.title ?? app.packageName).charAt(0).toUpperCase()}
                   </span>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 truncate">
+                  <p className="font-semibold text-om-ink truncate">
                     {app.title ?? app.packageName}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-om-ink-soft truncate">
                     {app.packageName}
                   </p>
                   {app.shortDescription ? (
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    <p className="text-sm text-om-ink-mute mt-1 line-clamp-2">
                       {app.shortDescription}
                     </p>
                   ) : null}
@@ -177,7 +177,7 @@ export default async function CategoryDetailPage({
       <div className="text-center">
         <Link
           href={`/search?category=${category.slug}`}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-om-primary hover:text-om-primary"
         >
           Browse more {category.name} →
         </Link>

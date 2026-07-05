@@ -128,7 +128,7 @@ export default function NotificationsPage() {
 
   if (loading || isPending)
     return (
-      <div className="max-w-3xl mx-auto px-6 py-10 text-sm text-gray-500">
+      <div className="max-w-3xl mx-auto px-6 py-10 text-sm text-om-ink-soft">
         Loading…
       </div>
     );
@@ -137,11 +137,11 @@ export default function NotificationsPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
       <div>
-        <Link href="/account" className="text-xs text-blue-600 hover:underline">
+        <Link href="/account" className="text-xs text-om-primary hover:underline">
           ← Back to account
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Notifications</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">Notifications</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Control which OpenMarket emails and browser pushes you receive.
         </p>
       </div>
@@ -153,11 +153,11 @@ export default function NotificationsPage() {
       ) : null}
 
       {/* Preferences */}
-      <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-gray-900">Preferences</h2>
+      <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-om-ink">Preferences</h2>
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-xs text-gray-500 text-left">
+            <tr className="text-xs text-om-ink-soft text-left">
               <th className="font-medium pb-2">Category</th>
               <th className="font-medium pb-2 w-20 text-center">Email</th>
               <th className="font-medium pb-2 w-20 text-center">Push</th>
@@ -168,10 +168,10 @@ export default function NotificationsPage() {
               (key) => (
                 <tr key={key} className="align-top">
                   <td className="py-3">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-om-ink">
                       {TYPE_LABELS[key]}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-om-ink-soft mt-0.5">
                       {TYPE_HELP[key]}
                     </p>
                   </td>
@@ -180,7 +180,7 @@ export default function NotificationsPage() {
                       type="checkbox"
                       checked={prefs.email[key]}
                       onChange={(e) => void flip("email", key, e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-om-line text-om-primary focus:ring-om-primary"
                     />
                   </td>
                   <td className="py-3 text-center">
@@ -188,7 +188,7 @@ export default function NotificationsPage() {
                       type="checkbox"
                       checked={prefs.push[key]}
                       onChange={(e) => void flip("push", key, e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-om-line text-om-primary focus:ring-om-primary"
                     />
                   </td>
                 </tr>
@@ -206,15 +206,15 @@ export default function NotificationsPage() {
       </section>
 
       {/* Subscriptions */}
-      <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+      <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-3">
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-gray-900">
+          <h2 className="text-sm font-semibold text-om-ink">
             Subscribed devices
           </h2>
           <PushSubscribeButton onChanged={() => void load()} />
         </div>
         {subs.length === 0 ? (
-          <p className="text-xs text-gray-500 italic">
+          <p className="text-xs text-om-ink-soft italic">
             No browsers subscribed yet. Click "Enable browser push" above to add
             this device.
           </p>
@@ -226,10 +226,10 @@ export default function NotificationsPage() {
                 className="py-3 flex items-baseline justify-between gap-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-om-ink truncate">
                     {summarizeUserAgent(s.userAgent)}
                   </p>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[11px] text-om-ink-soft">
                     Added {new Date(s.createdAt).toLocaleDateString()} · last
                     active {new Date(s.lastSeenAt).toLocaleDateString()}
                   </p>
@@ -248,12 +248,12 @@ export default function NotificationsPage() {
       </section>
 
       {/* Recent log */}
-      <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">
+      <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink">
           Recent notifications
         </h2>
         {log.length === 0 ? (
-          <p className="text-xs text-gray-500 italic">
+          <p className="text-xs text-om-ink-soft italic">
             Nothing recent. Notifications appear here once we send any.
           </p>
         ) : (
@@ -261,14 +261,14 @@ export default function NotificationsPage() {
             {log.map((n) => (
               <li key={n.id} className="py-2.5">
                 <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-om-ink">
                     {n.payload.title}
                   </p>
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-om-ink-soft">
                     {new Date(n.sentAt).toLocaleString()}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5">{n.payload.body}</p>
+                <p className="text-xs text-om-ink-soft mt-0.5">{n.payload.body}</p>
                 {n.status !== "sent" ? (
                   <p className="text-[10px] uppercase font-semibold text-amber-700 mt-0.5">
                     {n.status}

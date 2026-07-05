@@ -93,7 +93,7 @@ export function DmcaForm() {
         <p className="text-emerald-800 font-semibold">Notice received.</p>
         <p className="text-sm text-emerald-700">
           Reference number:{" "}
-          <code className="bg-white px-2 py-0.5 rounded border border-emerald-200">
+          <code className="bg-om-surface px-2 py-0.5 rounded border border-emerald-200">
             {result.noticeNumber}
           </code>
         </p>
@@ -176,12 +176,12 @@ export function DmcaForm() {
         />
       </Field>
 
-      <label className="flex items-start gap-2 text-sm text-gray-700">
+      <label className="flex items-start gap-2 text-sm text-om-ink-mute">
         <input
           type="checkbox"
           checked={form.goodFaithStatement}
           onChange={(e) => set("goodFaithStatement", e.target.checked)}
-          className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300"
+          className="mt-1 h-4 w-4 text-om-primary rounded border-om-line"
         />
         <span>
           I have a good-faith belief that the use of the material described
@@ -189,12 +189,12 @@ export function DmcaForm() {
           law.
         </span>
       </label>
-      <label className="flex items-start gap-2 text-sm text-gray-700">
+      <label className="flex items-start gap-2 text-sm text-om-ink-mute">
         <input
           type="checkbox"
           checked={form.accuracyStatement}
           onChange={(e) => set("accuracyStatement", e.target.checked)}
-          className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300"
+          className="mt-1 h-4 w-4 text-om-primary rounded border-om-line"
         />
         <span>
           I state under penalty of perjury that the information in this
@@ -225,7 +225,7 @@ export function DmcaForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-5 py-2.5 text-sm transition-colors disabled:opacity-50"
+        className="bg-om-primary hover:bg-om-primary-deep text-white font-medium rounded-lg px-5 py-2.5 text-sm transition-colors disabled:opacity-50"
       >
         {submitting ? "Submitting…" : "Submit notice"}
       </button>
@@ -234,7 +234,7 @@ export function DmcaForm() {
 }
 
 const input =
-  "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+  "w-full rounded-md border border-om-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-om-primary focus:border-om-primary";
 
 function Field({
   label,
@@ -249,12 +249,12 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-800 mb-1">
+      <label className="block text-sm font-medium text-om-ink-mute mb-1">
         {label}
         {required && <span className="text-red-600 ml-0.5">*</span>}
       </label>
       {children}
-      {hint && <p className="text-xs text-gray-500 mt-1">{hint}</p>}
+      {hint && <p className="text-xs text-om-ink-soft mt-1">{hint}</p>}
     </div>
   );
 }

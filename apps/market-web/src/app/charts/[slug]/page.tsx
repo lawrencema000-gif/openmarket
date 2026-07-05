@@ -91,20 +91,20 @@ export default async function ChartDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <nav className="text-sm text-gray-500 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-gray-900">Home</Link>
+      <nav className="text-sm text-om-ink-soft flex items-center gap-1.5">
+        <Link href="/" className="hover:text-om-ink">Home</Link>
         <span>/</span>
-        <Link href="/charts" className="hover:text-gray-900">Charts</Link>
+        <Link href="/charts" className="hover:text-om-ink">Charts</Link>
         <span>/</span>
-        <span className="text-gray-900 font-medium">{meta.title}</span>
+        <span className="text-om-ink font-medium">{meta.title}</span>
       </nav>
 
       <header>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{meta.title}</h1>
-        <p className="mt-2 text-gray-600 max-w-3xl">{meta.subtitle}</p>
+        <h1 className="text-3xl font-bold text-om-ink tracking-tight">{meta.title}</h1>
+        <p className="mt-2 text-om-ink-mute max-w-3xl">{meta.subtitle}</p>
       </header>
 
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-om-line-soft p-1 rounded-lg w-fit">
         {WINDOWS.map((w) => {
           const active = window === w.value;
           return (
@@ -113,8 +113,8 @@ export default async function ChartDetailPage({
               href={`/charts/${slug}?window=${w.value}`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 active
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-om-surface text-om-ink shadow-sm"
+                  : "text-om-ink-soft hover:text-om-ink"
               }`}
             >
               {w.label}
@@ -124,29 +124,29 @@ export default async function ChartDetailPage({
       </div>
 
       {data?.computedAt && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-om-ink-soft">
           Last refreshed {new Date(data.computedAt).toLocaleString()}.
         </p>
       )}
 
       {!data || data.items.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-10 text-center">
-          <p className="text-gray-700 font-medium">No data yet.</p>
-          <p className="text-sm text-gray-500 mt-1">
+        <div className="rounded-xl border border-om-line bg-om-surface-tint px-6 py-10 text-center">
+          <p className="text-om-ink-mute font-medium">No data yet.</p>
+          <p className="text-sm text-om-ink-soft mt-1">
             Charts repopulate hourly via the recompute job. Once the API
             sees install + review traffic in this window, this list fills
             in.
           </p>
         </div>
       ) : (
-        <ol className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 overflow-hidden">
+        <ol className="bg-om-surface border border-om-line rounded-xl divide-y divide-gray-100 overflow-hidden">
           {data.items.map((item) => (
             <li key={item.appId}>
               <Link
                 href={`/apps/${item.appId}`}
-                className="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-4 px-4 py-3 hover:bg-om-surface-tint transition-colors"
               >
-                <span className="w-10 text-2xl font-bold text-gray-300 text-right tabular-nums">
+                <span className="w-10 text-2xl font-bold text-om-line text-right tabular-nums">
                   {item.position}
                 </span>
                 {item.iconUrl ? (
@@ -160,11 +160,11 @@ export default async function ChartDetailPage({
                     decoding="async"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 shrink-0" />
+                  <div className="w-12 h-12 rounded-xl bg-om-line-soft shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{item.title}</p>
-                  <p className="text-sm text-gray-500 truncate">{item.shortDescription}</p>
+                  <p className="font-semibold text-om-ink truncate">{item.title}</p>
+                  <p className="text-sm text-om-ink-soft truncate">{item.shortDescription}</p>
                 </div>
                 <Delta value={item.deltaPosition} />
               </Link>
@@ -173,10 +173,10 @@ export default async function ChartDetailPage({
         </ol>
       )}
 
-      <p className="text-xs text-gray-500 max-w-3xl">
+      <p className="text-xs text-om-ink-soft max-w-3xl">
         These rankings are <strong>formulaic, not editorial</strong>. The
         ordering function is published in our{" "}
-        <Link href="/content-policy" className="text-blue-600 hover:text-blue-700">
+        <Link href="/content-policy" className="text-om-primary hover:text-om-primary">
           content policy
         </Link>{" "}
         and reproducible from the public install + review data.
@@ -187,10 +187,10 @@ export default async function ChartDetailPage({
 
 function Delta({ value }: { value: number | null }) {
   if (value == null) {
-    return <span className="text-xs text-gray-300">new</span>;
+    return <span className="text-xs text-om-line">new</span>;
   }
   if (value === 0) {
-    return <span className="text-xs text-gray-300">·</span>;
+    return <span className="text-xs text-om-line">·</span>;
   }
   if (value > 0) {
     return (

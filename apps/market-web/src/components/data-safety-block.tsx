@@ -77,10 +77,10 @@ export async function DataSafetyBlock({ appId }: { appId: string }) {
   const sharedCount = declaredEntries.filter(([, e]) => e.shared).length;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+    <section className="rounded-xl border border-om-line bg-om-surface p-4 space-y-3">
       <div>
-        <h2 className="text-sm font-semibold text-gray-900">Data safety</h2>
-        <p className="text-xs text-gray-600 mt-1">
+        <h2 className="text-sm font-semibold text-om-ink">Data safety</h2>
+        <p className="text-xs text-om-ink-mute mt-1">
           Collects {declaredEntries.length}{" "}
           {declaredEntries.length === 1 ? "category" : "categories"}
           {sharedCount > 0 && ` · shares ${sharedCount} with 3rd parties`}
@@ -97,10 +97,10 @@ export async function DataSafetyBlock({ appId }: { appId: string }) {
             return (
               <li
                 key={slug}
-                className="rounded-lg border border-gray-200 bg-gray-50 p-3"
+                className="rounded-lg border border-om-line bg-om-surface-tint p-3"
               >
                 <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-om-ink">
                     {meta.label}
                   </p>
                   <div className="flex flex-wrap gap-1">
@@ -110,17 +110,17 @@ export async function DataSafetyBlock({ appId }: { appId: string }) {
                       </span>
                     )}
                     {entry.optional && (
-                      <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                      <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-om-primary/15 text-om-primary">
                         optional
                       </span>
                     )}
                   </div>
                 </div>
-                <p className="text-[11px] text-gray-500 mt-1">
+                <p className="text-[11px] text-om-ink-soft mt-1">
                   {meta.description}
                 </p>
                 {entry.purposes.length > 0 && (
-                  <p className="text-[11px] text-gray-600 mt-1">
+                  <p className="text-[11px] text-om-ink-mute mt-1">
                     Purpose: {entry.purposes.join(", ").replace(/_/g, " ")}
                   </p>
                 )}
@@ -137,13 +137,13 @@ export async function DataSafetyBlock({ appId }: { appId: string }) {
 
 function DataSafetyFooter({ data }: { data: DataSafetyResponse }) {
   return (
-    <div className="flex flex-wrap gap-3 text-xs text-gray-500 pt-1 border-t border-gray-100">
+    <div className="flex flex-wrap gap-3 text-xs text-om-ink-soft pt-1 border-t border-om-line-soft">
       {data.privacyPolicyUrl && (
         <a
           href={data.privacyPolicyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-blue-700 underline"
+          className="hover:text-om-primary underline"
         >
           Privacy policy →
         </a>
@@ -153,7 +153,7 @@ function DataSafetyFooter({ data }: { data: DataSafetyResponse }) {
           href={data.dataDeletionRequestUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-blue-700 underline"
+          className="hover:text-om-primary underline"
         >
           Request data deletion →
         </a>

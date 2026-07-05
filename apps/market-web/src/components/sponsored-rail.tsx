@@ -51,10 +51,10 @@ export function SponsoredRail({ promotions }: { promotions: SponsoredPromotion[]
   return (
     <section aria-label="Sponsored apps">
       <div className="flex items-center gap-2 mb-4">
-        <h2 className="om-display text-xl font-bold text-slate-900">
+        <h2 className="om-display text-xl font-bold text-om-ink">
           Sponsored
         </h2>
-        <span className="text-[10px] uppercase tracking-[0.12em] font-semibold text-slate-400 border border-slate-200 rounded-full px-2 py-0.5">
+        <span className="text-[10px] uppercase tracking-[0.12em] font-semibold text-om-ink-soft border border-om-line rounded-full px-2 py-0.5">
           Ad
         </span>
       </div>
@@ -79,15 +79,15 @@ export function SponsoredRail({ promotions }: { promotions: SponsoredPromotion[]
               )}
             </span>
             <div className="min-w-0">
-              <p className="font-semibold text-slate-900 truncate group-hover:text-violet-700 transition-colors">
+              <p className="font-semibold text-om-ink truncate group-hover:text-violet-700 transition-colors">
                 {p.title}
               </p>
               {p.shortDescription && (
-                <p className="text-sm text-slate-500 truncate">
+                <p className="text-sm text-om-ink-soft truncate">
                   {p.shortDescription}
                 </p>
               )}
-              <span className="text-[10px] uppercase tracking-wide font-semibold text-slate-400">
+              <span className="text-[10px] uppercase tracking-wide font-semibold text-om-ink-soft">
                 Sponsored
               </span>
             </div>

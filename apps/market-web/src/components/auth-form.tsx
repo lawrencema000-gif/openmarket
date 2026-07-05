@@ -71,15 +71,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   if (needsVerification) {
     return (
       <div className="space-y-4 text-center">
-        <h2 className="text-xl font-semibold text-gray-900">Check your email</h2>
-        <p className="text-gray-600 text-sm leading-relaxed">
+        <h2 className="text-xl font-semibold text-om-ink">Check your email</h2>
+        <p className="text-om-ink-mute text-sm leading-relaxed">
           We sent a verification link to <strong>{email}</strong>. Click it to
           finish setting up your OpenMarket account. The link expires in 60
           minutes.
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-om-ink-soft">
           Didn't get it? Check spam, or{" "}
-          <Link href="/sign-in" className="text-blue-600 underline">
+          <Link href="/sign-in" className="text-om-primary underline">
             sign in
           </Link>{" "}
           to resend.
@@ -92,7 +92,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     <form onSubmit={onSubmit} className="space-y-4">
       {isSignUp ? (
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-om-ink-mute mb-1">
             Display name
           </label>
           <input
@@ -101,14 +101,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Optional — shown on your reviews"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+            className="w-full rounded-md border border-om-line px-3 py-2 text-sm shadow-sm focus:border-om-primary focus:ring-2 focus:ring-om-primary/20 focus:outline-none"
             autoComplete="name"
           />
         </div>
       ) : null}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-om-ink-mute mb-1">
           Email
         </label>
         <input
@@ -117,7 +117,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+          className="w-full rounded-md border border-om-line px-3 py-2 text-sm shadow-sm focus:border-om-primary focus:ring-2 focus:ring-om-primary/20 focus:outline-none"
           autoComplete="email"
           autoFocus={!isSignUp}
         />
@@ -125,11 +125,11 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-om-ink-mute">
             Password
           </label>
           {!isSignUp ? (
-            <Link href="/reset-password" className="text-xs text-blue-600 hover:text-blue-700">
+            <Link href="/reset-password" className="text-xs text-om-primary hover:text-om-primary">
               Forgot?
             </Link>
           ) : null}
@@ -141,11 +141,11 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+          className="w-full rounded-md border border-om-line px-3 py-2 text-sm shadow-sm focus:border-om-primary focus:ring-2 focus:ring-om-primary/20 focus:outline-none"
           autoComplete={isSignUp ? "new-password" : "current-password"}
         />
         {isSignUp ? (
-          <p className="mt-1 text-xs text-gray-500">At least 8 characters.</p>
+          <p className="mt-1 text-xs text-om-ink-soft">At least 8 characters.</p>
         ) : null}
       </div>
 
@@ -161,7 +161,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full rounded-md bg-om-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {submitting
           ? isSignUp
@@ -174,10 +174,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center" aria-hidden>
-          <div className="w-full border-t border-gray-200" />
+          <div className="w-full border-t border-om-line" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-white px-2 text-gray-500">or</span>
+          <span className="bg-om-surface px-2 text-om-ink-soft">or</span>
         </div>
       </div>
 
@@ -185,7 +185,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <button
           type="button"
           onClick={withGoogle}
-          className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2"
+          className="w-full rounded-md border border-om-line bg-om-surface px-4 py-2 text-sm font-medium text-om-ink-mute shadow-sm hover:bg-om-surface-tint flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
             <path fill="#4285F4" d="M22.5 12.27c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 0 1-2.2 3.32v2.76h3.55c2.08-1.92 3.27-4.74 3.27-8.09z"/>
@@ -198,7 +198,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <button
           type="button"
           onClick={withGithub}
-          className="w-full rounded-md border border-gray-300 bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 flex items-center justify-center gap-2"
+          className="w-full rounded-md bg-om-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-om-primary-deep flex items-center justify-center gap-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden fill="currentColor">
             <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.05c-3.2.7-3.87-1.37-3.87-1.37-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.74 2.68 1.24 3.34.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.27-5.24-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.17a10.96 10.96 0 0 1 5.74 0c2.18-1.48 3.14-1.17 3.14-1.17.62 1.59.23 2.76.11 3.05.74.8 1.18 1.82 1.18 3.07 0 4.4-2.69 5.36-5.25 5.65.41.36.78 1.07.78 2.16v3.2c0 .31.21.66.8.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z" />
@@ -207,25 +207,25 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         </button>
       </div>
 
-      <p className="text-center text-sm text-gray-600 mt-4">
+      <p className="text-center text-sm text-om-ink-mute mt-4">
         {isSignUp ? (
           <>
             Already have an account?{" "}
-            <Link href="/sign-in" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link href="/sign-in" className="text-om-primary hover:text-om-primary font-medium">
               Sign in
             </Link>
           </>
         ) : (
           <>
             New to OpenMarket?{" "}
-            <Link href="/sign-up" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link href="/sign-up" className="text-om-primary hover:text-om-primary font-medium">
               Create an account
             </Link>
           </>
         )}
       </p>
 
-      <p className="text-center text-xs text-gray-500 mt-2">
+      <p className="text-center text-xs text-om-ink-soft mt-2">
         By continuing you agree to our{" "}
         <Link href="/terms" className="underline">Terms</Link> and{" "}
         <Link href="/privacy" className="underline">Privacy Policy</Link>.

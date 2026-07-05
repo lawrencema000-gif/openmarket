@@ -83,16 +83,16 @@ export function PreRegisterButton({ appId }: PreRegisterButtonProps) {
   if (!info || !info.enabled) return null;
 
   return (
-    <section className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 space-y-3">
+    <section className="rounded-xl border border-om-primary/25 bg-om-primary/10 p-4 space-y-3">
       <div className="flex items-baseline justify-between gap-2 flex-wrap">
-        <h2 className="text-sm font-semibold text-indigo-900">
+        <h2 className="text-sm font-semibold text-om-primary-deep">
           Coming soon — pre-register
         </h2>
-        <span className="text-[11px] text-indigo-700">
+        <span className="text-[11px] text-om-primary">
           {info.registeredCount.toLocaleString()} pre-registered
         </span>
       </div>
-      <p className="text-xs text-indigo-800">
+      <p className="text-xs text-om-primary">
         Get notified the moment this app launches. We'll send you a push
         and/or email when the first stable release ships.
       </p>
@@ -100,7 +100,7 @@ export function PreRegisterButton({ appId }: PreRegisterButtonProps) {
       {isPending ? null : !session ? (
         <Link
           href={`/sign-in?next=/apps/${appId}`}
-          className="inline-flex items-center rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-800 hover:bg-indigo-100"
+          className="inline-flex items-center rounded-lg border border-om-primary/40 bg-om-surface px-3 py-1.5 text-xs font-semibold text-om-primary hover:bg-om-primary/15"
         >
           Sign in to pre-register
         </Link>
@@ -116,7 +116,7 @@ export function PreRegisterButton({ appId }: PreRegisterButtonProps) {
             type="button"
             onClick={() => void unregister()}
             disabled={acting}
-            className="text-xs text-indigo-700 hover:underline disabled:opacity-60"
+            className="text-xs text-om-primary hover:underline disabled:opacity-60"
           >
             {acting ? "…" : "Unregister"}
           </button>
@@ -126,7 +126,7 @@ export function PreRegisterButton({ appId }: PreRegisterButtonProps) {
           <select
             value={channel}
             onChange={(e) => setChannel(e.target.value as typeof channel)}
-            className="text-xs rounded-md border border-indigo-200 px-2 py-1.5 bg-white text-indigo-900"
+            className="text-xs rounded-md border border-om-primary/25 px-2 py-1.5 bg-om-surface text-om-primary-deep"
           >
             <option value="both">Push + email</option>
             <option value="push">Push only</option>
@@ -136,7 +136,7 @@ export function PreRegisterButton({ appId }: PreRegisterButtonProps) {
             type="button"
             onClick={() => void register()}
             disabled={acting}
-            className="inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 px-3 py-1.5 text-xs font-semibold text-white"
+            className="inline-flex items-center rounded-lg bg-om-primary hover:bg-om-primary-deep disabled:opacity-60 px-3 py-1.5 text-xs font-semibold text-white"
           >
             {acting ? "Saving…" : "Pre-register"}
           </button>

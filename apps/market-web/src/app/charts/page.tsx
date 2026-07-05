@@ -38,12 +38,12 @@ export default function ChartsIndexPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <header>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Charts</h1>
-        <p className="mt-2 text-gray-600 max-w-2xl">
+        <h1 className="text-3xl font-bold text-om-ink tracking-tight">Charts</h1>
+        <p className="mt-2 text-om-ink-mute max-w-2xl">
           Reproducible rankings driven by public install + review data.
           OpenMarket does not curate. The ordering function for every
           chart is published in the{" "}
-          <Link href="/content-policy" className="text-blue-600 hover:text-blue-700">
+          <Link href="/content-policy" className="text-om-primary hover:text-om-primary">
             content policy
           </Link>
           .
@@ -55,17 +55,17 @@ export default function ChartsIndexPage() {
           <li key={c.slug}>
             <Link
               href={`/charts/${c.slug}`}
-              className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 hover:border-blue-300 hover:shadow-md transition-all"
+              className="group flex items-start gap-4 rounded-xl border border-om-line bg-om-surface p-5 hover:border-om-primary/40 hover:shadow-md transition-all"
             >
               <span className="text-3xl flex-shrink-0">{c.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                <p className="font-semibold text-om-ink group-hover:text-om-primary transition-colors">
                   {c.title}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">{c.blurb}</p>
+                <p className="text-sm text-om-ink-mute mt-1">{c.blurb}</p>
               </div>
               <svg
-                className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0 mt-1"
+                className="w-5 h-5 text-om-line group-hover:text-om-primary transition-colors shrink-0 mt-1"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth={2}

@@ -38,7 +38,7 @@ export function PreviewVideosRail({ videos }: PreviewVideosRailProps) {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+      <h2 className="text-lg font-semibold text-om-ink mb-4">
         Preview {videos.length === 1 ? "video" : "videos"}
       </h2>
       <div
@@ -65,7 +65,7 @@ function PreviewVideoCard({ video }: { video: PreviewVideo }) {
   const source = classifyVideoUrl(video.videoUrl);
 
   return (
-    <figure className="shrink-0 snap-start w-[300px] sm:w-[360px] rounded-xl border border-gray-200 bg-black overflow-hidden">
+    <figure className="shrink-0 snap-start w-[300px] sm:w-[360px] rounded-xl border border-om-line bg-black overflow-hidden">
       <div className="aspect-video relative">
         {active ? (
           <Player source={source} poster={video.posterUrl ?? undefined} />
@@ -104,7 +104,7 @@ function PreviewVideoCard({ video }: { video: PreviewVideo }) {
         )}
       </div>
       {video.label ? (
-        <figcaption className="px-3 py-2 text-xs text-gray-200 bg-gray-900">
+        <figcaption className="px-3 py-2 text-xs text-om-line bg-gray-900">
           {video.label}
         </figcaption>
       ) : null}

@@ -41,7 +41,7 @@ export default function RedeemPage() {
   return (
     <Suspense
       fallback={
-        <div className="max-w-md mx-auto px-4 py-16 text-sm text-gray-500">
+        <div className="max-w-md mx-auto px-4 py-16 text-sm text-om-ink-soft">
           Loading…
         </div>
       }
@@ -119,15 +119,15 @@ function RedeemPageInner() {
   if (result) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 space-y-4 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">You're in</h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-2xl font-bold text-om-ink">You're in</h1>
+        <p className="text-sm text-om-ink-mute">
           Code redeemed successfully.
           {result.betaJoined ? " You're now in the beta track. " : null}
           {result.preRegistered ? " You're on the launch waitlist. " : null}
         </p>
         <Link
           href={`/apps/${result.appId}`}
-          className="inline-flex items-center rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2"
+          className="inline-flex items-center rounded-md bg-om-primary hover:bg-om-primary-deep text-white text-sm font-semibold px-4 py-2"
         >
           Open app
         </Link>
@@ -138,8 +138,8 @@ function RedeemPageInner() {
   return (
     <div className="max-w-md mx-auto px-4 py-16 space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-gray-900">Redeem a code</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink">Redeem a code</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Paste a promo code given to you by a developer to unlock beta
           access, pre-registration, or other perks.
         </p>
@@ -152,17 +152,17 @@ function RedeemPageInner() {
         placeholder="e.g. ABCD2345"
         autoCapitalize="characters"
         spellCheck={false}
-        className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base font-mono tracking-widest text-center uppercase shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+        className="w-full rounded-lg border border-om-line px-4 py-3 text-base font-mono tracking-widest text-center uppercase shadow-sm focus:border-om-primary focus:ring-2 focus:ring-om-primary/20 focus:outline-none"
       />
 
       {!shapeValid && normalized.length > 0 ? (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-om-ink-soft">
           Codes are 8 characters using letters and numbers.
         </p>
       ) : null}
 
       {loadingPreview && shapeValid ? (
-        <p className="text-xs text-gray-500">Looking up code…</p>
+        <p className="text-xs text-om-ink-soft">Looking up code…</p>
       ) : null}
 
       {previewError ? (
@@ -172,26 +172,26 @@ function RedeemPageInner() {
       ) : null}
 
       {preview ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+        <div className="rounded-xl border border-om-line bg-om-surface p-4 space-y-3">
           <div className="flex items-center gap-3">
             {preview.appIconUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={preview.appIconUrl}
                 alt=""
-                className="w-12 h-12 rounded-lg border border-gray-200 object-cover shrink-0"
+                className="w-12 h-12 rounded-lg border border-om-line object-cover shrink-0"
               />
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 shrink-0" />
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-om-primary/15 to-om-primary/25 shrink-0" />
             )}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 truncate">
+              <p className="font-semibold text-om-ink truncate">
                 {preview.appTitle}
               </p>
-              <p className="text-xs text-gray-500">This code unlocks:</p>
+              <p className="text-xs text-om-ink-soft">This code unlocks:</p>
             </div>
           </div>
-          <ul className="space-y-1 text-sm text-gray-700">
+          <ul className="space-y-1 text-sm text-om-ink-mute">
             {preview.grantsBeta && (
               <li className="flex items-center gap-2">
                 <span className="text-emerald-600">✓</span> Beta track access
@@ -203,19 +203,19 @@ function RedeemPageInner() {
               </li>
             )}
             {!preview.grantsBeta && !preview.grantsPreRegistration && (
-              <li className="text-gray-500 italic">
+              <li className="text-om-ink-soft italic">
                 A redemption record only — no auto-grant.
               </li>
             )}
           </ul>
           {preview.remainingRedemptions != null ? (
-            <p className="text-[11px] text-gray-500">
+            <p className="text-[11px] text-om-ink-soft">
               {preview.remainingRedemptions} redemption
               {preview.remainingRedemptions === 1 ? "" : "s"} remaining
             </p>
           ) : null}
           {preview.expiresAt ? (
-            <p className="text-[11px] text-gray-500">
+            <p className="text-[11px] text-om-ink-soft">
               Expires {new Date(preview.expiresAt).toLocaleString()}
             </p>
           ) : null}
@@ -223,7 +223,7 @@ function RedeemPageInner() {
             type="button"
             onClick={() => void redeem()}
             disabled={redeeming}
-            className="w-full rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2"
+            className="w-full rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-semibold px-4 py-2"
           >
             {redeeming
               ? "Redeeming…"

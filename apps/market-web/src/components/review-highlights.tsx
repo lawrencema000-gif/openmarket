@@ -43,12 +43,12 @@ export async function ReviewHighlights({ appId }: { appId: string }) {
   if (!hasAny) return null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+    <section className="rounded-xl border border-om-line bg-om-surface p-4 space-y-3">
       <div className="flex items-baseline justify-between gap-2 flex-wrap">
-        <h2 className="text-sm font-semibold text-gray-900">
+        <h2 className="text-sm font-semibold text-om-ink">
           What reviewers say
         </h2>
-        <span className="text-[10px] text-gray-400">
+        <span className="text-[10px] text-om-ink-soft">
           across {data.reviewsConsidered.toLocaleString()} review
           {data.reviewsConsidered === 1 ? "" : "s"}
         </span>
@@ -69,7 +69,7 @@ export async function ReviewHighlights({ appId }: { appId: string }) {
         />
       )}
 
-      <p className="text-[10px] text-gray-400 pt-1 border-t border-gray-100">
+      <p className="text-[10px] text-om-ink-soft pt-1 border-t border-om-line-soft">
         Auto-extracted from review bodies — no opaque scoring. Excludes
         reviews flagged by moderators.
       </p>
@@ -92,7 +92,7 @@ function Row({
       : "bg-rose-50 border-rose-200 text-rose-800";
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-xs font-medium text-gray-500 mr-1">{label}:</span>
+      <span className="text-xs font-medium text-om-ink-soft mr-1">{label}:</span>
       {terms.map((t) => (
         <span
           key={t.term}

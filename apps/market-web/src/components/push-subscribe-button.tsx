@@ -117,7 +117,7 @@ export function PushSubscribeButton({ onChanged }: PushSubscribeButtonProps) {
 
   if (!supported) {
     return (
-      <span className="text-xs text-gray-500 italic">
+      <span className="text-xs text-om-ink-soft italic">
         Browser push not supported in this browser.
       </span>
     );
@@ -131,8 +131,8 @@ export function PushSubscribeButton({ onChanged }: PushSubscribeButtonProps) {
         onClick={() => void (subscribed ? unsubscribe() : subscribe())}
         className={`text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
           subscribed
-            ? "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-            : "bg-blue-600 border-blue-600 text-white hover:bg-blue-700"
+            ? "bg-om-surface border-om-line text-om-ink-mute hover:bg-om-surface-tint"
+            : "bg-om-primary border-om-primary text-white hover:bg-om-primary-deep"
         } disabled:opacity-60`}
       >
         {working

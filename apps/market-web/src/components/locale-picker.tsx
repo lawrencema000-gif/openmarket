@@ -52,14 +52,14 @@ export function LocalePicker({
 
   return (
     <div className="inline-flex items-center gap-2">
-      <label className="text-xs text-gray-500" htmlFor="locale-picker">
+      <label className="text-xs text-om-ink-soft" htmlFor="locale-picker">
         Language
       </label>
       <select
         id="locale-picker"
         value={resolved}
         onChange={onChange}
-        className="text-xs rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="text-xs rounded-md border border-om-line bg-om-surface px-2 py-1 text-om-ink-mute hover:border-om-line focus:outline-none focus:ring-2 focus:ring-om-primary"
       >
         {all.map((loc) => (
           <option key={loc} value={loc}>

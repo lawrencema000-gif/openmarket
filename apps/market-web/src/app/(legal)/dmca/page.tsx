@@ -38,7 +38,7 @@ export default function DMCAPage() {
       <p className="not-prose">
         <a
           href="/dmca/submit"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm"
+          className="inline-flex items-center gap-2 bg-om-primary hover:bg-om-primary-deep text-white font-medium rounded-lg px-4 py-2 text-sm"
         >
           Submit a DMCA notice →
         </a>

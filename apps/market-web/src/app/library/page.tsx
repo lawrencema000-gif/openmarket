@@ -139,7 +139,7 @@ export default function LibraryPage() {
   if (sessionPending) {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
+        <div className="h-32 animate-pulse rounded-xl bg-om-line-soft" />
       </div>
     );
   }
@@ -147,15 +147,15 @@ export default function LibraryPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-bold tracking-tight text-om-ink">
           Your library
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-om-ink-soft">
           Apps you've installed via OpenMarket.
         </p>
       </header>
 
-      <div className="border-b border-gray-200">
+      <div className="border-b border-om-line">
         <nav className="flex gap-1" aria-label="Library tabs">
           {TABS.map((t) => {
             const active = tab === t.key;
@@ -167,8 +167,8 @@ export default function LibraryPage() {
                 aria-current={active ? "page" : undefined}
                 className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                   active
-                    ? "border-blue-600 text-blue-700"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
+                    ? "border-om-primary text-om-primary"
+                    : "border-transparent text-om-ink-soft hover:text-om-ink-mute"
                 }`}
               >
                 {t.label}
@@ -192,7 +192,7 @@ export default function LibraryPage() {
       ) : loading ? (
         <ul className="grid gap-3">
           {[0, 1, 2].map((i) => (
-            <li key={i} className="h-20 rounded-xl bg-gray-100 animate-pulse" />
+            <li key={i} className="h-20 rounded-xl bg-om-line-soft animate-pulse" />
           ))}
         </ul>
       ) : entries.length === 0 ? (
@@ -232,7 +232,7 @@ function LibraryRow({
   const title = listing?.title ?? entry.app.packageName;
 
   return (
-    <li className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow transition-shadow">
+    <li className="flex items-center gap-4 rounded-xl border border-om-line bg-om-surface p-4 shadow-sm hover:shadow transition-shadow">
       <Link
         href={`/apps/${entry.app.id}`}
         className="flex-shrink-0"
@@ -243,10 +243,10 @@ function LibraryRow({
           <img
             src={listing.iconUrl}
             alt={`${title} icon`}
-            className="h-14 w-14 rounded-xl object-cover bg-gray-100"
+            className="h-14 w-14 rounded-xl object-cover bg-om-line-soft"
           />
         ) : (
-          <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-semibold text-lg">
+          <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-om-primary/15 to-om-primary/20 flex items-center justify-center text-om-primary font-semibold text-lg">
             {title.charAt(0).toUpperCase()}
           </div>
         )}
@@ -255,15 +255,15 @@ function LibraryRow({
       <div className="min-w-0 flex-1">
         <Link
           href={`/apps/${entry.app.id}`}
-          className="block text-sm font-semibold text-gray-900 hover:text-blue-700 truncate"
+          className="block text-sm font-semibold text-om-ink hover:text-om-primary truncate"
         >
           {title}
         </Link>
-        <p className="text-xs text-gray-500 truncate">
+        <p className="text-xs text-om-ink-soft truncate">
           {entry.app.packageName}
           {listing?.category ? <> · {listing.category}</> : null}
         </p>
-        <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-gray-500">
+        <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-om-ink-soft">
           {entry.hasUpdate ? (
             <Badge>
               Update v
@@ -285,14 +285,14 @@ function LibraryRow({
             type="button"
             onClick={onReinstall}
             disabled={acting}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-md bg-om-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-om-primary-deep disabled:opacity-60"
           >
             {acting ? "…" : "Reinstall"}
           </button>
         ) : tab === "updates" ? (
           <Link
             href={`/apps/${entry.app.id}`}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+            className="rounded-md bg-om-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-om-primary-deep"
           >
             Update
           </Link>
@@ -300,7 +300,7 @@ function LibraryRow({
           <>
             <Link
               href={`/apps/${entry.app.id}`}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-om-line px-3 py-1.5 text-xs text-om-ink-mute hover:bg-om-surface-tint"
             >
               Open
             </Link>
@@ -308,7 +308,7 @@ function LibraryRow({
               type="button"
               onClick={onUninstall}
               disabled={acting}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+              className="rounded-md border border-om-line px-3 py-1.5 text-xs text-om-ink-mute hover:bg-om-surface-tint disabled:opacity-60"
             >
               {acting ? "…" : "Uninstall"}
             </button>
@@ -340,12 +340,12 @@ function EmptyState({ tab }: { tab: Status }) {
     };
   const m = messages[tab];
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-6 py-12 text-center">
-      <p className="text-base font-semibold text-gray-900">{m.title}</p>
-      <p className="text-sm text-gray-600 max-w-md">{m.body}</p>
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-om-line bg-om-surface-tint px-6 py-12 text-center">
+      <p className="text-base font-semibold text-om-ink">{m.title}</p>
+      <p className="text-sm text-om-ink-mute max-w-md">{m.body}</p>
       <Link
         href="/search"
-        className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+        className="mt-2 rounded-md bg-om-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep"
       >
         {m.cta}
       </Link>

@@ -107,7 +107,7 @@ export default function AccountPage() {
   if (isPending || loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
+        <div className="h-32 animate-pulse rounded-xl bg-om-line-soft" />
       </div>
     );
   }
@@ -115,8 +115,8 @@ export default function AccountPage() {
   if (!profile) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <p className="text-gray-700">{error ?? "No profile loaded."}</p>
-        <Link href="/" className="text-blue-600 underline mt-4 inline-block">← Home</Link>
+        <p className="text-om-ink-mute">{error ?? "No profile loaded."}</p>
+        <Link href="/" className="text-om-primary underline mt-4 inline-block">← Home</Link>
       </div>
     );
   }
@@ -125,46 +125,46 @@ export default function AccountPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-om-ink">
             Account settings
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-om-ink-soft">
             Signed in as <strong>{profile.email}</strong>.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/account/notifications"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-om-line px-3 py-1.5 text-sm text-om-ink-mute hover:bg-om-surface-tint"
           >
             Notifications
           </Link>
           <Link
             href="/account/parental-controls"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-om-line px-3 py-1.5 text-sm text-om-ink-mute hover:bg-om-surface-tint"
           >
             Parental controls
           </Link>
           <Link
             href="/account/family"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-om-line px-3 py-1.5 text-sm text-om-ink-mute hover:bg-om-surface-tint"
           >
             Family
           </Link>
           <button
             type="button"
             onClick={onSignOut}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-om-line px-3 py-1.5 text-sm text-om-ink-mute hover:bg-om-surface-tint"
           >
             Sign out
           </button>
         </div>
       </header>
 
-      <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
+      <section className="bg-om-surface rounded-2xl border border-om-line shadow-sm p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-om-ink">Profile</h2>
         <div>
-          <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="displayName" className="block text-sm font-medium text-om-ink-mute mb-1">
             Display name
           </label>
           <input
@@ -173,18 +173,18 @@ export default function AccountPage() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Shown on your reviews"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+            className="w-full rounded-md border border-om-line px-3 py-2 text-sm shadow-sm focus:border-om-primary focus:ring-2 focus:ring-om-primary/20 focus:outline-none"
           />
         </div>
         <div>
-          <label htmlFor="locale" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="locale" className="block text-sm font-medium text-om-ink-mute mb-1">
             Language &amp; region
           </label>
           <select
             id="locale"
             value={locale}
             onChange={(e) => setLocale(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+            className="w-full rounded-md border border-om-line px-3 py-2 text-sm shadow-sm focus:border-om-primary focus:ring-2 focus:ring-om-primary/20 focus:outline-none"
           >
             <option value="en-US">English (US)</option>
             <option value="en-GB">English (UK)</option>
@@ -196,7 +196,7 @@ export default function AccountPage() {
             <option value="ko-KR">한국어</option>
             <option value="zh-CN">中文 (简体)</option>
           </select>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-om-ink-soft">
             Affects what we surface in search and Top Charts when localized
             listings exist (Tier 2 feature).
           </p>
@@ -211,7 +211,7 @@ export default function AccountPage() {
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-md bg-om-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
@@ -225,9 +225,9 @@ export default function AccountPage() {
         </div>
       </section>
 
-      <section className="bg-white rounded-2xl border border-red-200 shadow-sm p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Delete account</h2>
-        <p className="text-sm text-gray-700">
+      <section className="bg-om-surface rounded-2xl border border-red-200 shadow-sm p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-om-ink">Delete account</h2>
+        <p className="text-sm text-om-ink-mute">
           Closing your account soft-deletes it for 30 days, then permanently
           removes your data. You can sign in within those 30 days to cancel
           the deletion.
@@ -250,7 +250,7 @@ export default function AccountPage() {
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                className="rounded-md border border-om-line px-3 py-1.5 text-sm text-om-ink-mute hover:bg-om-surface-tint"
               >
                 Cancel
               </button>
@@ -267,7 +267,7 @@ export default function AccountPage() {
         )}
       </section>
 
-      <p className="text-xs text-gray-500 text-center">
+      <p className="text-xs text-om-ink-soft text-center">
         Member since {new Date(profile.createdAt).toLocaleDateString()}.
       </p>
     </div>

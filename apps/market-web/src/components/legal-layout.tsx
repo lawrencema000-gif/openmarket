@@ -41,7 +41,7 @@ export function LegalLayout({
           aria-label="Legal & policy pages"
           className="lg:sticky lg:top-24 self-start"
         >
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-om-ink-soft mb-3">
             Policies
           </h2>
           <ul className="space-y-1 text-sm">
@@ -49,7 +49,7 @@ export function LegalLayout({
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="block px-2 py-1.5 rounded text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  className="block px-2 py-1.5 rounded text-om-ink-mute hover:bg-om-surface-tint hover:text-om-ink"
                 >
                   {l.label}
                 </Link>
@@ -58,7 +58,7 @@ export function LegalLayout({
           </ul>
           {toc && toc.length > 0 ? (
             <>
-              <h2 className="mt-8 text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">
+              <h2 className="mt-8 text-xs font-semibold uppercase tracking-widest text-om-ink-soft mb-3">
                 On this page
               </h2>
               <ul className="space-y-1 text-sm">
@@ -66,7 +66,7 @@ export function LegalLayout({
                   <li key={t.id}>
                     <a
                       href={`#${t.id}`}
-                      className="block px-2 py-1 rounded text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      className="block px-2 py-1 rounded text-om-ink-mute hover:bg-om-surface-tint hover:text-om-ink"
                     >
                       {t.label}
                     </a>
@@ -79,18 +79,18 @@ export function LegalLayout({
 
         {/* Main column */}
         <article className="min-w-0">
-          <header className="mb-8 pb-6 border-b border-gray-200">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <header className="mb-8 pb-6 border-b border-om-line">
+            <h1 className="text-3xl font-bold tracking-tight text-om-ink">
               {title}
             </h1>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-om-ink-soft">
               <span>Effective {effectiveDate}</span>
               <span className="mx-2">·</span>
               <span>Version {version}</span>
             </p>
           </header>
           {banner ? <div className="mb-8">{banner}</div> : null}
-          <div className="prose prose-gray max-w-none prose-headings:scroll-mt-24 prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:font-semibold prose-h3:mt-6 prose-h3:text-lg prose-h3:font-semibold prose-a:text-blue-600 hover:prose-a:text-blue-800 prose-strong:text-gray-900">
+          <div className="prose prose-gray max-w-none prose-headings:scroll-mt-24 prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:font-semibold prose-h3:mt-6 prose-h3:text-lg prose-h3:font-semibold prose-a:text-om-primary hover:prose-a:text-om-primary prose-strong:text-om-ink">
             {children}
           </div>
         </article>

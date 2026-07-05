@@ -34,8 +34,8 @@ export async function SimilarAppsRail({ appId }: { appId: string }) {
   return (
     <section>
       <div className="flex items-baseline justify-between gap-3 flex-wrap mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Similar apps</h2>
-        <p className="text-xs text-gray-500">Same category · matched on anti-feature overlap</p>
+        <h2 className="text-lg font-semibold text-om-ink">Similar apps</h2>
+        <p className="text-xs text-om-ink-soft">Same category · matched on anti-feature overlap</p>
       </div>
       <div
         className="relative"
@@ -51,7 +51,7 @@ export async function SimilarAppsRail({ appId }: { appId: string }) {
             <li key={item.id} className="snap-start shrink-0 w-[220px]">
               <Link
                 href={`/apps/${item.id}`}
-                className="group flex flex-col h-full bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md rounded-xl p-3 transition-all"
+                className="group flex flex-col h-full bg-om-surface border border-om-line hover:border-om-primary/40 hover:shadow-md rounded-xl p-3 transition-all"
               >
                 <div className="flex items-start gap-3">
                   {item.iconUrl ? (
@@ -65,18 +65,18 @@ export async function SimilarAppsRail({ appId }: { appId: string }) {
                       decoding="async"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-xl bg-gray-100 shrink-0" />
+                    <div className="w-12 h-12 rounded-xl bg-om-line-soft shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
+                    <p className="font-semibold text-om-ink text-sm truncate group-hover:text-om-primary transition-colors">
                       {item.title}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-om-ink-soft truncate">
                       {item.packageName}
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-600 line-clamp-2 mt-2">
+                <p className="text-xs text-om-ink-mute line-clamp-2 mt-2">
                   {item.shortDescription}
                 </p>
               </Link>

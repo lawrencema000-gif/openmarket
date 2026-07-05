@@ -111,7 +111,7 @@ export default function AntiFeaturesTaxonomyPage() {
         (source) => (
           <section key={source} className="not-prose mt-10">
             <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-              <h2 className="text-2xl font-bold text-gray-900 m-0">
+              <h2 className="text-2xl font-bold text-om-ink m-0">
                 {SOURCE_LABEL[source]}
               </h2>
               <span
@@ -121,7 +121,7 @@ export default function AntiFeaturesTaxonomyPage() {
                 {grouped[source].length === 1 ? "" : "s"}
               </span>
             </div>
-            <p className="text-sm text-gray-700 mb-5">
+            <p className="text-sm text-om-ink-mute mb-5">
               {SOURCE_DESCRIPTION[source]}
             </p>
             <div className="space-y-3">
@@ -130,22 +130,22 @@ export default function AntiFeaturesTaxonomyPage() {
                 return (
                   <article
                     key={slug}
-                    className="rounded-lg border border-gray-200 bg-white p-4"
+                    className="rounded-lg border border-om-line bg-om-surface p-4"
                   >
                     <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                      <h3 className="text-base font-semibold text-gray-900 m-0">
+                      <h3 className="text-base font-semibold text-om-ink m-0">
                         {meta.label}
                       </h3>
-                      <code className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                      <code className="text-xs font-mono text-om-ink-soft bg-om-line-soft px-2 py-0.5 rounded">
                         {meta.slug}
                       </code>
                     </div>
-                    <p className="mt-2 text-sm text-gray-700">
+                    <p className="mt-2 text-sm text-om-ink-mute">
                       {meta.description}
                     </p>
                     <Link
                       href={`/search?antiFeature=${encodeURIComponent(meta.slug)}`}
-                      className="mt-3 inline-block text-xs text-blue-600 hover:text-blue-700"
+                      className="mt-3 inline-block text-xs text-om-primary hover:text-om-primary"
                     >
                       Browse apps with this label →
                     </Link>

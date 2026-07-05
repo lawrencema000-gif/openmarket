@@ -82,8 +82,8 @@ export function WishlistHeart({
         aria-label="Sign in to save to wishlist"
         className={
           variant === "icon"
-            ? "p-2 rounded-full text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
-            : "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            ? "p-2 rounded-full text-om-ink-soft hover:text-rose-500 hover:bg-rose-50 transition-colors"
+            : "inline-flex items-center gap-2 rounded-lg border border-om-line bg-om-surface px-4 py-2 text-sm font-medium text-om-ink-mute hover:bg-om-surface-tint"
         }
       >
         <Heart filled={false} />
@@ -106,12 +106,12 @@ export function WishlistHeart({
           ? `p-2 rounded-full transition-colors ${
               filled
                 ? "text-rose-500 hover:bg-rose-50"
-                : "text-gray-400 hover:text-rose-500 hover:bg-rose-50"
+                : "text-om-ink-soft hover:text-rose-500 hover:bg-rose-50"
             } disabled:opacity-50`
           : `inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
               filled
                 ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
-                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                : "border-om-line bg-om-surface text-om-ink-mute hover:bg-om-surface-tint"
             }`
       }
     >

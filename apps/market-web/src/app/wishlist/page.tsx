@@ -75,7 +75,7 @@ export default function WishlistPage() {
   if (sessionPending) {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
+        <div className="h-32 animate-pulse rounded-xl bg-om-line-soft" />
       </div>
     );
   }
@@ -83,10 +83,10 @@ export default function WishlistPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-bold tracking-tight text-om-ink">
           Saved
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-om-ink-soft">
           Apps you've heart-saved for later.
         </p>
       </header>
@@ -105,7 +105,7 @@ export default function WishlistPage() {
       ) : loading ? (
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <li key={i} className="h-28 rounded-xl bg-gray-100 animate-pulse" />
+            <li key={i} className="h-28 rounded-xl bg-om-line-soft animate-pulse" />
           ))}
         </ul>
       ) : entries.length === 0 ? (
@@ -149,7 +149,7 @@ function WishlistCard({
   }
 
   return (
-    <li className="relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow transition-shadow group">
+    <li className="relative rounded-xl border border-om-line bg-om-surface p-4 shadow-sm hover:shadow transition-shadow group">
       <button
         type="button"
         onClick={remove}
@@ -168,7 +168,7 @@ function WishlistCard({
           <img
             src={listing.iconUrl}
             alt={`${title} icon`}
-            className="h-14 w-14 rounded-xl object-cover bg-gray-100 flex-shrink-0"
+            className="h-14 w-14 rounded-xl object-cover bg-om-line-soft flex-shrink-0"
           />
         ) : (
           <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-rose-700 font-semibold text-lg flex-shrink-0">
@@ -176,14 +176,14 @@ function WishlistCard({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 truncate">
+          <p className="text-sm font-semibold text-om-ink group-hover:text-om-primary truncate">
             {title}
           </p>
           {listing?.category ? (
-            <p className="text-xs text-gray-500 truncate">{listing.category}</p>
+            <p className="text-xs text-om-ink-soft truncate">{listing.category}</p>
           ) : null}
           {listing?.shortDescription ? (
-            <p className="mt-1 text-xs text-gray-600 line-clamp-2">
+            <p className="mt-1 text-xs text-om-ink-mute line-clamp-2">
               {listing.shortDescription}
             </p>
           ) : null}
@@ -195,15 +195,15 @@ function WishlistCard({
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-6 py-12 text-center">
-      <p className="text-base font-semibold text-gray-900">No saved apps yet</p>
-      <p className="text-sm text-gray-600 max-w-md">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-om-line bg-om-surface-tint px-6 py-12 text-center">
+      <p className="text-base font-semibold text-om-ink">No saved apps yet</p>
+      <p className="text-sm text-om-ink-mute max-w-md">
         Tap the heart on any app to save it here. Useful when you want to come
         back to something later.
       </p>
       <Link
         href="/search"
-        className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+        className="mt-2 rounded-md bg-om-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep"
       >
         Browse apps
       </Link>

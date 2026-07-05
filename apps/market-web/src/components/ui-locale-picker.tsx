@@ -31,13 +31,13 @@ export function UILocalePicker() {
   }
 
   return (
-    <label className="inline-flex items-center gap-2 text-xs text-gray-500">
+    <label className="inline-flex items-center gap-2 text-xs text-om-ink-soft">
       <span className="sr-only">{t("locale.label")}</span>
       <select
         value={current}
         disabled={pending}
         onChange={onChange}
-        className="text-xs rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="text-xs rounded-md border border-om-line bg-om-surface px-2 py-1 text-om-ink-mute hover:border-om-line focus:outline-none focus:ring-2 focus:ring-om-primary"
         aria-label={t("locale.label")}
       >
         {UI_LOCALES.map((loc) => (

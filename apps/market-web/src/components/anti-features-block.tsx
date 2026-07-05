@@ -53,21 +53,21 @@ export function AntiFeaturesBlock({ slugs }: { slugs: string[] }) {
 
   return (
     <section
-      className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-2"
+      className="rounded-xl border border-om-line bg-om-surface-tint p-4 space-y-2"
       aria-label="Anti-features disclosures"
     >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
-        <h2 className="text-sm font-semibold text-gray-900">
+        <h2 className="text-sm font-semibold text-om-ink">
           Anti-features
         </h2>
         <Link
           href="/anti-features"
-          className="text-xs text-blue-600 hover:text-blue-700"
+          className="text-xs text-om-primary hover:text-om-primary"
         >
           What does this mean?
         </Link>
       </div>
-      <p className="text-xs text-gray-600">
+      <p className="text-xs text-om-ink-mute">
         Things you might want to know before installing. Hover or tap a chip
         for the full definition; click to find other apps with the same
         property.
@@ -77,7 +77,7 @@ export function AntiFeaturesBlock({ slugs }: { slugs: string[] }) {
           const meta = ANTI_FEATURES[slug];
           if (!meta) return null;
           const tone =
-            TONE_BY_SLUG[slug] ?? "bg-gray-100 text-gray-700 border-gray-200";
+            TONE_BY_SLUG[slug] ?? "bg-om-line-soft text-om-ink-mute border-om-line";
           return (
             <Link
               key={slug}

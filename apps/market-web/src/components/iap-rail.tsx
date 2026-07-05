@@ -55,12 +55,12 @@ export function IapRail({ appId }: { appId: string }) {
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+    <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-3">
       <header>
-        <h2 className="text-sm font-semibold text-gray-900">
+        <h2 className="text-sm font-semibold text-om-ink">
           In-app purchases
         </h2>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-om-ink-soft mt-0.5">
           Optional add-ons sold by the developer. Per-country pricing
           shown in your local currency when available.
         </p>
@@ -127,8 +127,8 @@ function ProductRow({
     <li className="py-3 flex items-start gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 flex-wrap">
-          <p className="text-sm font-medium text-gray-900">{product.name}</p>
-          <span className="text-[10px] uppercase font-semibold text-gray-500 tracking-wider">
+          <p className="text-sm font-medium text-om-ink">{product.name}</p>
+          <span className="text-[10px] uppercase font-semibold text-om-ink-soft tracking-wider">
             {product.type === "non_consumable"
               ? "one-time"
               : product.type === "subscription"
@@ -142,7 +142,7 @@ function ProductRow({
           ) : null}
         </div>
         {product.description ? (
-          <p className="text-xs text-gray-600 mt-0.5">{product.description}</p>
+          <p className="text-xs text-om-ink-mute mt-0.5">{product.description}</p>
         ) : null}
         {note ? (
           <p className="text-[11px] text-amber-700 mt-1">{note}</p>
@@ -150,17 +150,17 @@ function ProductRow({
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
         {product.price ? (
-          <span className="text-sm font-semibold text-gray-900">
+          <span className="text-sm font-semibold text-om-ink">
             {formatPrice(product.price.priceCents, product.price.currency)}
           </span>
         ) : (
-          <span className="text-xs italic text-gray-400">Not in your region</span>
+          <span className="text-xs italic text-om-ink-soft">Not in your region</span>
         )}
         {product.price ? (
           isPending ? null : !session ? (
             <Link
               href={`/sign-in?next=/apps/${product.id}`}
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-om-primary hover:underline"
             >
               Sign in to buy
             </Link>

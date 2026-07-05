@@ -114,38 +114,38 @@ export default async function TransparencyReportPage() {
       {summary && (
         <div className="my-8 not-prose grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Headline counts cards. The window is 90 days by default. */}
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Total events (90d)</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="rounded-lg border border-om-line bg-om-surface p-4">
+            <p className="text-[11px] uppercase tracking-wide text-om-ink-soft font-semibold">Total events (90d)</p>
+            <p className="text-2xl font-bold text-om-ink mt-1">
               {summary.byEventType
                 .reduce((acc, e) => acc + e.count, 0)
                 .toLocaleString()}
             </p>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Appeals filed</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="rounded-lg border border-om-line bg-om-surface p-4">
+            <p className="text-[11px] uppercase tracking-wide text-om-ink-soft font-semibold">Appeals filed</p>
+            <p className="text-2xl font-bold text-om-ink mt-1">
               {summary.appeals.total.toLocaleString()}
             </p>
-            <p className="text-[11px] text-gray-500 mt-0.5">
+            <p className="text-[11px] text-om-ink-soft mt-0.5">
               {summary.appeals.accepted} accepted · {summary.appeals.rejected} rejected
             </p>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Response time p50</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="rounded-lg border border-om-line bg-om-surface p-4">
+            <p className="text-[11px] uppercase tracking-wide text-om-ink-soft font-semibold">Response time p50</p>
+            <p className="text-2xl font-bold text-om-ink mt-1">
               {fmtMs(summary.responseTimeMs.p50)}
             </p>
-            <p className="text-[11px] text-gray-500 mt-0.5">
+            <p className="text-[11px] text-om-ink-soft mt-0.5">
               p95: {fmtMs(summary.responseTimeMs.p95)}
             </p>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">Jurisdictions</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="rounded-lg border border-om-line bg-om-surface p-4">
+            <p className="text-[11px] uppercase tracking-wide text-om-ink-soft font-semibold">Jurisdictions</p>
+            <p className="text-2xl font-bold text-om-ink mt-1">
               {summary.byJurisdiction.length}
             </p>
-            <p className="text-[11px] text-gray-500 mt-0.5">
+            <p className="text-[11px] text-om-ink-soft mt-0.5">
               {summary.byJurisdiction
                 .slice(0, 3)
                 .map((j) => `${j.jurisdiction}: ${j.count}`)
@@ -164,9 +164,9 @@ export default async function TransparencyReportPage() {
           </p>
         </div>
       ) : items.length === 0 ? (
-        <div className="my-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="my-6 rounded-lg border border-om-primary/25 bg-om-primary/10 px-4 py-3 text-sm text-om-primary-deep">
           <p className="m-0 font-semibold">No events yet</p>
-          <p className="mt-1 m-0 text-blue-800">
+          <p className="mt-1 m-0 text-om-primary">
             We're at the very start of the platform. As soon as we take any
             moderation action it appears here, with the rule version cited
             and the reason given.
@@ -174,7 +174,7 @@ export default async function TransparencyReportPage() {
         </div>
       ) : (
         <div className="my-6 not-prose">
-          <p className="text-sm text-gray-600 mb-3">
+          <p className="text-sm text-om-ink-mute mb-3">
             Showing {items.length} of {total.toLocaleString()} events. Each
             row is hash-chained to the previous — see the audit notes below.
           </p>
@@ -182,33 +182,33 @@ export default async function TransparencyReportPage() {
             {items.map((e) => (
               <li
                 key={e.id}
-                className="rounded-lg border border-gray-200 bg-white p-4 text-sm"
+                className="rounded-lg border border-om-line bg-om-surface p-4 text-sm"
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-om-ink">
                       {TYPE_LABELS[e.eventType] ?? e.eventType}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-om-ink-soft mt-0.5">
                       {fmtDate(e.createdAt)} · target: {e.targetType}
                       {e.targetId ? ` · ${e.targetId.slice(0, 8)}…` : ""}
                     </p>
                   </div>
-                  <span className="text-[11px] font-mono text-gray-400">
+                  <span className="text-[11px] font-mono text-om-ink-soft">
                     rule {e.ruleVersion}
                   </span>
                 </div>
-                <p className="mt-2 text-gray-800 whitespace-pre-wrap">
+                <p className="mt-2 text-om-ink-mute whitespace-pre-wrap">
                   {e.reason}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
                   {e.jurisdiction && e.jurisdiction !== "global" && (
-                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700 font-medium">
+                    <span className="rounded-full bg-om-primary/10 px-2 py-0.5 text-om-primary font-medium">
                       jurisdiction · {e.jurisdiction}
                     </span>
                   )}
                   {e.legalBasis && (
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">
+                    <span className="rounded-full bg-om-line-soft px-2 py-0.5 text-om-ink-mute">
                       basis · {e.legalBasis}
                     </span>
                   )}
@@ -218,8 +218,8 @@ export default async function TransparencyReportPage() {
                     </span>
                   )}
                 </div>
-                <details className="mt-2 text-[11px] text-gray-500">
-                  <summary className="cursor-pointer hover:text-gray-700">
+                <details className="mt-2 text-[11px] text-om-ink-soft">
+                  <summary className="cursor-pointer hover:text-om-ink">
                     Audit hash
                   </summary>
                   <p className="mt-1 font-mono break-all">

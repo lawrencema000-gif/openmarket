@@ -74,7 +74,7 @@ export function LibraryButton({ appId }: { appId: string }) {
     return (
       <Link
         href={`/sign-in?next=/apps/${appId}`}
-        className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+        className="inline-flex items-center gap-2 rounded-lg border border-om-primary/25 bg-om-surface px-4 py-2 text-sm font-semibold text-om-primary hover:bg-om-primary/10"
       >
         Sign in to track
       </Link>
@@ -83,7 +83,7 @@ export function LibraryButton({ appId }: { appId: string }) {
 
   if (inLibrary === null) {
     return (
-      <span className="inline-block w-32 h-9 rounded-lg bg-blue-100 animate-pulse" />
+      <span className="inline-block w-32 h-9 rounded-lg bg-om-primary/15 animate-pulse" />
     );
   }
 
@@ -107,7 +107,7 @@ export function LibraryButton({ appId }: { appId: string }) {
           type="button"
           onClick={add}
           disabled={acting}
-          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg border border-om-primary/25 bg-om-surface px-4 py-2 text-sm font-semibold text-om-primary hover:bg-om-primary/10 disabled:opacity-60"
           aria-label="Add to library"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">

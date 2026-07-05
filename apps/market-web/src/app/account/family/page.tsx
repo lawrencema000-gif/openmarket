@@ -139,7 +139,7 @@ export default function FamilyPage() {
 
   if (loading || isPending)
     return (
-      <div className="max-w-3xl mx-auto px-6 py-10 text-sm text-gray-500">
+      <div className="max-w-3xl mx-auto px-6 py-10 text-sm text-om-ink-soft">
         Loading…
       </div>
     );
@@ -148,11 +148,11 @@ export default function FamilyPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
       <div>
-        <Link href="/account" className="text-xs text-blue-600 hover:underline">
+        <Link href="/account" className="text-xs text-om-primary hover:underline">
           ← Back to account
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Family sharing</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">Family sharing</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Share installed apps with up to 4 family members. Only apps the
           developer has opted into sharing will appear in members' libraries.
         </p>
@@ -166,30 +166,30 @@ export default function FamilyPage() {
 
       {!data.group && (
         <>
-          <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-900">
+          <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-om-ink">
               Create a family group
             </h2>
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="block w-full rounded-md border-gray-300 text-sm"
+              className="block w-full rounded-md border-om-line text-sm"
             />
             <button
               type="button"
               onClick={() => void createGroup()}
-              className="rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2"
+              className="rounded-md bg-om-primary hover:bg-om-primary-deep text-white text-sm font-medium px-4 py-2"
             >
               Create group
             </button>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-900">
+          <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-om-ink">
               Accept an invite
             </h2>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-om-ink-soft">
               Paste the token a family owner shared with you.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -198,13 +198,13 @@ export default function FamilyPage() {
                 value={acceptToken}
                 onChange={(e) => setAcceptToken(e.target.value)}
                 placeholder="om_fam_..."
-                className="flex-1 rounded-md border-gray-300 text-sm font-mono"
+                className="flex-1 rounded-md border-om-line text-sm font-mono"
               />
               <button
                 type="button"
                 onClick={() => void acceptInvite()}
                 disabled={!acceptToken}
-                className="text-xs font-medium px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="text-xs font-medium px-3 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
               >
                 Accept
               </button>
@@ -214,13 +214,13 @@ export default function FamilyPage() {
       )}
 
       {data.group && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+        <section className="rounded-xl border border-om-line bg-om-surface p-5 space-y-4">
           <div className="flex items-baseline justify-between gap-2 flex-wrap">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-om-ink">
                 {data.group.name}
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-om-ink-soft">
                 Your role: <strong>{data.role}</strong>
               </p>
             </div>
@@ -242,19 +242,19 @@ export default function FamilyPage() {
                 className="py-2 flex items-baseline justify-between gap-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-om-ink truncate">
                     {m.displayName ?? m.email ?? "—"}{" "}
-                    <span className="text-xs text-gray-400 font-normal">
+                    <span className="text-xs text-om-ink-soft font-normal">
                       ({m.role})
                     </span>
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-om-ink-soft">
                     {m.pending
                       ? `Pending — invited ${new Date(m.invitedAt).toLocaleDateString()}`
                       : `Joined ${m.acceptedAt ? new Date(m.acceptedAt).toLocaleDateString() : ""}`}
                   </p>
                   {m.pending && m.inviteToken ? (
-                    <p className="text-[11px] font-mono text-gray-500 mt-0.5 truncate">
+                    <p className="text-[11px] font-mono text-om-ink-soft mt-0.5 truncate">
                       Token: {m.inviteToken}
                     </p>
                   ) : null}
@@ -273,8 +273,8 @@ export default function FamilyPage() {
           </ul>
 
           {data.role === "owner" && (
-            <div className="border-t border-gray-100 pt-3 space-y-2">
-              <p className="text-xs font-medium text-gray-700">
+            <div className="border-t border-om-line-soft pt-3 space-y-2">
+              <p className="text-xs font-medium text-om-ink-mute">
                 Invite a family member
               </p>
               <div className="flex flex-wrap gap-2">
@@ -283,13 +283,13 @@ export default function FamilyPage() {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="member's openmarket email"
-                  className="flex-1 rounded-md border-gray-300 text-sm"
+                  className="flex-1 rounded-md border-om-line text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => void invite()}
                   disabled={!inviteEmail}
-                  className="text-xs font-medium px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="text-xs font-medium px-3 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
                 >
                   Send invite
                 </button>

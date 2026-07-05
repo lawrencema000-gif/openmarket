@@ -92,14 +92,14 @@ export default async function HomePage() {
               Open · Verified · Transparent
             </Eyebrow>
 
-            <h1 className="om-display text-5xl sm:text-7xl font-bold leading-[1.05] text-slate-900">
+            <h1 className="om-display text-5xl sm:text-7xl font-bold leading-[1.05] text-om-ink">
               Android apps,{" "}
               <GradientText as="span">
                 without the gatekeepers.
               </GradientText>
             </h1>
 
-            <p className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-om-ink-soft max-w-2xl mx-auto leading-relaxed">
               A viewpoint-neutral marketplace. Every developer verified, every
               build security-reviewed, every metric visible in the open.
             </p>
@@ -121,10 +121,10 @@ export default async function HomePage() {
                 { label: "Avg trust", value: "92 / 100" },
               ].map((s) => (
                 <div key={s.label} className="text-center">
-                  <dt className="text-[11px] uppercase tracking-[0.12em] font-semibold text-slate-500">
+                  <dt className="text-[11px] uppercase tracking-[0.12em] font-semibold text-om-ink-soft">
                     {s.label}
                   </dt>
-                  <dd className="text-xl sm:text-2xl font-bold om-display text-slate-900 mt-1">
+                  <dd className="text-xl sm:text-2xl font-bold om-display text-om-ink mt-1">
                     {s.value}
                   </dd>
                 </div>
@@ -140,7 +140,7 @@ export default async function HomePage() {
                 <Link
                   key={cat.slug}
                   href={`/categories/${cat.slug}`}
-                  className="om-tile om-glass om-glow-ring inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-slate-700 hover:text-violet-700 cursor-pointer"
+                  className="om-tile om-glass om-glow-ring inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-om-ink-mute hover:text-violet-700 cursor-pointer"
                 >
                   <span aria-hidden className="text-base">
                     {cat.icon ?? "▸"}
@@ -175,7 +175,7 @@ export default async function HomePage() {
         {trending.length > 0 && (
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
             <div className="text-center mb-3">
-              <span className="inline-flex items-center gap-2 text-xs text-slate-500 font-medium">
+              <span className="inline-flex items-center gap-2 text-xs text-om-ink-soft font-medium">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-60 animate-ping" />
                   <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
@@ -202,7 +202,7 @@ export default async function HomePage() {
                       app.title.slice(0, 1)
                     )}
                   </span>
-                  <span className="text-sm font-medium text-slate-800 truncate max-w-[12rem]">
+                  <span className="text-sm font-medium text-om-ink-mute truncate max-w-[12rem]">
                     {app.title}
                   </span>
                   <span className="text-[11px] uppercase tracking-wide font-semibold text-emerald-600">
@@ -227,10 +227,10 @@ export default async function HomePage() {
           <section>
             <div className="flex items-end justify-between mb-8">
               <div>
-                <h2 className="om-display text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+                <h2 className="om-display text-3xl sm:text-4xl font-bold text-om-ink tracking-tight">
                   Browse by category
                 </h2>
-                <p className="text-base text-slate-500 mt-1">
+                <p className="text-base text-om-ink-soft mt-1">
                   Apps organised by what they actually do.
                 </p>
               </div>
@@ -281,11 +281,11 @@ export default async function HomePage() {
                       </span>
                     </FeatureIcon>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900 group-hover:text-violet-700 transition-colors leading-tight">
+                      <p className="text-sm font-semibold text-om-ink group-hover:text-violet-700 transition-colors leading-tight">
                         {cat.name}
                       </p>
                       {cat.appCount !== undefined && cat.appCount > 0 && (
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <p className="text-[11px] text-om-ink-soft mt-0.5">
                           {cat.appCount}{" "}
                           {cat.appCount === 1 ? "app" : "apps"}
                         </p>
@@ -403,7 +403,7 @@ export default async function HomePage() {
         <section>
           <div className="text-center mb-10">
             <Eyebrow tone="neutral">Why OpenMarket</Eyebrow>
-            <h2 className="om-display text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mt-4">
+            <h2 className="om-display text-3xl sm:text-4xl font-bold text-om-ink tracking-tight mt-4">
               Three guarantees, every app.
             </h2>
           </div>
@@ -481,10 +481,10 @@ export default async function HomePage() {
                   {item.icon}
                 </FeatureIcon>
                 <div className="space-y-1.5">
-                  <h3 className="om-display font-bold text-slate-900 text-lg">
+                  <h3 className="om-display font-bold text-om-ink text-lg">
                     {item.title}
                   </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">
+                  <p className="text-sm text-om-ink-soft leading-relaxed">
                     {item.description}
                   </p>
                 </div>
