@@ -10,6 +10,7 @@ import {
   users,
 } from "@openmarket/db/schema";
 import { db } from "../lib/db";
+import { devPortalBaseUrl } from "../lib/urls";
 import { requireAuth, requireAuthVerified } from "../middleware/auth";
 import { findEffectiveDeveloperContext, roleSatisfies } from "../lib/team";
 import { enqueueEmail } from "../lib/email";
@@ -18,8 +19,7 @@ import type { Variables } from "../lib/types";
 export const teamRouter = new Hono<{ Variables: Variables }>();
 
 const INVITE_TTL_DAYS = 7;
-const DEV_PORTAL_BASE =
-  process.env.DEV_PORTAL_BASE_URL ?? "http://localhost:3002";
+const DEV_PORTAL_BASE = devPortalBaseUrl();
 
 const inviteBodySchema = z.object({
   email: z.string().email().max(254),

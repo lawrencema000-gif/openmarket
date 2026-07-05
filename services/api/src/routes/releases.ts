@@ -216,8 +216,14 @@ releasesRouter.get(
       });
     }
 
+    // Pass the LOGICAL bucket name "artifacts" — getSignedDownloadUrl
+    // resolves it to the real R2 bucket internally. Passing the stored
+    // (already-resolved) artifact.storageBucket would be re-resolved: only
+    // the literal "artifacts" maps to the artifacts bucket, so a real name
+    // like "openmarket-artifacts" falls through to the MEDIA bucket and the
+    // signed URL 404s. The device download path uses the literal too.
     const url = await getSignedDownloadUrl({
-      bucket: artifact.storageBucket,
+      bucket: "artifacts",
       key: artifact.storageKey,
       expiresInSeconds: 300,
       contentDisposition: `attachment; filename="${artifact.id}.${artifact.artifactType}"`,

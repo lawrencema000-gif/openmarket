@@ -62,30 +62,9 @@ import { cronRouter } from "./routes/cron";
 import { planRouter } from "./routes/plan";
 import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/error-handler";
-
-const env = (k: string) => {
-  const v = process.env[k];
-  return v && v.length > 0 ? v : undefined;
-};
-
-/**
- * Build the list of allowed CORS origins.
- *
- * Local dev:   localhost:3000-3002 (market-web, dev-portal, admin).
- * Production:  driven by CORS_ORIGINS env var (comma-separated).
- *
- * We never use `*` for origins because Better Auth sets cookies with
- * credentials: include, which requires explicit origin allow-list.
- */
-function allowedOrigins(): string[] {
-  const explicit = env("CORS_ORIGINS")?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
-  return [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    ...explicit,
-  ];
-}
+// Origin allow-list shared with Better Auth's trustedOrigins (lib/auth.ts)
+// so CORS and the auth-layer origin check can never diverge.
+import { allowedOrigins } from "./lib/origins";
 
 export const app = new Hono();
 

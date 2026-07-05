@@ -11,6 +11,7 @@ import {
 } from "@openmarket/db/schema";
 import { db } from "./db";
 import { enqueueEmail } from "./email";
+import { allowedOrigins } from "./origins";
 
 // BullMQ rejects ":" in job IDs. Hash any user-supplied content before
 // using it as part of an idempotency key.
@@ -146,7 +147,12 @@ export const auth = betterAuth({
   },
   secret: env("BETTER_AUTH_SECRET"),
   baseURL: env("BETTER_AUTH_URL"),
-  trustedOrigins: [WEB_BASE_URL],
+  // MUST match the CORS allow-list. Better Auth runs its own origin/CSRF
+  // check on sign-in POSTs; sourcing this single-origin from WEB_BASE_URL
+  // meant every production login 403'd (WEB_BASE_URL is optional and, even
+  // when set, names only ONE of the three frontends). Sharing allowedOrigins()
+  // with app.ts trusts storefront + dev-portal + admin alike.
+  trustedOrigins: allowedOrigins(),
   databaseHooks: {
     user: {
       create: {

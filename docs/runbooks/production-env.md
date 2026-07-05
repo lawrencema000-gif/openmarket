@@ -26,7 +26,7 @@ Legend: **R** = required, **O** = optional / feature-gated.
 | `REDIS_URL` | **R** | Upstash TCP `rediss://…:6379`. Shared with all workers. |
 | `BETTER_AUTH_SECRET` | **R** | 32+ char random (`openssl rand -base64 32`). |
 | `BETTER_AUTH_URL` | **R** | Public API origin, e.g. `https://api.openmarket.app`. |
-| `CORS_ORIGINS` | **R** | Comma-separated storefront/dev-portal/admin origins. |
+| `CORS_ORIGINS` | **R** | Comma-separated storefront/dev-portal/admin origins. **Login depends on this** — Better Auth's `trustedOrigins` is derived from the same list, so a sign-in POST from any origin not listed here is rejected 403. Include every frontend origin (all three consoles). |
 | `CRON_SECRET` | **R** | Long random string; gates `GET /api/cron/*`. Required for the 5 scheduled jobs. |
 | `R2_ACCOUNT_ID` | **R** | Cloudflare account id. |
 | `R2_ACCESS_KEY_ID` | **R** | R2 token. |
@@ -38,7 +38,7 @@ Legend: **R** = required, **O** = optional / feature-gated.
 | `MEILI_URL` | **R** for search | Meilisearch host. |
 | `MEILI_MASTER_KEY` | **R** for search | Fails closed in prod if unset. |
 | `STOREFRONT_URL` | **R** | Used in Stripe redirect + email links. |
-| `DEV_PORTAL_URL` / `DEV_PORTAL_BASE_URL` | O | Payout/team links back to dev-portal. |
+| `DEV_PORTAL_URL` / `DEV_PORTAL_BASE_URL` | O (set in prod) | Dev-portal base for Stripe redirect, payout onboarding, team-invite, and moderation-email links. The two names are truly interchangeable (code coalesces `DEV_PORTAL_URL ?? DEV_PORTAL_BASE_URL`); set either. Defaults to localhost — set it in prod or those links point at localhost. |
 | `WEB_BASE_URL` | O | Canonical web origin for absolute links. |
 | `STRIPE_DRIVER` | O | `noop` (default — **free launch**) or `stripe` to enable payments. |
 | `STRIPE_SECRET_KEY` | **R** if `STRIPE_DRIVER=stripe` | `sk_live_…`. |

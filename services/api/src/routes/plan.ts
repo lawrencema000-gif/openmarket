@@ -6,12 +6,13 @@ import { db } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 import { findEffectiveDeveloperContext, roleSatisfies } from "../lib/team";
 import { computePlanStatus } from "../lib/plan";
+import { devPortalBaseUrl } from "../lib/urls";
 import { StripeNotConfiguredError, getStripeAdapter } from "../lib/stripe";
 import type { Variables } from "../lib/types";
 
 export const planRouter = new Hono<{ Variables: Variables }>();
 
-const DEV_PORTAL_URL = process.env.DEV_PORTAL_URL ?? "http://localhost:3002";
+const DEV_PORTAL_URL = devPortalBaseUrl();
 
 function platformPlanPriceCents(): number {
   const raw = process.env.PLATFORM_PLAN_PRICE_CENTS;

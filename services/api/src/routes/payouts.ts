@@ -15,14 +15,13 @@ import {
   StripeNotConfiguredError,
   getStripeAdapter,
 } from "../lib/stripe";
+import { devPortalBaseUrl, storefrontUrl } from "../lib/urls";
 import type { Variables } from "../lib/types";
 
 export const payoutsRouter = new Hono<{ Variables: Variables }>();
 
-const STOREFRONT_URL =
-  process.env.STOREFRONT_URL ?? "http://localhost:3000";
-const DEV_PORTAL_URL =
-  process.env.DEV_PORTAL_URL ?? "http://localhost:3002";
+const STOREFRONT_URL = storefrontUrl();
+const DEV_PORTAL_URL = devPortalBaseUrl();
 
 /**
  * Developer payouts via Stripe Connect Express (P4-D).

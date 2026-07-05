@@ -29,12 +29,16 @@ import { dispatchPreRegistrationLaunch } from "../lib/pre-registration";
 import { promoteDueReviews } from "../lib/review-moderation";
 import { syncAppToSearchIndex } from "../lib/search-index";
 import { sourceCodeVerificationPatchSchema } from "@openmarket/contracts/source-code";
+import { devPortalBaseUrl, webBaseUrl } from "../lib/urls";
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
 
-const webBase = () => process.env.WEB_BASE_URL ?? "https://openmarket.app";
-const devBase = () => process.env.DEV_PORTAL_URL ?? "https://dev.openmarket.app";
+// Shared resolvers so admin links can't diverge from the rest of the API
+// (the dev-portal base is settable as DEV_PORTAL_URL or DEV_PORTAL_BASE_URL;
+// devPortalBaseUrl coalesces both).
+const webBase = () => webBaseUrl();
+const devBase = () => devPortalBaseUrl();
 const today = () => new Date().toISOString().slice(0, 10);
 
 /**
