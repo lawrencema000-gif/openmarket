@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { Sentry, sentryEnabled } from "./lib/sentry.js";
 import { Queue, Worker } from "bullmq";
 import { createDb } from "@openmarket/db";
 import { processIngestJob, type IngestJobData } from "./processor.js";
@@ -46,9 +47,17 @@ worker.on("completed", (job, result) => {
 });
 worker.on("failed", (job, err) => {
   console.error(`[ingest-worker] FAILED job=${job?.id}:`, err.message);
+  if (sentryEnabled) {
+    Sentry.withScope((scope) => {
+      scope.setTag("job_id", job?.id ?? "unknown");
+      scope.setContext("job", { data: job?.data });
+      Sentry.captureException(err);
+    });
+  }
 });
 worker.on("error", (err) => {
   console.error("[ingest-worker] error:", err);
+  if (sentryEnabled) Sentry.captureException(err);
 });
 
 const host = (connection as { host?: string }).host ?? "<unknown>";

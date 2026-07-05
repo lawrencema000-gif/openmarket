@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { Sentry, sentryEnabled } from "./lib/sentry.js";
 import { Worker } from "bullmq";
 import {
   ensureIndex,
@@ -52,6 +53,13 @@ async function main() {
 
   worker.on("failed", (job, err) => {
     console.error(`Job ${job?.id} failed:`, err);
+    if (sentryEnabled) {
+      Sentry.withScope((scope) => {
+        scope.setTag("job_id", job?.id ?? "unknown");
+        scope.setContext("job", { data: job?.data });
+        Sentry.captureException(err);
+      });
+    }
   });
 
   console.log("Search worker started, listening on openmarket-search-index");
@@ -67,5 +75,6 @@ async function main() {
 
 main().catch((err) => {
   console.error("Fatal error:", err);
+  if (sentryEnabled) Sentry.captureException(err);
   process.exit(1);
 });

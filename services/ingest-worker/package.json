@@ -18,7 +18,8 @@
     "bullmq": "^5.34.0",
     "dotenv": "^16.4.0",
     "drizzle-orm": "^0.39.0",
-    "yauzl": "^3.2.0"
+    "yauzl": "^3.2.0",
+    "@sentry/node": "^10.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

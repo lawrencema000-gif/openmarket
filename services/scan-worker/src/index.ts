@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { Sentry, sentryEnabled } from "./lib/sentry.js";
 import { Worker } from "bullmq";
 import { createDb } from "@openmarket/db";
 import { processScanJob, type ScanJobData } from "./processor.js";
@@ -34,9 +35,19 @@ worker.on("completed", (job, result) => {
 });
 worker.on("failed", (job, err) => {
   console.error(`[scan-worker] FAILED job=${job?.id}:`, err.message);
+  // A crashing scanner fails SAFE (release stays unpublished) but would be
+  // invisible without this — surface it so a broken malware gate is noticed.
+  if (sentryEnabled) {
+    Sentry.withScope((scope) => {
+      scope.setTag("job_id", job?.id ?? "unknown");
+      scope.setContext("job", { data: job?.data });
+      Sentry.captureException(err);
+    });
+  }
 });
 worker.on("error", (err) => {
   console.error("[scan-worker] error:", err);
+  if (sentryEnabled) Sentry.captureException(err);
 });
 
 const host = (connection as { host?: string }).host ?? "<unknown>";
