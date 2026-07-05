@@ -117,12 +117,12 @@ export default function PromoCodesPage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Promo codes</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">Promo codes</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Issue codes that grant beta access or pre-registration to launch
           partners. Each code is single-use per user; revoking kills future
           redemptions but keeps the audit log.
@@ -135,14 +135,14 @@ export default function PromoCodesPage({
         </div>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">Create a code</h2>
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">Create a code</h2>
         <input
           type="text"
           placeholder='Label — e.g. "Launch partners 2026"'
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          className="block w-full rounded-md border-gray-300 text-sm"
+          className="block w-full rounded-md border-om-line text-sm"
         />
         <div className="grid grid-cols-2 gap-2">
           <label className="flex items-center gap-2 text-sm">
@@ -150,7 +150,7 @@ export default function PromoCodesPage({
               type="checkbox"
               checked={grantsBeta}
               onChange={(e) => setGrantsBeta(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-om-line"
             />
             Grants beta access
           </label>
@@ -159,13 +159,13 @@ export default function PromoCodesPage({
               type="checkbox"
               checked={grantsPreRegistration}
               onChange={(e) => setGrantsPreRegistration(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-om-line"
             />
             Grants pre-registration
           </label>
         </div>
         <label className="block">
-          <span className="text-xs font-medium text-gray-700">
+          <span className="text-xs font-medium text-om-ink-mute">
             Max redemptions
           </span>
           <input
@@ -174,21 +174,21 @@ export default function PromoCodesPage({
             value={maxRedemptions}
             onChange={(e) => setMaxRedemptions(e.target.value)}
             placeholder="(leave blank for unlimited)"
-            className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+            className="mt-1 block w-full rounded-md border-om-line text-sm"
           />
         </label>
         <button
           type="button"
           onClick={() => void createCode()}
           disabled={creating}
-          className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+          className="rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
         >
           {creating ? "Creating…" : "Generate code"}
         </button>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           {loading
             ? "Loading…"
             : codes.length === 0
@@ -201,10 +201,10 @@ export default function PromoCodesPage({
           return (
             <div
               key={c.id}
-              className={`rounded-xl border bg-white p-4 space-y-2 ${isActive ? "border-gray-200" : "border-gray-200 opacity-60"}`}
+              className={`rounded-xl border bg-om-surface p-4 space-y-2 ${isActive ? "border-om-line" : "border-om-line opacity-60"}`}
             >
               <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                <code className="text-base font-mono font-semibold tracking-widest text-gray-900">
+                <code className="text-base font-mono font-semibold tracking-widest text-om-ink">
                   {c.code}
                 </code>
                 {isActive ? (
@@ -216,13 +216,13 @@ export default function PromoCodesPage({
                     Revoke
                   </button>
                 ) : (
-                  <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                  <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-om-line-soft text-om-ink-mute">
                     revoked
                   </span>
                 )}
               </div>
               {c.label ? (
-                <p className="text-xs text-gray-600">{c.label}</p>
+                <p className="text-xs text-om-ink-mute">{c.label}</p>
               ) : null}
               <div className="flex flex-wrap gap-1.5">
                 {c.grantsBeta && (
@@ -231,12 +231,12 @@ export default function PromoCodesPage({
                   </span>
                 )}
                 {c.grantsPreRegistration && (
-                  <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                  <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-om-primary/15 text-om-primary">
                     pre-reg
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-gray-500">
+              <p className="text-[11px] text-om-ink-soft">
                 {c.redeemedCount.toLocaleString()} redemption
                 {c.redeemedCount === 1 ? "" : "s"}
                 {c.maxRedemptions != null
@@ -247,14 +247,14 @@ export default function PromoCodesPage({
                   : ""}
               </p>
               {isActive && (
-                <div className="flex items-center gap-2 rounded-md bg-gray-50 border border-gray-200 px-3 py-2 text-xs">
-                  <code className="flex-1 truncate font-mono text-gray-700">
+                <div className="flex items-center gap-2 rounded-md bg-om-surface-tint border border-om-line px-3 py-2 text-xs">
+                  <code className="flex-1 truncate font-mono text-om-ink-mute">
                     {redeemUrl}
                   </code>
                   <button
                     type="button"
                     onClick={() => void copy(c.id, redeemUrl)}
-                    className="text-blue-600 hover:underline shrink-0"
+                    className="text-om-primary hover:underline shrink-0"
                   >
                     {copyHint?.id === c.id ? copyHint.text : "Copy"}
                   </button>

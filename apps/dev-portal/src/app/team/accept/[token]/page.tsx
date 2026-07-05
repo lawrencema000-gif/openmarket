@@ -39,7 +39,7 @@ export default function AcceptInvitePage({
   return (
     <div className="max-w-md mx-auto pt-16 space-y-4">
       {state === "working" && (
-        <p className="text-sm text-gray-500">Accepting invite…</p>
+        <p className="text-sm text-om-ink-soft">Accepting invite…</p>
       )}
       {state === "ok" && result && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5 space-y-2">
@@ -51,7 +51,7 @@ export default function AcceptInvitePage({
           </p>
           <Link
             href="/dashboard"
-            className="inline-block mt-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2"
+            className="inline-block mt-2 bg-om-primary hover:bg-om-primary-deep text-white text-sm font-medium rounded-lg px-4 py-2"
           >
             Go to dashboard →
           </Link>

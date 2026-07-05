@@ -124,7 +124,7 @@ export function CategoriesEditor({ initial }: { initial: Category[] }) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCreating(true)}
-            className="text-sm font-semibold px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            className="text-sm font-semibold px-4 py-2 rounded-lg bg-om-primary text-white hover:bg-om-primary-deep"
           >
             + New category
           </button>
@@ -138,23 +138,23 @@ export function CategoriesEditor({ initial }: { initial: Category[] }) {
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-om-ink-soft">
           {items.length} categories &middot; {items.filter((c) => c.isFeatured).length} featured
         </p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+      <div className="bg-om-surface rounded-xl border border-om-line overflow-hidden divide-y divide-gray-100">
         {items.map((c, idx) => (
           <div
             key={c.id}
-            className="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-4 px-4 py-3 hover:bg-om-surface-tint transition-colors"
           >
             <div className="flex flex-col gap-0.5">
               <button
                 onClick={() => moveItem(idx, -1)}
                 disabled={idx === 0}
                 aria-label="Move up"
-                className="text-gray-400 hover:text-gray-700 disabled:opacity-30"
+                className="text-om-ink-soft hover:text-om-ink disabled:opacity-30"
               >
                 ▲
               </button>
@@ -162,7 +162,7 @@ export function CategoriesEditor({ initial }: { initial: Category[] }) {
                 onClick={() => moveItem(idx, 1)}
                 disabled={idx === items.length - 1}
                 aria-label="Move down"
-                className="text-gray-400 hover:text-gray-700 disabled:opacity-30"
+                className="text-om-ink-soft hover:text-om-ink disabled:opacity-30"
               >
                 ▼
               </button>
@@ -170,8 +170,8 @@ export function CategoriesEditor({ initial }: { initial: Category[] }) {
             <span className="text-2xl flex-shrink-0">{c.icon ?? "📦"}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-semibold text-gray-900 text-sm">{c.name}</p>
-                <code className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                <p className="font-semibold text-om-ink text-sm">{c.name}</p>
+                <code className="text-xs text-om-ink-soft bg-om-line-soft px-1.5 py-0.5 rounded">
                   {c.slug}
                 </code>
                 {c.isFeatured && (
@@ -180,23 +180,23 @@ export function CategoriesEditor({ initial }: { initial: Category[] }) {
                   </span>
                 )}
                 {c.appCount !== undefined && (
-                  <span className="text-xs text-gray-500">{c.appCount} apps</span>
+                  <span className="text-xs text-om-ink-soft">{c.appCount} apps</span>
                 )}
               </div>
               {c.description && (
-                <p className="text-xs text-gray-500 mt-0.5 truncate">{c.description}</p>
+                <p className="text-xs text-om-ink-soft mt-0.5 truncate">{c.description}</p>
               )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => toggleFeatured(c)}
-                className="text-xs font-medium px-2.5 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
+                className="text-xs font-medium px-2.5 py-1 rounded-md border border-om-line hover:bg-om-surface-tint"
               >
                 {c.isFeatured ? "Unfeature" : "Feature"}
               </button>
               <button
                 onClick={() => setEditing(c)}
-                className="text-xs font-medium px-2.5 py-1 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50"
+                className="text-xs font-medium px-2.5 py-1 rounded-md border border-om-primary/25 text-om-primary hover:bg-om-primary/10"
               >
                 Edit
               </button>
@@ -309,77 +309,77 @@ function CategoryForm({
     <div className="fixed inset-0 bg-black/40 z-30 flex items-center justify-center p-4">
       <form
         onSubmit={submit}
-        className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4"
+        className="bg-om-surface rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4"
       >
-        <h2 className="text-lg font-bold text-gray-900">
+        <h2 className="text-lg font-bold text-om-ink">
           {mode === "create" ? "New category" : `Edit "${initial?.name}"`}
         </h2>
 
         {mode === "create" && (
           <label className="block">
-            <span className="text-xs font-semibold text-gray-700">Slug</span>
+            <span className="text-xs font-semibold text-om-ink-mute">Slug</span>
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value.toLowerCase())}
               placeholder="puzzle-games"
-              className="mt-1 block w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="mt-1 block w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
               required
             />
-            <span className="text-xs text-gray-500 mt-1 block">
+            <span className="text-xs text-om-ink-soft mt-1 block">
               Lowercase letters, digits, hyphens. Cannot be changed later.
             </span>
           </label>
         )}
 
         <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Name</span>
+          <span className="text-xs font-semibold text-om-ink-mute">Name</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="mt-1 block w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
             required
           />
         </label>
 
         <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Description</span>
+          <span className="text-xs font-semibold text-om-ink-mute">Description</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="mt-1 block w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="mt-1 block w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
           />
         </label>
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-semibold text-gray-700">Icon (emoji)</span>
+            <span className="text-xs font-semibold text-om-ink-mute">Icon (emoji)</span>
             <input
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
               placeholder="🎮"
               maxLength={8}
-              className="mt-1 block w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="mt-1 block w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold text-gray-700">Position</span>
+            <span className="text-xs font-semibold text-om-ink-mute">Position</span>
             <input
               type="number"
               value={position}
               onChange={(e) => setPosition(Number(e.target.value))}
-              className="mt-1 block w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="mt-1 block w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
             />
           </label>
         </div>
 
         <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Icon URL (optional)</span>
+          <span className="text-xs font-semibold text-om-ink-mute">Icon URL (optional)</span>
           <input
             value={iconUrl}
             onChange={(e) => setIconUrl(e.target.value)}
             placeholder="https://cdn.openmarket.app/categories/games.svg"
-            className="mt-1 block w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="mt-1 block w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
           />
         </label>
 
@@ -388,9 +388,9 @@ function CategoryForm({
             type="checkbox"
             checked={isFeatured}
             onChange={(e) => setIsFeatured(e.target.checked)}
-            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+            className="h-4 w-4 text-om-primary rounded border-om-line"
           />
-          <span className="text-sm text-gray-700">Show on storefront featured grid</span>
+          <span className="text-sm text-om-ink-mute">Show on storefront featured grid</span>
         </label>
 
         {error && <p className="text-xs text-red-600">{error}</p>}
@@ -399,14 +399,14 @@ function CategoryForm({
           <button
             type="button"
             onClick={onClose}
-            className="text-sm px-4 py-2 text-gray-600 hover:text-gray-900"
+            className="text-sm px-4 py-2 text-om-ink-mute hover:text-om-ink"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="text-sm font-semibold px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="text-sm font-semibold px-4 py-2 rounded-lg bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
           >
             {saving ? "Saving…" : mode === "create" ? "Create category" : "Save changes"}
           </button>

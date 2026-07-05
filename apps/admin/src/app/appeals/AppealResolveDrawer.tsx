@@ -21,7 +21,7 @@ export function AppealResolveDrawer({
   const router = useRouter();
 
   if (disabled) {
-    return <span className="text-xs text-gray-400 italic">resolved</span>;
+    return <span className="text-xs text-om-ink-soft italic">resolved</span>;
   }
 
   async function submit() {
@@ -59,7 +59,7 @@ export function AppealResolveDrawer({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-xs font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-md border border-blue-200 hover:bg-blue-50 transition-colors shrink-0"
+        className="text-xs font-medium text-om-primary hover:text-om-primary px-3 py-1.5 rounded-md border border-om-primary/25 hover:bg-om-primary/10 transition-colors shrink-0"
       >
         Review
       </button>
@@ -67,7 +67,7 @@ export function AppealResolveDrawer({
   }
 
   return (
-    <div className="w-full mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-3">
+    <div className="w-full mt-3 rounded-lg border border-om-line bg-om-surface-tint p-3 space-y-3">
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -92,7 +92,7 @@ export function AppealResolveDrawer({
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Required: explain the decision. Public transparency log records this verbatim — including denials."
-        className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        className="w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
         rows={4}
       />
       {error && <p className="text-xs text-red-600">{error}</p>}
@@ -103,7 +103,7 @@ export function AppealResolveDrawer({
             setOpen(false);
             setError(null);
           }}
-          className="text-xs px-3 py-1.5 text-gray-600 hover:text-gray-900"
+          className="text-xs px-3 py-1.5 text-om-ink-mute hover:text-om-ink"
           disabled={pending}
         >
           Cancel
@@ -112,7 +112,7 @@ export function AppealResolveDrawer({
           type="button"
           onClick={submit}
           disabled={pending}
-          className="text-xs font-semibold px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="text-xs font-semibold px-4 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
         >
           {pending ? "Saving…" : "Confirm decision"}
         </button>

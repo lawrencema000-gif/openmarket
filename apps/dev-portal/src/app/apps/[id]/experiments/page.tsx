@@ -173,14 +173,14 @@ export default function ExperimentsPage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">
           Listing experiments
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-om-ink-soft mt-1">
           Test variations of your title, description, icon, or screenshots
           and measure install rate. One experiment can run at a time;
           conclude the current one before starting another.
@@ -193,8 +193,8 @@ export default function ExperimentsPage({
         </div>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           Create an experiment
         </h2>
         <input
@@ -202,20 +202,20 @@ export default function ExperimentsPage({
           placeholder='Name — e.g. "Hero title test Q2"'
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="block w-full rounded-md border-gray-300 text-sm"
+          className="block w-full rounded-md border-om-line text-sm"
         />
         <textarea
           placeholder="Hypothesis (optional) — what are you testing?"
           value={hypothesis}
           onChange={(e) => setHypothesis(e.target.value)}
           rows={2}
-          className="block w-full rounded-md border-gray-300 text-sm"
+          className="block w-full rounded-md border-om-line text-sm"
         />
         <div className="space-y-3">
           {variants.map((v, i) => (
             <div
               key={i}
-              className="rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2"
+              className="rounded-md border border-om-line bg-om-surface-tint p-3 space-y-2"
             >
               <div className="flex items-center gap-2">
                 <input
@@ -224,7 +224,7 @@ export default function ExperimentsPage({
                   onChange={(e) =>
                     updateVariant(i, { label: e.target.value })
                   }
-                  className="flex-1 rounded-md border-gray-300 text-sm"
+                  className="flex-1 rounded-md border-om-line text-sm"
                   placeholder="Label"
                 />
                 <input
@@ -235,10 +235,10 @@ export default function ExperimentsPage({
                   onChange={(e) =>
                     updateVariant(i, { trafficWeight: e.target.value })
                   }
-                  className="w-20 rounded-md border-gray-300 text-sm"
+                  className="w-20 rounded-md border-om-line text-sm"
                 />
-                <span className="text-xs text-gray-500">%</span>
-                <label className="flex items-center gap-1 text-xs text-gray-600 whitespace-nowrap">
+                <span className="text-xs text-om-ink-soft">%</span>
+                <label className="flex items-center gap-1 text-xs text-om-ink-mute whitespace-nowrap">
                   <input
                     type="checkbox"
                     checked={v.isControl}
@@ -263,7 +263,7 @@ export default function ExperimentsPage({
                 placeholder="Title override (leave blank = baseline)"
                 value={v.title}
                 onChange={(e) => updateVariant(i, { title: e.target.value })}
-                className="block w-full rounded-md border-gray-300 text-xs"
+                className="block w-full rounded-md border-om-line text-xs"
               />
               <input
                 type="text"
@@ -272,7 +272,7 @@ export default function ExperimentsPage({
                 onChange={(e) =>
                   updateVariant(i, { shortDescription: e.target.value })
                 }
-                className="block w-full rounded-md border-gray-300 text-xs"
+                className="block w-full rounded-md border-om-line text-xs"
               />
               <textarea
                 placeholder="Full description override"
@@ -281,7 +281,7 @@ export default function ExperimentsPage({
                   updateVariant(i, { fullDescription: e.target.value })
                 }
                 rows={2}
-                className="block w-full rounded-md border-gray-300 text-xs font-mono"
+                className="block w-full rounded-md border-om-line text-xs font-mono"
               />
             </div>
           ))}
@@ -291,11 +291,11 @@ export default function ExperimentsPage({
             type="button"
             onClick={addVariant}
             disabled={variants.length >= 6}
-            className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+            className="text-xs text-om-primary hover:underline disabled:opacity-50"
           >
             + Add variant
           </button>
-          <span className="text-xs text-gray-500 ml-auto">
+          <span className="text-xs text-om-ink-soft ml-auto">
             Sum:{" "}
             <strong>
               {variants.reduce(
@@ -310,14 +310,14 @@ export default function ExperimentsPage({
           type="button"
           onClick={() => void create()}
           disabled={creating}
-          className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+          className="rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
         >
           {creating ? "Creating…" : "Create as draft"}
         </button>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           {loading
             ? "Loading…"
             : experiments.length === 0
@@ -381,12 +381,12 @@ function ExperimentCard({
       : null;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+    <div className="rounded-xl border border-om-line bg-om-surface p-4 space-y-3">
       <div className="flex items-baseline justify-between gap-2 flex-wrap">
         <div>
-          <p className="text-sm font-semibold text-gray-900">{experiment.name}</p>
+          <p className="text-sm font-semibold text-om-ink">{experiment.name}</p>
           {experiment.hypothesis ? (
-            <p className="text-xs text-gray-600 mt-0.5">
+            <p className="text-xs text-om-ink-mute mt-0.5">
               {experiment.hypothesis}
             </p>
           ) : null}
@@ -396,7 +396,7 @@ function ExperimentCard({
             experiment.status === "running"
               ? "bg-emerald-100 text-emerald-700"
               : experiment.status === "concluded"
-                ? "bg-gray-100 text-gray-600"
+                ? "bg-om-line-soft text-om-ink-mute"
                 : "bg-amber-100 text-amber-700"
           }`}
         >
@@ -406,7 +406,7 @@ function ExperimentCard({
 
       {variants.length > 0 && (
         <table className="w-full text-xs">
-          <thead className="text-gray-500 text-left">
+          <thead className="text-om-ink-soft text-left">
             <tr>
               <th className="py-1 font-medium">Variant</th>
               <th className="py-1 font-medium">Weight</th>
@@ -429,7 +429,7 @@ function ExperimentCard({
                   <td className="py-1.5">
                     {v.label}
                     {v.isControl && (
-                      <span className="ml-1 text-[9px] uppercase font-semibold text-gray-500">
+                      <span className="ml-1 text-[9px] uppercase font-semibold text-om-ink-soft">
                         control
                       </span>
                     )}
@@ -464,7 +464,7 @@ function ExperimentCard({
           <button
             type="button"
             onClick={onStart}
-            className="text-xs font-medium px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            className="text-xs font-medium px-3 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep"
           >
             Start
           </button>
@@ -474,7 +474,7 @@ function ExperimentCard({
             <select
               value={selectedWinner}
               onChange={(e) => setSelectedWinner(e.target.value)}
-              className="text-xs rounded-md border border-gray-200 px-2 py-1.5"
+              className="text-xs rounded-md border border-om-line px-2 py-1.5"
             >
               <option value="">Conclude without winner</option>
               {variants.map((v) => (
@@ -486,7 +486,7 @@ function ExperimentCard({
             <button
               type="button"
               onClick={() => onConclude(selectedWinner || null)}
-              className="text-xs font-medium px-3 py-1.5 rounded-md bg-gray-700 text-white hover:bg-gray-800"
+              className="text-xs font-medium px-3 py-1.5 rounded-md bg-om-ink text-om-surface hover:bg-om-ink/90"
             >
               Conclude
             </button>

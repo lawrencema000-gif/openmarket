@@ -65,12 +65,12 @@ export default function CrashesPage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Crashes</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">Crashes</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Crash reports submitted by devices running this app. Reports
           are grouped by stack-trace fingerprint so related crashes
           aggregate.
@@ -85,8 +85,8 @@ export default function CrashesPage({
             onClick={() => setStatus(s)}
             className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
               status === s
-                ? "bg-blue-600 border-blue-600 text-white"
-                : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                ? "bg-om-primary border-om-primary text-white"
+                : "bg-om-surface border-om-line text-om-ink-mute hover:border-om-line"
             }`}
           >
             {s[0]!.toUpperCase() + s.slice(1)}
@@ -101,10 +101,10 @@ export default function CrashesPage({
       ) : null}
 
       {loading ? (
-        <div className="text-sm text-gray-500">Loading…</div>
+        <div className="text-sm text-om-ink-soft">Loading…</div>
       ) : !data || data.groups.length === 0 ? (
-        <div className="rounded-xl bg-white border border-dashed border-gray-300 p-8 text-center">
-          <p className="text-sm text-gray-500">No {status} crashes.</p>
+        <div className="rounded-xl bg-om-surface border border-dashed border-om-line p-8 text-center">
+          <p className="text-sm text-om-ink-soft">No {status} crashes.</p>
         </div>
       ) : (
         <ul className="space-y-2">
@@ -112,7 +112,7 @@ export default function CrashesPage({
             <li key={g.id}>
               <Link
                 href={`/apps/${appId}/crashes/${g.id}`}
-                className="block bg-white rounded-xl border border-gray-200 hover:border-gray-300 px-5 py-4 transition-colors"
+                className="block bg-om-surface rounded-xl border border-om-line hover:border-om-line px-5 py-4 transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -120,7 +120,7 @@ export default function CrashesPage({
                       {g.exceptionType}
                     </p>
                     {g.exceptionMessage ? (
-                      <p className="text-sm text-gray-800 mt-1 truncate">
+                      <p className="text-sm text-om-ink-mute mt-1 truncate">
                         {g.exceptionMessage}
                       </p>
                     ) : null}
@@ -131,13 +131,13 @@ export default function CrashesPage({
                         ? "bg-red-100 text-red-700"
                         : g.status === "resolved"
                           ? "bg-emerald-100 text-emerald-700"
-                          : "bg-gray-100 text-gray-600"
+                          : "bg-om-line-soft text-om-ink-mute"
                     }`}
                   >
                     {g.status}
                   </span>
                 </div>
-                <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                <div className="mt-2 flex items-center gap-4 text-xs text-om-ink-soft">
                   <span>
                     {g.occurrenceCount.toLocaleString()} event
                     {g.occurrenceCount === 1 ? "" : "s"}

@@ -155,20 +155,20 @@ export default function PricingPage({
     }
   }
 
-  if (loading) return <div className="text-sm text-gray-500">Loading…</div>;
+  if (loading) return <div className="text-sm text-om-ink-soft">Loading…</div>;
 
   return (
     <div className="max-w-3xl space-y-6">
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Pricing</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Set per-country prices. Use <code className="text-xs bg-gray-100 px-1 rounded">default</code>{" "}
+        <h1 className="text-2xl font-bold text-om-ink mt-2">Pricing</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
+          Set per-country prices. Use <code className="text-xs bg-om-line-soft px-1 rounded">default</code>{" "}
           as a fallback for unlisted countries. Leaving this empty makes the
           app free. Stripe Checkout integration ships in a follow-up — until
           then prices are informational only.
@@ -181,8 +181,8 @@ export default function PricingPage({
         </div>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">Pricing rows</h2>
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">Pricing rows</h2>
         <div className="space-y-2">
           {rows.map((r, i) => (
             <div
@@ -192,7 +192,7 @@ export default function PricingPage({
               <select
                 value={r.countryCode}
                 onChange={(e) => updateRow(i, { countryCode: e.target.value })}
-                className="rounded-md border-gray-300 text-sm"
+                className="rounded-md border-om-line text-sm"
               >
                 {COMMON_COUNTRIES.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -208,12 +208,12 @@ export default function PricingPage({
                 value={r.priceMajor}
                 onChange={(e) => updateRow(i, { priceMajor: e.target.value })}
                 placeholder="9.99"
-                className="rounded-md border-gray-300 text-sm font-mono"
+                className="rounded-md border-om-line text-sm font-mono"
               />
               <select
                 value={r.currency}
                 onChange={(e) => updateRow(i, { currency: e.target.value })}
-                className="rounded-md border-gray-300 text-sm"
+                className="rounded-md border-om-line text-sm"
               >
                 {COMMON_CURRENCIES.map((c) => (
                   <option key={c} value={c}>
@@ -221,7 +221,7 @@ export default function PricingPage({
                   </option>
                 ))}
               </select>
-              <label className="flex items-center gap-1 text-xs text-gray-600">
+              <label className="flex items-center gap-1 text-xs text-om-ink-mute">
                 <input
                   type="checkbox"
                   checked={r.active}
@@ -244,17 +244,17 @@ export default function PricingPage({
         <button
           type="button"
           onClick={addRow}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           + Add country
         </button>
       </section>
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           Refund window
         </h2>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-om-ink-soft">
           Hours after purchase during which a buyer can self-refund. Leave
           blank for manual review; set <code>0</code> to disable auto-
           refunds entirely. Common values: 2 (Play Store), 24 (generous),
@@ -267,7 +267,7 @@ export default function PricingPage({
           value={refundWindow}
           onChange={(e) => setRefundWindow(e.target.value)}
           placeholder="leave blank for manual review"
-          className="block w-32 rounded-md border-gray-300 text-sm font-mono"
+          className="block w-32 rounded-md border-om-line text-sm font-mono"
         />
       </section>
 
@@ -275,7 +275,7 @@ export default function PricingPage({
         type="button"
         onClick={() => void save()}
         disabled={saving}
-        className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+        className="rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
       >
         {saving ? "Saving…" : "Save pricing"}
       </button>

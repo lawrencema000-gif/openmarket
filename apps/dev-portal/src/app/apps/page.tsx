@@ -43,7 +43,7 @@ export default function AppsPage() {
         description="Manage your published applications."
         actions={
           <Link href="/apps/new">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+            <Button className="bg-om-primary hover:bg-om-primary-deep text-white flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
@@ -80,7 +80,7 @@ export default function AppsPage() {
               description="Create your first app to get started on OpenMarket."
               action={
                 <Link href="/apps/new">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="bg-om-primary hover:bg-om-primary-deep text-white">
                     Create your first app
                   </Button>
                 </Link>
@@ -95,19 +95,19 @@ export default function AppsPage() {
           {apps.map((app) => (
             <li key={app.id}>
               <Link href={`/apps/${app.id}`}>
-                <Card className="hover:border-blue-200 hover:shadow-sm transition-all duration-200 cursor-pointer">
+                <Card className="hover:border-om-primary/25 hover:shadow-sm transition-all duration-200 cursor-pointer">
                   <CardContent className="py-4">
                     <div className="flex items-center justify-between gap-4">
                       <div className="min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">{app.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 font-mono">{app.packageName}</p>
+                        <p className="font-semibold text-om-ink truncate">{app.title}</p>
+                        <p className="text-xs text-om-ink-soft mt-0.5 font-mono">{app.packageName}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-xs text-gray-400 capitalize hidden sm:block">
+                        <span className="text-xs text-om-ink-soft capitalize hidden sm:block">
                           {app.category.replace(/_/g, " ")}
                         </span>
                         <StatusBadge status={app.trustTier} />
-                        <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <svg className="w-4 h-4 text-om-line" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                       </div>

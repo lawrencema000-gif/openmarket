@@ -109,9 +109,9 @@ export function DeveloperActions({
       {confirmSuspend && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setConfirmSuspend(false)} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6" role="dialog" aria-modal="true">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Suspend Developer</h2>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="relative bg-om-surface rounded-2xl shadow-xl max-w-md w-full mx-4 p-6" role="dialog" aria-modal="true">
+            <h2 className="text-lg font-semibold text-om-ink mb-2">Suspend Developer</h2>
+            <p className="text-sm text-om-ink-soft mb-4">
               This will suspend the developer&apos;s account and block all app publications. Provide a reason for your records.
             </p>
             <textarea
@@ -119,13 +119,13 @@ export function DeveloperActions({
               onChange={(e) => setReason(e.target.value)}
               placeholder="Suspension reason (optional)"
               rows={3}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+              className="w-full text-sm border border-om-line rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
             />
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmSuspend(false)}
                 disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-om-ink-mute bg-om-surface border border-om-line rounded-lg hover:bg-om-surface-tint transition-colors"
               >
                 Cancel
               </button>

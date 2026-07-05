@@ -82,13 +82,13 @@ export function PlanStatusBanner() {
         ? "border-violet-300 bg-violet-50"
         : data.status === "approaching"
           ? "border-amber-300 bg-amber-50"
-          : "border-slate-200 bg-white";
+          : "border-om-line bg-om-surface";
 
   return (
     <div className={`rounded-2xl border ${tone} p-5`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-om-ink">
             {data.status === "enforced"
               ? "Free tier exceeded — publishing is paused"
               : data.status === "over_grace"
@@ -97,7 +97,7 @@ export function PlanStatusBanner() {
                   ? "Approaching the free-tier limit"
                   : "Free plan"}
           </p>
-          <p className="text-xs text-slate-500 max-w-md">
+          <p className="text-xs text-om-ink-soft max-w-md">
             {data.status === "enforced"
               ? "Your existing apps keep running, but new apps and releases are paused until you upgrade. Upgrade to a flat monthly plan (plus the standard revenue share) to resume."
               : data.status === "over_grace"
@@ -146,12 +146,12 @@ function UsageBar({
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
-        <span className="font-medium text-slate-600">{label}</span>
-        <span className={over ? "text-violet-700 font-semibold" : "text-slate-400"}>
+        <span className="font-medium text-om-ink-mute">{label}</span>
+        <span className={over ? "text-violet-700 font-semibold" : "text-om-ink-soft"}>
           {used.toLocaleString()} / {max.toLocaleString()}
         </span>
       </div>
-      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+      <div className="h-2 rounded-full bg-om-line-soft overflow-hidden">
         <div
           className={`h-full rounded-full ${
             over ? "bg-violet-500" : percent >= 80 ? "bg-amber-400" : "bg-emerald-500"

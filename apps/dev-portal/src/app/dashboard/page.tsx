@@ -67,13 +67,13 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 rounded-lg bg-gray-200 animate-pulse" />
+        <div className="h-8 w-48 rounded-lg bg-om-line animate-pulse" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 rounded-xl bg-gray-200 animate-pulse" />
+            <div key={i} className="h-24 rounded-xl bg-om-line animate-pulse" />
           ))}
         </div>
-        <div className="h-48 rounded-xl bg-gray-200 animate-pulse" />
+        <div className="h-48 rounded-xl bg-om-line animate-pulse" />
       </div>
     );
   }
@@ -102,7 +102,7 @@ export default function DashboardPage() {
           <Eyebrow tone="primary" pulse>
             Developer console
           </Eyebrow>
-          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-om-ink">
             Welcome back
             {developer?.displayName ? (
               <>
@@ -114,7 +114,7 @@ export default function DashboardPage() {
             ) : null}
             .
           </h1>
-          <p className="text-slate-500 max-w-xl">
+          <p className="text-om-ink-soft max-w-xl">
             Snapshot of your apps, trust state, and the things you can ship
             right now.
           </p>
@@ -181,8 +181,8 @@ export default function DashboardPage() {
                   <div
                     className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-colors ${
                       i <= activeTrustIndex
-                        ? "border-blue-600 bg-blue-600 text-white"
-                        : "border-gray-200 bg-white text-gray-400"
+                        ? "border-om-primary bg-om-primary text-white"
+                        : "border-om-line bg-om-surface text-om-ink-soft"
                     }`}
                   >
                     {i < activeTrustIndex ? (
@@ -193,15 +193,15 @@ export default function DashboardPage() {
                       i + 1
                     )}
                   </div>
-                  <p className={`text-xs font-medium mt-2 ${i <= activeTrustIndex ? "text-gray-900" : "text-gray-400"}`}>
+                  <p className={`text-xs font-medium mt-2 ${i <= activeTrustIndex ? "text-om-ink" : "text-om-ink-soft"}`}>
                     {step.label}
                   </p>
-                  <p className="text-[10px] text-gray-400 text-center mt-0.5 hidden sm:block">
+                  <p className="text-[10px] text-om-ink-soft text-center mt-0.5 hidden sm:block">
                     {step.description}
                   </p>
                 </div>
                 {i < TRUST_STEPS.length - 1 && (
-                  <div className={`flex-shrink-0 h-0.5 w-8 mx-1 mb-4 ${i < activeTrustIndex ? "bg-blue-600" : "bg-gray-200"}`} />
+                  <div className={`flex-shrink-0 h-0.5 w-8 mx-1 mb-4 ${i < activeTrustIndex ? "bg-om-primary" : "bg-om-line"}`} />
                 )}
               </div>
             ))}
@@ -217,7 +217,7 @@ export default function DashboardPage() {
         <CardContent>
           <div className="flex flex-wrap gap-3">
             <Link href="/apps/new">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+              <Button className="bg-om-primary hover:bg-om-primary-deep text-white flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>

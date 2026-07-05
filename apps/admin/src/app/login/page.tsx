@@ -37,23 +37,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-om-surface-tint flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mb-3 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-om-primary flex items-center justify-center mb-3 shadow-sm">
             <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">OpenMarket</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Admin Console</p>
+          <h1 className="text-xl font-bold text-om-ink">OpenMarket</h1>
+          <p className="text-sm text-om-ink-soft mt-0.5">Admin Console</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+        <div className="bg-om-surface rounded-2xl border border-om-line shadow-sm">
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Admin Sign In</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <h2 className="text-lg font-semibold text-om-ink mb-1">Admin Sign In</h2>
+            <p className="text-sm text-om-ink-soft mb-6">
               Access the OpenMarket Admin Console
             </p>
 
@@ -65,7 +65,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-om-ink-mute mb-1">
                   Email
                 </label>
                 <Input
@@ -78,7 +78,7 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-om-ink-mute mb-1">
                   Password
                 </label>
                 <Input
@@ -93,7 +93,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-1 w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                className="mt-1 w-full rounded-lg bg-om-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-om-primary-deep disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -109,9 +109,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="mt-6 text-sm text-center text-gray-500">
+            <p className="mt-6 text-sm text-center text-om-ink-soft">
               Not an admin?{" "}
-              <Link href="https://openmarket-dev-portal.vercel.app" className="text-blue-600 hover:underline font-medium">
+              <Link href="https://openmarket-dev-portal.vercel.app" className="text-om-primary hover:underline font-medium">
                 Go to Marketplace
               </Link>
             </p>

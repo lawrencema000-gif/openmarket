@@ -47,7 +47,7 @@ async function getRelease(id: string): Promise<Release | null> {
 }
 
 function riskScoreClass(score?: number): string {
-  if (score == null) return "text-gray-600";
+  if (score == null) return "text-om-ink-mute";
   if (score >= 71) return "text-red-600";
   if (score >= 31) return "text-orange-500";
   if (score >= 11) return "text-yellow-600";
@@ -55,7 +55,7 @@ function riskScoreClass(score?: number): string {
 }
 
 function riskBarClass(score?: number): string {
-  if (score == null) return "bg-gray-300";
+  if (score == null) return "bg-om-line";
   if (score >= 71) return "bg-red-500";
   if (score >= 31) return "bg-orange-400";
   if (score >= 11) return "bg-yellow-400";
@@ -74,8 +74,8 @@ function severityHeaderClass(sev?: string): string {
     case "critical": return "bg-red-50 border-red-200 text-red-700";
     case "high": return "bg-orange-50 border-orange-200 text-orange-700";
     case "medium": return "bg-yellow-50 border-yellow-200 text-yellow-700";
-    case "low": return "bg-blue-50 border-blue-200 text-blue-700";
-    default: return "bg-gray-50 border-gray-200 text-gray-600";
+    case "low": return "bg-om-primary/10 border-om-primary/25 text-om-primary";
+    default: return "bg-om-surface-tint border-om-line text-om-ink-mute";
   }
 }
 
@@ -100,7 +100,7 @@ export default async function ReleaseDetailPage({
 
   if (!release) {
     return (
-      <div className="text-center py-20 text-gray-400">
+      <div className="text-center py-20 text-om-ink-soft">
         Release not found or API unavailable.
       </div>
     );
@@ -132,56 +132,56 @@ export default async function ReleaseDetailPage({
             <CardContent className="p-6 space-y-4">
               {release.packageName && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Package</p>
-                  <code className="text-sm font-mono text-gray-800 bg-gray-50 px-2 py-1 rounded">
+                  <p className="text-xs font-semibold text-om-ink-soft uppercase mb-1">Package</p>
+                  <code className="text-sm font-mono text-om-ink-mute bg-om-surface-tint px-2 py-1 rounded">
                     {release.packageName}
                   </code>
                 </div>
               )}
               {release.version && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Version</p>
-                  <p className="text-sm text-gray-800 font-medium">v{release.version}</p>
+                  <p className="text-xs font-semibold text-om-ink-soft uppercase mb-1">Version</p>
+                  <p className="text-sm text-om-ink-mute font-medium">v{release.version}</p>
                 </div>
               )}
               {release.channel && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Channel</p>
+                  <p className="text-xs font-semibold text-om-ink-soft uppercase mb-1">Channel</p>
                   <StatusBadge status={release.channel} />
                 </div>
               )}
               {release.status && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Status</p>
+                  <p className="text-xs font-semibold text-om-ink-soft uppercase mb-1">Status</p>
                   <StatusBadge status={release.status} />
                 </div>
               )}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Developer</p>
+                <p className="text-xs font-semibold text-om-ink-soft uppercase mb-1">Developer</p>
                 {release.developer?.id ? (
                   <a
                     href={`/developers/${release.developer.id}`}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="text-sm font-medium text-om-primary hover:underline"
                   >
                     {devName}
                   </a>
                 ) : (
-                  <p className="text-sm text-gray-800">{devName}</p>
+                  <p className="text-sm text-om-ink-mute">{devName}</p>
                 )}
                 {release.developer?.email && (
-                  <p className="text-xs text-gray-400 mt-0.5">{release.developer.email}</p>
+                  <p className="text-xs text-om-ink-soft mt-0.5">{release.developer.email}</p>
                 )}
               </div>
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Submitted</p>
-                <p className="text-sm text-gray-800">
+                <p className="text-xs font-semibold text-om-ink-soft uppercase mb-1">Submitted</p>
+                <p className="text-sm text-om-ink-mute">
                   {submitted ? new Date(submitted).toLocaleString() : "—"}
                 </p>
               </div>
               {release.description && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Description</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{release.description}</p>
+                  <p className="text-xs font-semibold text-om-ink-soft uppercase mb-1">Description</p>
+                  <p className="text-sm text-om-ink-mute leading-relaxed">{release.description}</p>
                 </div>
               )}
             </CardContent>
@@ -190,14 +190,14 @@ export default async function ReleaseDetailPage({
           {/* Risk score card */}
           <Card>
             <CardContent className="p-6">
-              <p className="text-xs font-semibold text-gray-400 uppercase mb-3">Risk Score</p>
+              <p className="text-xs font-semibold text-om-ink-soft uppercase mb-3">Risk Score</p>
               <div className="flex items-end gap-3 mb-3">
                 <span className={`text-5xl font-black ${riskScoreClass(score)}`}>
                   {score != null ? score : "—"}
                 </span>
-                <span className="text-sm text-gray-500 mb-1.5">/ 100</span>
+                <span className="text-sm text-om-ink-soft mb-1.5">/ 100</span>
               </div>
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+              <div className="w-full h-2 bg-om-line-soft rounded-full overflow-hidden mb-3">
                 <div
                   className={`h-full rounded-full transition-all ${riskBarClass(score)}`}
                   style={{ width: `${Math.min(score ?? 0, 100)}%` }}
@@ -217,11 +217,11 @@ export default async function ReleaseDetailPage({
 
               {Object.keys(breakdown).length > 0 && (
                 <div className="mt-4 space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-400 uppercase">Breakdown</p>
+                  <p className="text-xs font-semibold text-om-ink-soft uppercase">Breakdown</p>
                   {Object.entries(breakdown).map(([key, val]) => (
                     <div key={key} className="flex justify-between text-xs">
-                      <span className="text-gray-500 capitalize">{key.replace(/_/g, " ")}</span>
-                      <span className="font-semibold text-gray-800">{val}</span>
+                      <span className="text-om-ink-soft capitalize">{key.replace(/_/g, " ")}</span>
+                      <span className="font-semibold text-om-ink-mute">{val}</span>
                     </div>
                   ))}
                 </div>
@@ -233,7 +233,7 @@ export default async function ReleaseDetailPage({
           {release.permissions && release.permissions.length > 0 && (
             <Card>
               <CardContent className="p-6">
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-3">Permissions</p>
+                <p className="text-xs font-semibold text-om-ink-soft uppercase mb-3">Permissions</p>
                 <div className="flex flex-wrap gap-1.5">
                   {release.permissions.map((perm) => {
                     const isDangerous = /CAMERA|RECORD_AUDIO|READ_CONTACTS|ACCESS_FINE_LOCATION|READ_CALL_LOG|READ_SMS/i.test(perm);
@@ -243,7 +243,7 @@ export default async function ReleaseDetailPage({
                         className={`text-xs px-2 py-0.5 rounded font-mono ${
                           isDangerous
                             ? "bg-red-50 text-red-700 border border-red-200"
-                            : "bg-gray-100 text-gray-600"
+                            : "bg-om-line-soft text-om-ink-mute"
                         }`}
                       >
                         {perm}
@@ -262,16 +262,16 @@ export default async function ReleaseDetailPage({
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Scan Findings</h2>
+                  <h2 className="text-base font-semibold text-om-ink">Scan Findings</h2>
                   {release.scanResults?.summary && (
-                    <p className="text-sm text-gray-500 mt-0.5">{release.scanResults.summary}</p>
+                    <p className="text-sm text-om-ink-soft mt-0.5">{release.scanResults.summary}</p>
                   )}
                 </div>
                 <Badge variant="secondary">{findings.length} finding{findings.length !== 1 ? "s" : ""}</Badge>
               </div>
 
               {grouped.length === 0 ? (
-                <div className="py-8 text-center text-sm text-gray-400">No scan findings</div>
+                <div className="py-8 text-center text-sm text-om-ink-soft">No scan findings</div>
               ) : (
                 <div className="space-y-4">
                   {grouped.map(({ severity, items }) => (
@@ -280,20 +280,20 @@ export default async function ReleaseDetailPage({
                         <span className="text-xs font-bold uppercase tracking-wide capitalize">{severity}</span>
                         <span className="text-xs font-semibold opacity-70">{items.length}</span>
                       </div>
-                      <div className="divide-y divide-gray-100 bg-white">
+                      <div className="divide-y divide-gray-100 bg-om-surface">
                         {items.map((f, i) => (
                           <div key={i} className="px-4 py-3 flex items-start gap-3">
                             <div className="flex-1 min-w-0">
                               {f.type && (
-                                <p className="text-xs font-semibold text-gray-500 mb-0.5">{f.type}</p>
+                                <p className="text-xs font-semibold text-om-ink-soft mb-0.5">{f.type}</p>
                               )}
-                              <p className="text-sm text-gray-700">
+                              <p className="text-sm text-om-ink-mute">
                                 {f.message ?? f.description ?? "No details"}
                               </p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               {f.isNew && (
-                                <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">NEW</span>
+                                <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-om-primary/15 text-om-primary">NEW</span>
                               )}
                               {f.isDangerous && (
                                 <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700">!</span>

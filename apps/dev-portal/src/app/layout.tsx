@@ -118,7 +118,7 @@ function Sidebar() {
           </div>
           <div>
             <p className="text-white font-semibold text-sm leading-none">OpenMarket</p>
-            <p className="text-slate-400 text-xs mt-0.5">Developer Console</p>
+            <p className="text-om-ink-soft text-xs mt-0.5">Developer Console</p>
           </div>
         </Link>
       </div>
@@ -134,7 +134,7 @@ function Sidebar() {
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-violet-600/20 text-white border-l-2 border-violet-400 pl-[10px] shadow-inner shadow-violet-500/10"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent pl-[10px]"
+                  : "text-om-ink-soft hover:text-white hover:bg-white/5 border-l-2 border-transparent pl-[10px]"
               }`}
             >
               {link.icon}
@@ -146,17 +146,17 @@ function Sidebar() {
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-slate-800 space-y-3">
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
-          <a href={`${WEB_BASE_URL}/content-policy`} className="hover:text-slate-300">Content&nbsp;Policy</a>
-          <a href={`${WEB_BASE_URL}/dmca`} className="hover:text-slate-300">DMCA</a>
-          <a href={`${WEB_BASE_URL}/privacy`} className="hover:text-slate-300">Privacy</a>
-          <a href={`${WEB_BASE_URL}/terms`} className="hover:text-slate-300">Terms</a>
-          <a href={`${WEB_BASE_URL}/transparency-report`} className="hover:text-slate-300">Transparency</a>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-om-ink-soft">
+          <a href={`${WEB_BASE_URL}/content-policy`} className="hover:text-om-line">Content&nbsp;Policy</a>
+          <a href={`${WEB_BASE_URL}/dmca`} className="hover:text-om-line">DMCA</a>
+          <a href={`${WEB_BASE_URL}/privacy`} className="hover:text-om-line">Privacy</a>
+          <a href={`${WEB_BASE_URL}/terms`} className="hover:text-om-line">Terms</a>
+          <a href={`${WEB_BASE_URL}/transparency-report`} className="hover:text-om-line">Transparency</a>
         </div>
-        <p className="text-xs text-slate-500">v1.0.0</p>
+        <p className="text-xs text-om-ink-soft">v1.0.0</p>
         <button
           onClick={handleSignOut}
-          className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1.5"
+          className="text-xs text-om-ink-soft hover:text-white transition-colors flex items-center gap-1.5"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
@@ -184,7 +184,7 @@ function MobileNav() {
             key={link.href}
             href={link.href}
             className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${
-              isActive ? "text-violet-400" : "text-slate-500 hover:text-slate-300"
+              isActive ? "text-violet-400" : "text-om-ink-soft hover:text-om-line"
             }`}
           >
             {link.icon}
@@ -233,10 +233,10 @@ export default function RootLayout({
         <title>OpenMarket Developer Console</title>
         <meta name="description" content="Manage your apps and releases on OpenMarket." />
       </head>
-      <body className="om-bg-app text-slate-900">
+      <body className="om-bg-app text-om-ink">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-om-primary focus:px-4 focus:py-2 focus:text-white"
         >
           Skip to content
         </a>

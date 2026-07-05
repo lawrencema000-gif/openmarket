@@ -87,7 +87,7 @@ export default function SigningKeysPage() {
   }
 
   const selectCls =
-    "flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+    "flex h-9 w-full rounded-md border border-om-line bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-om-primary disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -139,10 +139,10 @@ export default function SigningKeysPage() {
                     </Badge>
                     <StatusBadge status={key.isActive ? "published" : "revoked"} />
                   </div>
-                  <p className="text-sm font-mono text-gray-700 break-all">
+                  <p className="text-sm font-mono text-om-ink-mute break-all">
                     {key.fingerprint}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1.5">
+                  <p className="text-xs text-om-ink-soft mt-1.5">
                     Enrolled {new Date(key.enrolledAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
@@ -180,7 +180,7 @@ export default function SigningKeysPage() {
 
           <form onSubmit={handleEnroll} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-om-ink-mute mb-1">
                 Fingerprint (SHA-256)
               </label>
               <Input
@@ -193,7 +193,7 @@ export default function SigningKeysPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-om-ink-mute mb-1">
                 Algorithm
               </label>
               <select
@@ -211,7 +211,7 @@ export default function SigningKeysPage() {
             <Button
               type="submit"
               disabled={enrollLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-60"
+              className="bg-om-primary hover:bg-om-primary-deep text-white disabled:opacity-60"
             >
               {enrollLoading ? (
                 <span className="flex items-center gap-2">

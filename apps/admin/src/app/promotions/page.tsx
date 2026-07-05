@@ -95,8 +95,8 @@ export default function AdminPromotionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Promoted listings</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink">Promoted listings</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Editorial review queue. Approve only labeled, policy-compliant
           campaigns — promotions never bump established trust signals.
         </p>
@@ -111,23 +111,23 @@ export default function AdminPromotionsPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+            <div key={i} className="h-24 rounded-xl bg-om-line-soft animate-pulse" />
           ))}
         </div>
       ) : pending.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-6 py-12 text-center">
-          <p className="text-slate-500">Nothing pending review. 🎉</p>
+        <div className="rounded-xl border border-om-line bg-om-surface px-6 py-12 text-center">
+          <p className="text-om-ink-soft">Nothing pending review. 🎉</p>
         </div>
       ) : (
         <div className="space-y-3">
           {pending.map((p) => (
             <div
               key={p.id}
-              className="rounded-xl border border-slate-200 bg-white px-5 py-4 flex flex-wrap items-center justify-between gap-4"
+              className="rounded-xl border border-om-line bg-om-surface px-5 py-4 flex flex-wrap items-center justify-between gap-4"
             >
               <div className="space-y-1 min-w-0">
-                <p className="font-mono text-xs text-slate-400">app {p.appId}</p>
-                <p className="text-sm text-slate-700">
+                <p className="font-mono text-xs text-om-ink-soft">app {p.appId}</p>
+                <p className="text-sm text-om-ink-mute">
                   <span className="font-semibold">
                     {money(p.bidCentsPerClick, p.currency)}
                   </span>{" "}
@@ -137,7 +137,7 @@ export default function AdminPromotionsPage() {
                   </span>{" "}
                   / day
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-om-ink-soft">
                   {p.targetCountries?.length
                     ? `Countries: ${p.targetCountries.join(", ")} · `
                     : ""}

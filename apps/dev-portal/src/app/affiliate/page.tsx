@@ -91,8 +91,8 @@ export default function AffiliatePage() {
   if (loading) {
     return (
       <div className="max-w-4xl space-y-6">
-        <div className="h-32 rounded-3xl bg-slate-200 animate-pulse" />
-        <div className="h-48 rounded-2xl bg-slate-200 animate-pulse" />
+        <div className="h-32 rounded-3xl bg-om-line animate-pulse" />
+        <div className="h-48 rounded-2xl bg-om-line animate-pulse" />
       </div>
     );
   }
@@ -105,10 +105,10 @@ export default function AffiliatePage() {
           <Eyebrow tone="primary" pulse>
             Affiliate program
           </Eyebrow>
-          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-om-ink">
             Earn by <GradientText as="span">referring installs</GradientText>.
           </h1>
-          <p className="text-slate-500 max-w-xl">
+          <p className="text-om-ink-soft max-w-xl">
             Share referral links to apps in the program and earn a commission on
             every qualified install attributed to you.
           </p>
@@ -127,12 +127,12 @@ export default function AffiliatePage() {
             <CardTitle>Join the affiliate program</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-om-ink-mute">
               Enrolling generates your unique referral code. Optional details:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-slate-500" htmlFor="handle">
+                <label className="text-xs font-medium text-om-ink-soft" htmlFor="handle">
                   Public handle (optional)
                 </label>
                 <Input
@@ -143,7 +143,7 @@ export default function AffiliatePage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-500" htmlFor="payout">
+                <label className="text-xs font-medium text-om-ink-soft" htmlFor="payout">
                   Payout email (optional)
                 </label>
                 <Input
@@ -209,14 +209,14 @@ export default function AffiliatePage() {
                   {copied ? "Copied!" : "Copy"}
                 </Button>
               </div>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-om-ink-soft">
                 Append <code className="text-violet-700">?ref={data.account?.referralCode}</code>{" "}
                 to any app link in the program. Example:
               </p>
-              <code className="block rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600 break-all">
+              <code className="block rounded-lg bg-om-surface-tint border border-om-line px-3 py-2 text-xs text-om-ink-mute break-all">
                 {STOREFRONT}/apps/&lt;app-id&gt;?ref={data.account?.referralCode}
               </code>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-om-ink-soft">
                 Approved earnings become payable through your{" "}
                 <a href="/payouts" className="text-violet-600 hover:underline">
                   payout account

@@ -102,12 +102,12 @@ export default function RevenuePage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Revenue</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">Revenue</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Completed minus refunded — both app sales and in-app product
           purchases. Per-currency rollups; we don't FX-convert because
           per-country pricing means buyers pay in their local currency.
@@ -122,8 +122,8 @@ export default function RevenuePage({
             onClick={() => setDays(p.days)}
             className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
               days === p.days
-                ? "bg-blue-600 border-blue-600 text-white"
-                : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                ? "bg-om-primary border-om-primary text-white"
+                : "bg-om-surface border-om-line text-om-ink-mute hover:border-om-line"
             }`}
           >
             {p.label}
@@ -138,10 +138,10 @@ export default function RevenuePage({
       ) : null}
 
       {loading ? (
-        <div className="text-sm text-gray-500">Loading…</div>
+        <div className="text-sm text-om-ink-soft">Loading…</div>
       ) : !data ? null : data.byCurrency.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
-          <p className="text-sm text-gray-600">
+        <div className="rounded-xl border border-dashed border-om-line bg-om-surface p-8 text-center">
+          <p className="text-sm text-om-ink-mute">
             No revenue in this window. Once buyers complete a checkout,
             their purchases land here.
           </p>
@@ -152,19 +152,19 @@ export default function RevenuePage({
             {data.byCurrency.map((c) => (
               <div
                 key={c.currency}
-                className="rounded-xl border border-gray-200 bg-white p-4"
+                className="rounded-xl border border-om-line bg-om-surface p-4"
               >
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-om-ink-soft uppercase tracking-wider">
                   Net · {c.currency}
                 </p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
+                <p className="text-2xl font-bold text-om-ink mt-1">
                   {formatPrice(c.netCents, c.currency)}
                 </p>
-                <p className="text-[11px] text-gray-500 mt-2">
+                <p className="text-[11px] text-om-ink-soft mt-2">
                   Gross {formatPrice(c.grossCents, c.currency)} · refunded{" "}
                   {formatPrice(c.refundedCents, c.currency)}
                 </p>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-om-ink-soft">
                   {c.completedCount.toLocaleString()} completed ·{" "}
                   {c.refundedCount.toLocaleString()} refunded
                 </p>
@@ -173,7 +173,7 @@ export default function RevenuePage({
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-gray-900">
+            <h2 className="text-sm font-semibold text-om-ink">
               Daily net revenue
             </h2>
             {Array.from(dailyByCurrency.entries()).map(([currency, rows]) => (
@@ -181,12 +181,12 @@ export default function RevenuePage({
             ))}
           </section>
 
-          <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-2">
-            <h2 className="text-sm font-semibold text-gray-700">
+          <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-2">
+            <h2 className="text-sm font-semibold text-om-ink-mute">
               Per-product breakdown
             </h2>
             <table className="w-full text-xs">
-              <thead className="text-gray-500 text-left">
+              <thead className="text-om-ink-soft text-left">
                 <tr>
                   <th className="py-1 font-medium">Product</th>
                   <th className="py-1 font-medium">Currency</th>
@@ -200,9 +200,9 @@ export default function RevenuePage({
                   <tr key={i}>
                     <td className="py-1.5">
                       {p.source === "app" ? (
-                        <span className="text-gray-700">App download</span>
+                        <span className="text-om-ink-mute">App download</span>
                       ) : (
-                        <span className="text-gray-700">
+                        <span className="text-om-ink-mute">
                           {p.productName ?? "Unknown product"}
                           <span className="ml-1 text-[9px] uppercase font-semibold text-emerald-700">
                             iap
@@ -217,7 +217,7 @@ export default function RevenuePage({
                     <td className="py-1.5 text-right">
                       {p.completedCount.toLocaleString()}
                     </td>
-                    <td className="py-1.5 text-right text-gray-500">
+                    <td className="py-1.5 text-right text-om-ink-soft">
                       {p.refundedCount.toLocaleString()}
                     </td>
                   </tr>
@@ -235,8 +235,8 @@ function DailyChart({ currency, rows }: { currency: string; rows: DailyRow[] }) 
   if (rows.length === 0) return null;
   const max = Math.max(...rows.map((r) => Math.abs(r.netCents)), 1);
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <p className="text-xs font-medium text-gray-700 mb-2">{currency}</p>
+    <div className="bg-om-surface rounded-xl border border-om-line p-4">
+      <p className="text-xs font-medium text-om-ink-mute mb-2">{currency}</p>
       <div className="flex items-end gap-0.5 h-32">
         {rows.map((r) => {
           const heightPct = (Math.abs(r.netCents) / max) * 100;
@@ -255,7 +255,7 @@ function DailyChart({ currency, rows }: { currency: string; rows: DailyRow[] }) 
           );
         })}
       </div>
-      <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+      <div className="flex justify-between text-[10px] text-om-ink-soft mt-1">
         <span>{rows[0]?.day}</span>
         <span>{rows[rows.length - 1]?.day}</span>
       </div>

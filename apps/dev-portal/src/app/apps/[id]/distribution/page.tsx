@@ -121,14 +121,14 @@ export default function DistributionPage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">
           Distribution channels
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-om-ink-soft mt-1">
           Share private builds with testers via secret URLs. Each channel
           has its own share link and can pin one or more releases. Revoke
           a channel anytime to kill the URL immediately.
@@ -141,36 +141,36 @@ export default function DistributionPage({
         </div>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">Create a channel</h2>
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">Create a channel</h2>
         <div className="space-y-2">
           <input
             type="text"
             placeholder='Name — e.g. "Internal alpha"'
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            className="block w-full rounded-md border-gray-300 text-sm"
+            className="block w-full rounded-md border-om-line text-sm"
           />
           <textarea
             placeholder="Description (optional)"
             value={newDescription}
             onChange={(e) => setNewDescription(e.target.value)}
             rows={2}
-            className="block w-full rounded-md border-gray-300 text-sm"
+            className="block w-full rounded-md border-om-line text-sm"
           />
         </div>
         <button
           type="button"
           onClick={() => void createChannel()}
           disabled={creating || !newName.trim()}
-          className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+          className="rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
         >
           {creating ? "Creating…" : "Create channel"}
         </button>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           {loading
             ? "Loading…"
             : channels.length === 0
@@ -280,13 +280,13 @@ function ChannelCard({
 
   return (
     <div
-      className={`rounded-xl border bg-white p-5 space-y-3 ${isActive ? "border-gray-200" : "border-gray-200 opacity-60"}`}
+      className={`rounded-xl border bg-om-surface p-5 space-y-3 ${isActive ? "border-om-line" : "border-om-line opacity-60"}`}
     >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-sm font-semibold text-gray-900">{channel.name}</p>
+          <p className="text-sm font-semibold text-om-ink">{channel.name}</p>
           {channel.description ? (
-            <p className="text-xs text-gray-500 mt-0.5">{channel.description}</p>
+            <p className="text-xs text-om-ink-soft mt-0.5">{channel.description}</p>
           ) : null}
         </div>
         {isActive ? (
@@ -298,21 +298,21 @@ function ChannelCard({
             Revoke
           </button>
         ) : (
-          <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+          <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-om-line-soft text-om-ink-mute">
             revoked {channel.revokedAt ? new Date(channel.revokedAt).toLocaleDateString() : ""}
           </span>
         )}
       </div>
 
       {isActive ? (
-        <div className="flex items-center gap-2 rounded-md bg-gray-50 border border-gray-200 px-3 py-2 text-xs">
-          <code className="font-mono flex-1 truncate text-gray-700">
+        <div className="flex items-center gap-2 rounded-md bg-om-surface-tint border border-om-line px-3 py-2 text-xs">
+          <code className="font-mono flex-1 truncate text-om-ink-mute">
             {shareUrl}
           </code>
           <button
             type="button"
             onClick={() => void copyShareUrl()}
-            className="text-blue-600 hover:underline shrink-0"
+            className="text-om-primary hover:underline shrink-0"
           >
             {copyHint ?? "Copy"}
           </button>
@@ -321,11 +321,11 @@ function ChannelCard({
 
       {isActive ? (
         <div>
-          <p className="text-xs font-medium text-gray-700 mb-1.5">
+          <p className="text-xs font-medium text-om-ink-mute mb-1.5">
             Pinned builds ({pinned.length})
           </p>
           {pinned.length === 0 ? (
-            <p className="text-xs text-gray-500 italic">No builds pinned yet.</p>
+            <p className="text-xs text-om-ink-soft italic">No builds pinned yet.</p>
           ) : (
             <ul className="space-y-1">
               {pinned.map((r) => (
@@ -335,7 +335,7 @@ function ChannelCard({
                 >
                   <span>
                     v{r.versionName}{" "}
-                    <span className="text-gray-400 font-mono">
+                    <span className="text-om-ink-soft font-mono">
                       ({r.versionCode})
                     </span>
                   </span>
@@ -355,7 +355,7 @@ function ChannelCard({
             <select
               value={selectedReleaseId}
               onChange={(e) => setSelectedReleaseId(e.target.value)}
-              className="flex-1 text-xs rounded-md border border-gray-200 px-2 py-1.5"
+              className="flex-1 text-xs rounded-md border border-om-line px-2 py-1.5"
             >
               <option value="">Pick a release to pin…</option>
               {releases.map((r) => (
@@ -368,7 +368,7 @@ function ChannelCard({
               type="button"
               disabled={!selectedReleaseId || working}
               onClick={() => void pin()}
-              className="text-xs font-medium px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              className="text-xs font-medium px-3 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
             >
               Pin
             </button>
@@ -376,7 +376,7 @@ function ChannelCard({
         </div>
       ) : null}
 
-      <p className="text-[10px] text-gray-400">
+      <p className="text-[10px] text-om-ink-soft">
         Created {new Date(channel.createdAt).toLocaleDateString()}
         {channel.expiresAt
           ? ` · expires ${new Date(channel.expiresAt).toLocaleDateString()}`

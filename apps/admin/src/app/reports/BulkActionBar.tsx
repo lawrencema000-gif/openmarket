@@ -73,10 +73,10 @@ export function BulkActionBar({
   }
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 shadow-xl">
+    <div className="fixed bottom-0 inset-x-0 z-30 bg-om-surface border-t border-om-line shadow-xl">
       <div className="max-w-5xl mx-auto p-4 space-y-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-semibold text-om-ink">
             {selectedIds.length} selected
           </p>
           <div className="flex items-center gap-2">
@@ -85,8 +85,8 @@ export function BulkActionBar({
               onClick={() => setResolution("dismiss")}
               className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
                 resolution === "dismiss"
-                  ? "bg-gray-100 text-gray-900 border-gray-300 ring-2 ring-offset-1 ring-blue-300"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  ? "bg-om-line-soft text-om-ink border-om-line ring-2 ring-offset-1 ring-om-primary/40"
+                  : "bg-om-surface text-om-ink-mute border-om-line hover:bg-om-surface-tint"
               }`}
             >
               Dismiss
@@ -97,7 +97,7 @@ export function BulkActionBar({
               className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
                 resolution === "warn"
                   ? "bg-amber-50 text-amber-700 border-amber-200 ring-2 ring-offset-1 ring-amber-300"
-                  : "bg-white text-amber-700 border-amber-200 hover:bg-amber-50"
+                  : "bg-om-surface text-amber-700 border-amber-200 hover:bg-amber-50"
               }`}
             >
               Warn
@@ -108,7 +108,7 @@ export function BulkActionBar({
               className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
                 resolution === "delist"
                   ? "bg-red-50 text-red-700 border-red-200 ring-2 ring-offset-1 ring-red-300"
-                  : "bg-white text-red-700 border-red-200 hover:bg-red-50"
+                  : "bg-om-surface text-red-700 border-red-200 hover:bg-red-50"
               }`}
             >
               Delist
@@ -116,7 +116,7 @@ export function BulkActionBar({
             <button
               type="button"
               onClick={onClear}
-              className="text-xs text-gray-500 hover:text-gray-700 px-2"
+              className="text-xs text-om-ink-soft hover:text-om-ink px-2"
             >
               Clear
             </button>
@@ -136,7 +136,7 @@ export function BulkActionBar({
                     : "Required (≥10 chars): public takedown reason. Appears in the transparency log for every delisted target."
               }
               rows={2}
-              className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
             />
             {resolution === "delist" && (
               <label className="flex items-center gap-2 text-sm text-red-700 cursor-pointer">
@@ -160,7 +160,7 @@ export function BulkActionBar({
               type="button"
               onClick={submit}
               disabled={pending}
-              className="text-xs font-semibold px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              className="text-xs font-semibold px-4 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
             >
               {pending
                 ? "Resolving…"

@@ -9,7 +9,7 @@ type Resolution = "delist" | "warn" | "dismiss";
 const RESOLUTIONS: { value: Resolution; label: string; tone: string }[] = [
   { value: "delist", label: "Delist target", tone: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100" },
   { value: "warn", label: "Warn developer", tone: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" },
-  { value: "dismiss", label: "Dismiss report", tone: "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100" },
+  { value: "dismiss", label: "Dismiss report", tone: "bg-om-surface-tint text-om-ink-mute border-om-line hover:bg-om-surface-tint" },
 ];
 
 export function ReportResolveDrawer({
@@ -28,7 +28,7 @@ export function ReportResolveDrawer({
 
   if (disabled) {
     return (
-      <span className="text-xs text-gray-400 italic">resolved</span>
+      <span className="text-xs text-om-ink-soft italic">resolved</span>
     );
   }
 
@@ -67,7 +67,7 @@ export function ReportResolveDrawer({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-xs font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-md border border-blue-200 hover:bg-blue-50 transition-colors shrink-0"
+        className="text-xs font-medium text-om-primary hover:text-om-primary px-3 py-1.5 rounded-md border border-om-primary/25 hover:bg-om-primary/10 transition-colors shrink-0"
       >
         Resolve
       </button>
@@ -75,7 +75,7 @@ export function ReportResolveDrawer({
   }
 
   return (
-    <div className="w-full mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-3">
+    <div className="w-full mt-3 rounded-lg border border-om-line bg-om-surface-tint p-3 space-y-3">
       <div className="flex flex-wrap gap-2">
         {RESOLUTIONS.map((r) => {
           const active = resolution === r.value;
@@ -85,7 +85,7 @@ export function ReportResolveDrawer({
               type="button"
               onClick={() => setResolution(r.value)}
               className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
-                active ? r.tone + " ring-2 ring-offset-1 ring-blue-300" : r.tone
+                active ? r.tone + " ring-2 ring-offset-1 ring-om-primary/40" : r.tone
               }`}
             >
               {r.label}
@@ -101,7 +101,7 @@ export function ReportResolveDrawer({
             ? "Optional notes…"
             : "Required: cite the policy section + reason. This text appears in the public transparency log on delist."
         }
-        className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        className="w-full text-sm border border-om-line rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-om-primary/40"
         rows={3}
       />
       {error && (
@@ -114,7 +114,7 @@ export function ReportResolveDrawer({
             setOpen(false);
             setError(null);
           }}
-          className="text-xs px-3 py-1.5 text-gray-600 hover:text-gray-900"
+          className="text-xs px-3 py-1.5 text-om-ink-mute hover:text-om-ink"
           disabled={pending}
         >
           Cancel
@@ -123,7 +123,7 @@ export function ReportResolveDrawer({
           type="button"
           onClick={submit}
           disabled={pending}
-          className="text-xs font-semibold px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="text-xs font-semibold px-4 py-1.5 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
         >
           {pending ? "Saving…" : "Confirm resolution"}
         </button>

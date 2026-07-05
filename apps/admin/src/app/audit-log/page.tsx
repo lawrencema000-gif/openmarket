@@ -66,9 +66,9 @@ function actionTone(action: string): string {
   if (action.startsWith("appeal.resolve.accept") || action === "reviews.unfreeze") {
     return "bg-emerald-100 text-emerald-700";
   }
-  if (action.startsWith("category.")) return "bg-blue-100 text-blue-700";
+  if (action.startsWith("category.")) return "bg-om-primary/15 text-om-primary";
   if (action.startsWith("reviews.")) return "bg-amber-100 text-amber-700";
-  return "bg-gray-100 text-gray-700";
+  return "bg-om-line-soft text-om-ink-mute";
 }
 
 export default async function AuditLogPage({
@@ -99,7 +99,7 @@ export default async function AuditLogPage({
         description={`Page ${data.page} · ${data.data.length} entries shown · forensic trail of every admin mutation`}
       />
 
-      <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex flex-wrap gap-1 bg-om-line-soft p-1 rounded-lg w-fit">
         {ACTION_FILTERS.map((f) => {
           const active =
             (!actionFilter && f.value === "all") || actionFilter === f.value;
@@ -109,8 +109,8 @@ export default async function AuditLogPage({
               href={`/audit-log?action=${f.value}`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 active
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-om-surface text-om-ink shadow-sm"
+                  : "text-om-ink-soft hover:text-om-ink"
               }`}
             >
               {f.label}
@@ -119,7 +119,7 @@ export default async function AuditLogPage({
         })}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-om-surface rounded-xl border border-om-line shadow-sm overflow-hidden">
         {data.data.length === 0 ? (
           <EmptyState
             title="No audit log entries"
@@ -128,29 +128,29 @@ export default async function AuditLogPage({
         ) : (
           <>
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-om-surface-tint border-b border-om-line">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide whitespace-nowrap">
                     Timestamp
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">
                     Actor
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">
                     Action
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">
                     Target
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">
                     Path / IP
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {data.data.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-3 text-xs text-gray-500 whitespace-nowrap font-mono">
+                  <tr key={entry.id} className="hover:bg-om-surface-tint transition-colors">
+                    <td className="px-6 py-3 text-xs text-om-ink-soft whitespace-nowrap font-mono">
                       {new Date(entry.createdAt).toLocaleString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -159,7 +159,7 @@ export default async function AuditLogPage({
                         second: "2-digit",
                       })}
                     </td>
-                    <td className="px-6 py-3 text-gray-700 text-xs font-medium">
+                    <td className="px-6 py-3 text-om-ink-mute text-xs font-medium">
                       {entry.actorEmail}
                     </td>
                     <td className="px-6 py-3">
@@ -169,12 +169,12 @@ export default async function AuditLogPage({
                         {entry.action}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-gray-600 text-xs">
+                    <td className="px-6 py-3 text-om-ink-mute text-xs">
                       {entry.targetType ? (
                         <span>
                           <span className="font-medium">{entry.targetType}</span>
                           {entry.targetId && (
-                            <span className="ml-1 font-mono text-gray-400">
+                            <span className="ml-1 font-mono text-om-ink-soft">
                               {entry.targetId.length > 12
                                 ? entry.targetId.slice(0, 8) + "…"
                                 : entry.targetId}
@@ -182,13 +182,13 @@ export default async function AuditLogPage({
                           )}
                         </span>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-om-line">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-xs text-gray-500 font-mono">
+                    <td className="px-6 py-3 text-xs text-om-ink-soft font-mono">
                       <div>{entry.requestMethod} {entry.requestPath}</div>
                       {entry.ipAddress && (
-                        <div className="text-gray-400">{entry.ipAddress}</div>
+                        <div className="text-om-ink-soft">{entry.ipAddress}</div>
                       )}
                     </td>
                   </tr>
@@ -196,15 +196,15 @@ export default async function AuditLogPage({
               </tbody>
             </table>
 
-            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-              <p className="text-xs text-gray-500">
+            <div className="px-6 py-4 border-t border-om-line-soft flex items-center justify-between">
+              <p className="text-xs text-om-ink-soft">
                 Page {data.page}
               </p>
               <div className="flex gap-2">
                 {data.page > 1 && (
                   <a
                     href={`/audit-log?page=${data.page - 1}${actionFilter ? `&action=${actionFilter}` : ""}`}
-                    className="px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium border border-om-line rounded-lg text-om-ink-mute hover:bg-om-surface-tint transition-colors"
                   >
                     Previous
                   </a>
@@ -212,7 +212,7 @@ export default async function AuditLogPage({
                 {data.data.length === data.limit && (
                   <a
                     href={`/audit-log?page=${data.page + 1}${actionFilter ? `&action=${actionFilter}` : ""}`}
-                    className="px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium border border-om-line rounded-lg text-om-ink-mute hover:bg-om-surface-tint transition-colors"
                   >
                     Next
                   </a>

@@ -129,14 +129,14 @@ export default function DataSafetyPage({
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-sm text-om-ink-soft">Loading…</p>;
 
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Data safety</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-om-ink">Data safety</h1>
+          <p className="text-sm text-om-ink-soft mt-1">
             Tell users what data your app collects and shares. Honest
             disclosure builds trust — and our scanner cross-checks this
             against the permissions in your APK to flag discrepancies.
@@ -144,7 +144,7 @@ export default function DataSafetyPage({
         </div>
         <Link
           href={`/apps/${appId}`}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-om-primary hover:text-om-primary"
         >
           ← Back to app
         </Link>
@@ -156,8 +156,8 @@ export default function DataSafetyPage({
         </div>
       )}
 
-      <section className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-gray-900">Master toggles</h2>
+      <section className="bg-om-surface border border-om-line rounded-xl p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-om-ink">Master toggles</h2>
         <Toggle
           label="This app collects user data"
           checked={form.collectsData}
@@ -191,11 +191,11 @@ export default function DataSafetyPage({
       </section>
 
       {form.collectsData && (
-        <section className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-900">
+        <section className="bg-om-surface border border-om-line rounded-xl p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-om-ink">
             Per-category attestations
           </h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-om-ink-soft">
             Tick the data types your app collects. For each, declare
             whether it's shared with third parties, whether collection is
             optional, and what you use it for.
@@ -215,7 +215,7 @@ export default function DataSafetyPage({
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         {savedAt && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-om-ink-soft">
             Last saved {savedAt.toLocaleString()}
           </p>
         )}
@@ -223,7 +223,7 @@ export default function DataSafetyPage({
           type="button"
           onClick={save}
           disabled={saving}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-5 py-2.5 text-sm transition-colors disabled:opacity-50 ml-auto"
+          className="bg-om-primary hover:bg-om-primary-deep text-white font-medium rounded-lg px-5 py-2.5 text-sm transition-colors disabled:opacity-50 ml-auto"
         >
           {saving ? "Saving…" : "Save declaration"}
         </button>
@@ -247,9 +247,9 @@ function Toggle({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+        className="mt-0.5 h-4 w-4 rounded border-om-line text-om-primary"
       />
-      <span className="text-gray-800">{label}</span>
+      <span className="text-om-ink-mute">{label}</span>
     </label>
   );
 }
@@ -267,7 +267,7 @@ function UrlField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-700 mb-1">
+      <label className="block text-xs font-semibold text-om-ink-mute mb-1">
         {label}
       </label>
       <input
@@ -275,9 +275,9 @@ function UrlField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="https://…"
-        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full border border-om-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-om-primary focus:border-om-primary"
       />
-      {hint && <p className="text-[11px] text-gray-500 mt-1">{hint}</p>}
+      {hint && <p className="text-[11px] text-om-ink-soft mt-1">{hint}</p>}
     </div>
   );
 }
@@ -307,28 +307,28 @@ function CategoryRow({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 p-3">
+    <div className="rounded-lg border border-om-line p-3">
       <label className="flex items-start gap-3 cursor-pointer">
         <input
           type="checkbox"
           checked={e.collected}
           onChange={(ev) => onChange({ collected: ev.target.checked })}
-          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+          className="mt-0.5 h-4 w-4 rounded border-om-line text-om-primary"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900">{meta.label}</p>
-          <p className="text-[11px] text-gray-500">{meta.description}</p>
+          <p className="text-sm font-medium text-om-ink">{meta.label}</p>
+          <p className="text-[11px] text-om-ink-soft">{meta.description}</p>
         </div>
       </label>
       {e.collected && (
         <div className="mt-3 ml-7 space-y-2">
-          <div className="flex flex-wrap gap-3 text-xs text-gray-700">
+          <div className="flex flex-wrap gap-3 text-xs text-om-ink-mute">
             <label className="flex items-center gap-1.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={e.shared}
                 onChange={(ev) => onChange({ shared: ev.target.checked })}
-                className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                className="h-3.5 w-3.5 rounded border-om-line text-om-primary"
               />
               Shared with 3rd parties
             </label>
@@ -337,13 +337,13 @@ function CategoryRow({
                 type="checkbox"
                 checked={e.optional}
                 onChange={(ev) => onChange({ optional: ev.target.checked })}
-                className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                className="h-3.5 w-3.5 rounded border-om-line text-om-primary"
               />
               Collection is optional
             </label>
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wide w-full">
+            <span className="text-[11px] text-om-ink-soft font-semibold uppercase tracking-wide w-full">
               Purposes
             </span>
             {PURPOSES.map((p) => {
@@ -355,8 +355,8 @@ function CategoryRow({
                   onClick={() => togglePurpose(p, !on)}
                   className={`text-[11px] px-2 py-1 rounded-full border ${
                     on
-                      ? "bg-blue-50 border-blue-200 text-blue-700"
-                      : "bg-white border-gray-200 text-gray-600 hover:border-blue-200"
+                      ? "bg-om-primary/10 border-om-primary/25 text-om-primary"
+                      : "bg-om-surface border-om-line text-om-ink-mute hover:border-om-primary/25"
                   }`}
                 >
                   {p.replace(/_/g, " ")}

@@ -53,7 +53,7 @@ export function SourceCodeVerifyActions({
         className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors disabled:opacity-50 ${
           current.sourceCodeVerified
             ? "bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100"
-            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+            : "bg-om-surface border-om-line text-om-ink-mute hover:bg-om-surface-tint"
         }`}
       >
         {current.sourceCodeVerified ? "Clear source verified" : "Mark source verified"}
@@ -65,7 +65,7 @@ export function SourceCodeVerifyActions({
         className={`text-xs font-medium px-3 py-1.5 rounded-md border transition-colors disabled:opacity-50 ${
           current.reproducibleVerified
             ? "bg-teal-50 border-teal-200 text-teal-800 hover:bg-teal-100"
-            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+            : "bg-om-surface border-om-line text-om-ink-mute hover:bg-om-surface-tint"
         }`}
       >
         {current.reproducibleVerified

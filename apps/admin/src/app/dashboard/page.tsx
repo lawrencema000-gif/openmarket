@@ -89,10 +89,10 @@ export default async function DashboardPage() {
           <Eyebrow tone="neutral" pulse>
             Moderation
           </Eyebrow>
-          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-om-ink">
             <GradientText as="span">Command center.</GradientText>
           </h1>
-          <p className="text-slate-500 max-w-2xl">
+          <p className="text-om-ink-soft max-w-2xl">
             Risk queue, reports, and recent actions — at a glance. Click in for
             the full audit trail.
           </p>
@@ -165,10 +165,10 @@ export default async function DashboardPage() {
                   className="px-6 py-3.5 flex items-center justify-between"
                 >
                   <div>
-                    <p className="font-mono text-xs text-gray-700">
+                    <p className="font-mono text-xs text-om-ink-mute">
                       app · {b.appId.slice(0, 8)}…
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-om-ink-soft mt-0.5">
                       {b.recentLowStarCount} low-star reviews in the last hour
                       · avg {b.recentAvg.toFixed(2)} (was {b.baselineAvg.toFixed(2)})
                     </p>
@@ -197,7 +197,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             {highPriority.length === 0 ? (
-              <p className="px-6 py-8 text-sm text-gray-400 text-center">Queue is clear</p>
+              <p className="px-6 py-8 text-sm text-om-ink-soft text-center">Queue is clear</p>
             ) : (
               <div className="divide-y divide-gray-50">
                 {highPriority.map((r) => {
@@ -209,17 +209,17 @@ export default async function DashboardPage() {
                       <div>
                         <a
                           href={`/releases/${r.id}`}
-                          className="text-sm font-medium text-blue-600 hover:underline"
+                          className="text-sm font-medium text-om-primary hover:underline"
                         >
                           {appName}
                         </a>
                         {r.version && (
-                          <span className="ml-2 text-xs text-gray-400">v{r.version}</span>
+                          <span className="ml-2 text-xs text-om-ink-soft">v{r.version}</span>
                         )}
-                        <p className="text-xs text-gray-400 mt-0.5">{devName}</p>
+                        <p className="text-xs text-om-ink-soft mt-0.5">{devName}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div className="w-16 h-1.5 rounded-full bg-om-line-soft overflow-hidden">
                           <div
                             className={`h-full rounded-full ${score >= 71 ? "bg-red-500" : score >= 31 ? "bg-orange-400" : score >= 11 ? "bg-yellow-400" : "bg-green-400"}`}
                             style={{ width: `${Math.min(score, 100)}%` }}
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             {recentActions.length === 0 ? (
-              <p className="px-6 py-8 text-sm text-gray-400 text-center">No recent actions</p>
+              <p className="px-6 py-8 text-sm text-om-ink-soft text-center">No recent actions</p>
             ) : (
               <div className="divide-y divide-gray-50">
                 {recentActions.map((action, i) => {
@@ -255,11 +255,11 @@ export default async function DashboardPage() {
                     <div key={action.id ?? i} className="px-6 py-3.5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <StatusBadge status={action.action ?? "unknown"} />
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-om-ink-soft">
                           {action.target ?? "—"}
                         </span>
                       </div>
-                      <div className="text-right text-xs text-gray-400 shrink-0 ml-4">
+                      <div className="text-right text-xs text-om-ink-soft shrink-0 ml-4">
                         <p className="font-medium">{action.moderator ?? "—"}</p>
                         <p>{ts ? new Date(ts).toLocaleString() : "—"}</p>
                       </div>

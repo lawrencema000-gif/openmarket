@@ -77,13 +77,13 @@ export default function LiveAnalyticsPage({
         <div className="flex items-center gap-3">
           <Link
             href={`/apps/${appId}`}
-            className="text-sm text-slate-400 hover:text-slate-600"
+            className="text-sm text-om-ink-soft hover:text-om-ink-mute"
           >
             ← App
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Live analytics</h1>
+          <h1 className="text-2xl font-bold text-om-ink">Live analytics</h1>
         </div>
-        <span className="inline-flex items-center gap-2 text-xs font-medium text-slate-500">
+        <span className="inline-flex items-center gap-2 text-xs font-medium text-om-ink-soft">
           <span className="relative flex h-2.5 w-2.5">
             <span
               className={`absolute inset-0 rounded-full ${stale ? "bg-amber-400" : "bg-emerald-500"} opacity-60 animate-ping`}
@@ -105,7 +105,7 @@ export default function LiveAnalyticsPage({
       {!data && !error ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+            <div key={i} className="h-24 rounded-xl bg-om-line-soft animate-pulse" />
           ))}
         </div>
       ) : data ? (
@@ -126,7 +126,7 @@ export default function LiveAnalyticsPage({
             </CardHeader>
             <CardContent>
               {data.perMinute.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-om-ink-soft">
                   No installs in the last hour yet.
                 </p>
               ) : (
@@ -143,7 +143,7 @@ export default function LiveAnalyticsPage({
                   ))}
                 </div>
               )}
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-[11px] text-om-ink-soft mt-2">
                 Privacy-respecting — active devices is a salted, non-PII count.
               </p>
             </CardContent>

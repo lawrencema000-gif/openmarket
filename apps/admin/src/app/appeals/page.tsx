@@ -50,7 +50,7 @@ const STATUS_TABS: { value: AppealStatus | "all"; label: string }[] = [
 
 function statusBadge(status: AppealStatus): string {
   switch (status) {
-    case "open": return "bg-blue-100 text-blue-700";
+    case "open": return "bg-om-primary/15 text-om-primary";
     case "in_review": return "bg-amber-100 text-amber-700";
     case "accepted": return "bg-emerald-100 text-emerald-700";
     case "rejected": return "bg-rose-100 text-rose-700";
@@ -92,7 +92,7 @@ export default async function AppealsPage({
         description={`${total} total · ${data.counts.open} open · ${data.counts.in_review} in review`}
       />
 
-      <div className="rounded-lg bg-blue-50 border border-blue-100 p-4 text-sm text-blue-900">
+      <div className="rounded-lg bg-om-primary/10 border border-om-primary/20 p-4 text-sm text-om-primary-deep">
         <p className="font-semibold mb-1">Due-process reminder</p>
         <p>
           Per content policy §2 principle 3, every appeal outcome — including denials — is
@@ -100,7 +100,7 @@ export default async function AppealsPage({
         </p>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-om-line-soft p-1 rounded-lg w-fit">
         {STATUS_TABS.map((tab) => {
           const isActive = (!filterStatus && tab.value === "all") || filterStatus === tab.value;
           return (
@@ -108,7 +108,7 @@ export default async function AppealsPage({
               key={tab.value}
               href={`/appeals?status=${tab.value}`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                isActive ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                isActive ? "bg-om-surface text-om-ink shadow-sm" : "text-om-ink-soft hover:text-om-ink"
               }`}
             >
               {tab.label}
@@ -130,7 +130,7 @@ export default async function AppealsPage({
             return (
               <div
                 key={appeal.id}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:border-gray-300 transition-colors"
+                className="bg-om-surface rounded-xl border border-om-line shadow-sm p-5 hover:border-om-line transition-colors"
               >
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">
@@ -140,31 +140,31 @@ export default async function AppealsPage({
                       >
                         {appeal.status.replace("_", " ")}
                       </span>
-                      <span className="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-medium text-om-ink-mute bg-om-line-soft px-2 py-0.5 rounded-full">
                         {targetLabel(appeal.targetType)}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-om-ink-soft">
                         Target ID:{" "}
-                        <span className="font-mono text-gray-700">
+                        <span className="font-mono text-om-ink-mute">
                           {appeal.targetId.slice(0, 8)}…
                         </span>
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-om-ink-soft">
                         Developer:{" "}
-                        <span className="font-mono text-gray-700">
+                        <span className="font-mono text-om-ink-mute">
                           {appeal.developerId.slice(0, 8)}…
                         </span>
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 leading-relaxed mb-2 whitespace-pre-line">
+                    <p className="text-sm text-om-ink-mute leading-relaxed mb-2 whitespace-pre-line">
                       {appeal.body}
                     </p>
                     {appeal.resolution && (
-                      <p className="text-xs text-gray-500 italic mt-2 bg-gray-50 p-2 rounded">
+                      <p className="text-xs text-om-ink-soft italic mt-2 bg-om-surface-tint p-2 rounded">
                         <span className="font-semibold">Resolution:</span> {appeal.resolution}
                       </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-om-ink-soft mt-1">
                       Filed {new Date(appeal.createdAt).toLocaleString()}
                       {appeal.resolvedAt && (
                         <> · resolved {new Date(appeal.resolvedAt).toLocaleString()}</>

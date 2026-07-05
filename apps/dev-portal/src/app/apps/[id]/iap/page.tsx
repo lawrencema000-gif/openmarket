@@ -119,12 +119,12 @@ export default function IapPage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">In-app products</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">In-app products</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Consumables (repurchasable), one-time unlocks, and subscriptions.
           Per-country pricing per product lives on its own page (open a
           product to manage prices).
@@ -137,21 +137,21 @@ export default function IapPage({
         </div>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">Create product</h2>
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">Create product</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">SKU</span>
+            <span className="text-xs font-medium text-om-ink-mute">SKU</span>
             <input
               type="text"
               value={draft.sku}
               onChange={(e) => setDraft((d) => ({ ...d, sku: e.target.value }))}
               placeholder="com.example.app.coins.100"
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm font-mono"
+              className="mt-1 block w-full rounded-md border-om-line text-sm font-mono"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">Type</span>
+            <span className="text-xs font-medium text-om-ink-mute">Type</span>
             <select
               value={draft.type}
               onChange={(e) =>
@@ -160,7 +160,7 @@ export default function IapPage({
                   type: e.target.value as DraftProduct["type"],
                 }))
               }
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+              className="mt-1 block w-full rounded-md border-om-line text-sm"
             >
               <option value="consumable">Consumable</option>
               <option value="non_consumable">Non-consumable (one-time)</option>
@@ -169,28 +169,28 @@ export default function IapPage({
           </label>
         </div>
         <label className="block">
-          <span className="text-xs font-medium text-gray-700">Name</span>
+          <span className="text-xs font-medium text-om-ink-mute">Name</span>
           <input
             type="text"
             value={draft.name}
             onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
             placeholder="100 coins"
-            className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+            className="mt-1 block w-full rounded-md border-om-line text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-gray-700">Description</span>
+          <span className="text-xs font-medium text-om-ink-mute">Description</span>
           <textarea
             value={draft.description}
             onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
             rows={2}
-            className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+            className="mt-1 block w-full rounded-md border-om-line text-sm"
           />
         </label>
         {draft.type === "subscription" && (
           <div className="grid grid-cols-3 gap-3">
             <label className="block">
-              <span className="text-xs font-medium text-gray-700">Interval</span>
+              <span className="text-xs font-medium text-om-ink-mute">Interval</span>
               <select
                 value={draft.subscriptionInterval}
                 onChange={(e) =>
@@ -199,7 +199,7 @@ export default function IapPage({
                     subscriptionInterval: e.target.value as DraftProduct["subscriptionInterval"],
                   }))
                 }
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                className="mt-1 block w-full rounded-md border-om-line text-sm"
               >
                 <option value="day">Day</option>
                 <option value="week">Week</option>
@@ -208,7 +208,7 @@ export default function IapPage({
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-gray-700">Every</span>
+              <span className="text-xs font-medium text-om-ink-mute">Every</span>
               <input
                 type="number"
                 min={1}
@@ -220,18 +220,18 @@ export default function IapPage({
                     subscriptionIntervalCount: e.target.value,
                   }))
                 }
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                className="mt-1 block w-full rounded-md border-om-line text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-gray-700">Trial (days)</span>
+              <span className="text-xs font-medium text-om-ink-mute">Trial (days)</span>
               <input
                 type="number"
                 min={0}
                 max={30}
                 value={draft.trialDays}
                 onChange={(e) => setDraft((d) => ({ ...d, trialDays: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                className="mt-1 block w-full rounded-md border-om-line text-sm"
               />
             </label>
           </div>
@@ -240,14 +240,14 @@ export default function IapPage({
           type="button"
           onClick={() => void create()}
           disabled={creating || !draft.sku || !draft.name}
-          className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+          className="rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
         >
           {creating ? "Creating…" : "Create product"}
         </button>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           {loading
             ? "Loading…"
             : products.length === 0
@@ -257,14 +257,14 @@ export default function IapPage({
         {products.map((p) => (
           <div
             key={p.id}
-            className={`rounded-xl border bg-white p-4 space-y-2 ${p.active ? "border-gray-200" : "border-gray-200 opacity-60"}`}
+            className={`rounded-xl border bg-om-surface p-4 space-y-2 ${p.active ? "border-om-line" : "border-om-line opacity-60"}`}
           >
             <div className="flex items-baseline justify-between gap-2 flex-wrap">
               <div>
-                <p className="text-sm font-semibold text-gray-900">{p.name}</p>
-                <p className="text-xs text-gray-500 font-mono mt-0.5">{p.sku}</p>
+                <p className="text-sm font-semibold text-om-ink">{p.name}</p>
+                <p className="text-xs text-om-ink-soft font-mono mt-0.5">{p.sku}</p>
               </div>
-              <span className="text-[10px] uppercase font-semibold text-gray-500 tracking-wider">
+              <span className="text-[10px] uppercase font-semibold text-om-ink-soft tracking-wider">
                 {p.type === "non_consumable"
                   ? "one-time"
                   : p.type === "subscription"
@@ -273,9 +273,9 @@ export default function IapPage({
               </span>
             </div>
             {p.description ? (
-              <p className="text-xs text-gray-600">{p.description}</p>
+              <p className="text-xs text-om-ink-mute">{p.description}</p>
             ) : null}
-            <p className="text-[11px] text-gray-500">
+            <p className="text-[11px] text-om-ink-soft">
               {p.price
                 ? `${(p.price.priceCents / 100).toFixed(2)} ${p.price.currency} (${p.price.countryCode})`
                 : "No pricing rows yet"}

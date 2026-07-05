@@ -225,8 +225,8 @@ export default function NewReleasePage({
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Create Release</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink">Create Release</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Upload a new APK. We hash it client-side, send it directly to
           object storage, and run ingest + security scans before it can be
           published.
@@ -303,7 +303,7 @@ function UploadForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="bg-white rounded-xl border border-gray-200 p-6 space-y-5"
+      className="bg-om-surface rounded-xl border border-om-line p-6 space-y-5"
     >
       <Field label="Version Code">
         <input
@@ -312,7 +312,7 @@ function UploadForm({
           min={1}
           value={form.versionCode}
           onChange={(e) => set("versionCode", e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-om-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-om-primary"
           placeholder="e.g. 10"
         />
       </Field>
@@ -322,7 +322,7 @@ function UploadForm({
           required
           value={form.versionName}
           onChange={(e) => set("versionName", e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-om-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-om-primary"
           placeholder="e.g. 1.0.0"
         />
       </Field>
@@ -330,7 +330,7 @@ function UploadForm({
         <select
           value={form.channel}
           onChange={(e) => set("channel", e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-om-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-om-primary"
         >
           {CHANNELS.map((c) => (
             <option key={c} value={c}>
@@ -344,20 +344,20 @@ function UploadForm({
           rows={4}
           value={form.releaseNotes}
           onChange={(e) => set("releaseNotes", e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          className="w-full border border-om-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-om-primary resize-none"
           placeholder="What's new in this release…"
         />
       </Field>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-om-ink-mute mb-1">
           APK File
         </label>
         <div
           onClick={() => fileRef.current?.click()}
           className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
             file
-              ? "border-blue-400 bg-blue-50"
-              : "border-gray-300 hover:border-blue-400 hover:bg-gray-50"
+              ? "border-om-primary bg-om-primary/10"
+              : "border-om-line hover:border-om-primary hover:bg-om-surface-tint"
           }`}
         >
           <input
@@ -369,15 +369,15 @@ function UploadForm({
           />
           {file ? (
             <div>
-              <p className="text-sm font-medium text-blue-700">{file.name}</p>
-              <p className="text-xs text-blue-500 mt-1">
+              <p className="text-sm font-medium text-om-primary">{file.name}</p>
+              <p className="text-xs text-om-primary mt-1">
                 {(file.size / 1024 / 1024).toFixed(1)} MB
               </p>
             </div>
           ) : (
             <div>
-              <p className="text-sm text-gray-500">Click to select an APK file</p>
-              <p className="text-xs text-gray-400 mt-1">.apk files only · max 500 MB</p>
+              <p className="text-sm text-om-ink-soft">Click to select an APK file</p>
+              <p className="text-xs text-om-ink-soft mt-1">.apk files only · max 500 MB</p>
             </div>
           )}
         </div>
@@ -385,14 +385,14 @@ function UploadForm({
       <div className="pt-2 flex gap-3">
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-5 py-2.5 text-sm transition-colors"
+          className="bg-om-primary hover:bg-om-primary-deep text-white font-medium rounded-lg px-5 py-2.5 text-sm transition-colors"
         >
           Create release
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium rounded-lg px-5 py-2.5 text-sm transition-colors"
+          className="bg-om-surface hover:bg-om-surface-tint border border-om-line text-om-ink-mute font-medium rounded-lg px-5 py-2.5 text-sm transition-colors"
         >
           Cancel
         </button>
@@ -412,10 +412,10 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-om-ink-mute mb-1">
         {label}
         {optional && (
-          <span className="text-gray-400 font-normal text-xs ml-1">(optional)</span>
+          <span className="text-om-ink-soft font-normal text-xs ml-1">(optional)</span>
         )}
       </label>
       {children}
@@ -456,8 +456,8 @@ function ProgressView({
   const currentIdx = stages.findIndex((s) => s.key === step);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">Processing release…</h2>
+    <div className="bg-om-surface rounded-xl border border-om-line p-6 space-y-4">
+      <h2 className="text-lg font-semibold text-om-ink">Processing release…</h2>
       <ol className="space-y-3">
         {stages.map((s, i) => {
           const state =
@@ -469,8 +469,8 @@ function ProgressView({
                   state === "done"
                     ? "bg-emerald-500 text-white"
                     : state === "active"
-                      ? "bg-blue-600 text-white animate-pulse"
-                      : "bg-gray-200 text-gray-500"
+                      ? "bg-om-primary text-white animate-pulse"
+                      : "bg-om-line text-om-ink-soft"
                 }`}
                 aria-hidden
               >
@@ -480,21 +480,21 @@ function ProgressView({
                 <p
                   className={`text-sm font-medium ${
                     state === "active"
-                      ? "text-blue-700"
+                      ? "text-om-primary"
                       : state === "done"
-                        ? "text-gray-700"
-                        : "text-gray-400"
+                        ? "text-om-ink-mute"
+                        : "text-om-ink-soft"
                   }`}
                 >
                   {s.label}
                   {s.key === "hashing" && state === "active" && (
-                    <span className="ml-2 text-xs text-blue-500">
+                    <span className="ml-2 text-xs text-om-primary">
                       {(hashProgress * 100).toFixed(0)}%
                     </span>
                   )}
                 </p>
                 {s.tip && state === "active" && (
-                  <p className="text-xs text-gray-500 mt-0.5">{s.tip}</p>
+                  <p className="text-xs text-om-ink-soft mt-0.5">{s.tip}</p>
                 )}
               </div>
             </li>
@@ -503,7 +503,7 @@ function ProgressView({
       </ol>
 
       {release && step === "polling" && (
-        <div className="mt-4 rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-600 space-y-1">
+        <div className="mt-4 rounded-lg bg-om-surface-tint border border-om-line p-3 text-xs text-om-ink-mute space-y-1">
           <p>
             <strong>Release status:</strong> {release.status}
           </p>
@@ -540,8 +540,8 @@ function OutcomeView({
 }) {
   if (!release) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <p className="text-sm text-gray-500">
+      <div className="bg-om-surface rounded-xl border border-om-line p-6">
+        <p className="text-sm text-om-ink-soft">
           Release created, but we couldn't fetch its current state. Check the
           dashboard.
         </p>
@@ -567,7 +567,7 @@ function OutcomeView({
         }`}
       >
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className="text-lg font-bold text-om-ink">
             {blocked
               ? "Release blocked"
               : band === "high_risk"
@@ -575,7 +575,7 @@ function OutcomeView({
                 : "Release accepted"}
           </h2>
           {score != null && (
-            <span className="text-xs font-mono text-gray-700 bg-white/60 px-2 py-1 rounded-md border border-gray-200">
+            <span className="text-xs font-mono text-om-ink-mute bg-white/60 px-2 py-1 rounded-md border border-om-line">
               risk score {score}/100 · band {band ?? "—"}
             </span>
           )}
@@ -584,7 +584,7 @@ function OutcomeView({
         {blocked ? (
           <RejectionDetails rejection={rejection} />
         ) : (
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm text-om-ink-mute">
             {release.scan?.summary ??
               "Ingest + scan completed without a populated summary."}
           </p>
@@ -608,14 +608,14 @@ function OutcomeView({
         {!blocked ? (
           <button
             onClick={onDone}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-5 py-2.5 text-sm"
+            className="bg-om-primary hover:bg-om-primary-deep text-white font-medium rounded-lg px-5 py-2.5 text-sm"
           >
             {band === "high_risk" ? "Back to app" : "Ready to publish — back to app"}
           </button>
         ) : (
           <Link
             href={`/apps/${appId}`}
-            className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium rounded-lg px-5 py-2.5 text-sm"
+            className="bg-om-surface hover:bg-om-surface-tint border border-om-line text-om-ink-mute font-medium rounded-lg px-5 py-2.5 text-sm"
           >
             Back to app
           </Link>
@@ -677,9 +677,9 @@ function RejectionDetails({
 
 function FindingsTable({ findings }: { findings: Finding[] }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-semibold text-gray-900">
+    <div className="bg-om-surface rounded-xl border border-om-line overflow-hidden">
+      <div className="px-4 py-3 border-b border-om-line bg-om-surface-tint">
+        <h3 className="text-sm font-semibold text-om-ink">
           Scan findings ({findings.length})
         </h3>
       </div>
@@ -688,8 +688,8 @@ function FindingsTable({ findings }: { findings: Finding[] }) {
           <li key={i} className="px-4 py-3 flex items-start gap-3">
             <SeverityChip severity={f.severity} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">{f.message}</p>
-              <p className="text-xs text-gray-500 mt-0.5 font-mono">
+              <p className="text-sm font-medium text-om-ink">{f.message}</p>
+              <p className="text-xs text-om-ink-soft mt-0.5 font-mono">
                 {f.type} · weight {f.weight}
               </p>
             </div>
@@ -709,8 +709,8 @@ function SeverityChip({ severity }: { severity: string }) {
         : severity === "medium"
           ? "bg-amber-100 text-amber-700"
           : severity === "low"
-            ? "bg-blue-100 text-blue-700"
-            : "bg-gray-100 text-gray-600";
+            ? "bg-om-primary/15 text-om-primary"
+            : "bg-om-line-soft text-om-ink-mute";
   return (
     <span
       className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${tone} mt-0.5`}
@@ -741,12 +741,12 @@ function AntiFeaturesAttestation({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+    <div className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">
+        <h3 className="text-sm font-semibold text-om-ink">
           Anti-Features disclosure
         </h3>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-om-ink-soft mt-1">
           Honest disclosure beats hidden dark patterns. Tick anything that
           applies — users will see these labels on your listing and can
           filter on them. Mismatch between what you tick and what we observe
@@ -761,17 +761,17 @@ function AntiFeaturesAttestation({
           return (
             <label
               key={slug}
-              className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 cursor-pointer"
+              className="flex items-start gap-3 p-3 rounded-lg border border-om-line hover:border-om-primary/40 cursor-pointer"
             >
               <input
                 type="checkbox"
                 checked={checked}
                 onChange={() => toggle(slug)}
-                className="mt-0.5 h-4 w-4 text-blue-600 rounded border-gray-300"
+                className="mt-0.5 h-4 w-4 text-om-primary rounded border-om-line"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">{meta.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{meta.description}</p>
+                <p className="text-sm font-medium text-om-ink">{meta.label}</p>
+                <p className="text-xs text-om-ink-soft mt-0.5">{meta.description}</p>
               </div>
             </label>
           );
@@ -781,7 +781,7 @@ function AntiFeaturesAttestation({
         <button
           onClick={saveAntiFeatures}
           disabled={savingAttestation}
-          className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium rounded-lg px-4 py-2 text-sm disabled:opacity-50"
+          className="bg-om-surface hover:bg-om-surface-tint border border-om-line text-om-ink-mute font-medium rounded-lg px-4 py-2 text-sm disabled:opacity-50"
         >
           {savingAttestation ? "Saving…" : "Save disclosures"}
         </button>

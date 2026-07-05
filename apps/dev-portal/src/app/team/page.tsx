@@ -84,7 +84,7 @@ export default function TeamPage() {
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-sm text-om-ink-soft">Loading…</p>;
   if (!data) {
     return (
       <p className="text-sm text-red-600">
@@ -98,8 +98,8 @@ export default function TeamPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Team</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink">Team</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Manage who has access to{" "}
           <strong>{data.developer.displayName ?? data.developer.email}</strong>.
           You are signed in as <RoleChip role={data.callerRole} />.
@@ -112,7 +112,7 @@ export default function TeamPage() {
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+      <div className="bg-om-surface border border-om-line rounded-xl divide-y divide-gray-100">
         <Row
           email={data.implicitOwner.email}
           role={data.implicitOwner.role}
@@ -151,9 +151,9 @@ export default function TeamPage() {
       {canManage && (
         <form
           onSubmit={invite}
-          className="bg-white border border-gray-200 rounded-xl p-5 space-y-3"
+          className="bg-om-surface border border-om-line rounded-xl p-5 space-y-3"
         >
-          <h2 className="text-sm font-semibold text-gray-900">Invite by email</h2>
+          <h2 className="text-sm font-semibold text-om-ink">Invite by email</h2>
           <div className="flex gap-2 flex-wrap">
             <input
               type="email"
@@ -161,12 +161,12 @@ export default function TeamPage() {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="teammate@example.com"
-              className="flex-1 min-w-[200px] border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="flex-1 min-w-[200px] border border-om-line rounded-md px-3 py-2 text-sm"
             />
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as Role)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="border border-om-line rounded-md px-3 py-2 text-sm"
             >
               <option value="admin">admin</option>
               <option value="developer">developer</option>
@@ -175,12 +175,12 @@ export default function TeamPage() {
             <button
               type="submit"
               disabled={inviting}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50"
+              className="bg-om-primary hover:bg-om-primary-deep text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50"
             >
               {inviting ? "Sending…" : "Send invite"}
             </button>
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-om-ink-soft">
             Invites expire in 7 days. The accepting user must sign in with
             this exact email address.
           </p>
@@ -206,17 +206,17 @@ function Row({
   return (
     <div className="px-5 py-3 flex items-center justify-between gap-3">
       <div>
-        <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-om-ink">
           {displayName ? (
             <>
               {displayName}{" "}
-              <span className="text-gray-400 font-normal">({email})</span>
+              <span className="text-om-ink-soft font-normal">({email})</span>
             </>
           ) : (
             email
           )}
         </p>
-        <p className="text-xs text-gray-500">{sub}</p>
+        <p className="text-xs text-om-ink-soft">{sub}</p>
       </div>
       <div className="flex items-center gap-3">
         <RoleChip role={role} />
@@ -231,10 +231,10 @@ function RoleChip({ role }: { role: Role }) {
     role === "owner"
       ? "bg-violet-100 text-violet-700"
       : role === "admin"
-        ? "bg-blue-100 text-blue-700"
+        ? "bg-om-primary/15 text-om-primary"
         : role === "developer"
           ? "bg-emerald-100 text-emerald-700"
-          : "bg-gray-100 text-gray-600";
+          : "bg-om-line-soft text-om-ink-mute";
   return (
     <span
       className={`text-xs font-semibold uppercase px-2 py-0.5 rounded-full ${tone}`}

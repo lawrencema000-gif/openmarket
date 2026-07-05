@@ -107,7 +107,7 @@ export function DmcaActions({ notice }: { notice: Notice }) {
   }
 
   return (
-    <div className="border-t border-gray-100 pt-3 space-y-3">
+    <div className="border-t border-om-line-soft pt-3 space-y-3">
       {notice.status === "received" && (
         <div className="flex flex-wrap gap-2">
           <button
@@ -120,7 +120,7 @@ export function DmcaActions({ notice }: { notice: Notice }) {
           <button
             type="button"
             onClick={() => setOpen("invalid")}
-            className="text-xs font-medium px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            className="text-xs font-medium px-3 py-1.5 rounded-md border border-om-line bg-om-surface text-om-ink-mute hover:bg-om-surface-tint"
           >
             Mark invalid
           </button>
@@ -139,7 +139,7 @@ export function DmcaActions({ notice }: { notice: Notice }) {
           <button
             type="button"
             onClick={() => setOpen("invalid")}
-            className="text-xs font-medium px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            className="text-xs font-medium px-3 py-1.5 rounded-md border border-om-line bg-om-surface text-om-ink-mute hover:bg-om-surface-tint"
           >
             Revoke validity
           </button>
@@ -147,13 +147,13 @@ export function DmcaActions({ notice }: { notice: Notice }) {
       )}
 
       {(open === "valid" || open === "invalid") && (
-        <div className="rounded-md bg-gray-50 border border-gray-200 p-3 space-y-2">
+        <div className="rounded-md bg-om-surface-tint border border-om-line p-3 space-y-2">
           {open === "valid" && (
             <input
               value={appId}
               onChange={(e) => setAppId(e.target.value)}
               placeholder="App UUID this notice targets"
-              className="w-full text-xs font-mono border border-gray-200 rounded-md px-2 py-1.5"
+              className="w-full text-xs font-mono border border-om-line rounded-md px-2 py-1.5"
             />
           )}
           <textarea
@@ -165,7 +165,7 @@ export function DmcaActions({ notice }: { notice: Notice }) {
                 ? "Validation notes (kept on the record)"
                 : "Reason for invalidating — sent to the claimant"
             }
-            className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5"
+            className="w-full text-sm border border-om-line rounded-md px-2 py-1.5"
           />
           {error && <p className="text-xs text-red-600">{error}</p>}
           <div className="flex justify-end gap-2">
@@ -175,7 +175,7 @@ export function DmcaActions({ notice }: { notice: Notice }) {
                 setOpen(null);
                 setError(null);
               }}
-              className="text-xs px-2 py-1 text-gray-600 hover:text-gray-900"
+              className="text-xs px-2 py-1 text-om-ink-mute hover:text-om-ink"
             >
               Cancel
             </button>
@@ -183,7 +183,7 @@ export function DmcaActions({ notice }: { notice: Notice }) {
               type="button"
               onClick={() => review(open)}
               disabled={pending}
-              className="text-xs font-semibold px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              className="text-xs font-semibold px-3 py-1 rounded-md bg-om-primary text-white hover:bg-om-primary-deep disabled:opacity-50"
             >
               Confirm {open}
             </button>
@@ -206,7 +206,7 @@ export function DmcaActions({ notice }: { notice: Notice }) {
                 setOpen(null);
                 setError(null);
               }}
-              className="text-xs px-2 py-1 text-gray-600 hover:text-gray-900"
+              className="text-xs px-2 py-1 text-om-ink-mute hover:text-om-ink"
             >
               Cancel
             </button>

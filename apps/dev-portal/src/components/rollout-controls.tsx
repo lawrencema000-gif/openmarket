@@ -79,7 +79,7 @@ export function RolloutControls({
   }
 
   return (
-    <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
+    <div className="border-t border-om-line-soft pt-3 mt-3 space-y-2">
       <div className="flex items-center gap-3 flex-wrap">
         <StatusChip status={status} />
         <div className="flex-1 flex items-center gap-3 min-w-0">
@@ -100,7 +100,7 @@ export function RolloutControls({
             }}
             className="flex-1 disabled:opacity-50"
           />
-          <span className="text-sm font-mono text-gray-700 w-10 text-right">
+          <span className="text-sm font-mono text-om-ink-mute w-10 text-right">
             {pct}%
           </span>
         </div>
@@ -131,7 +131,7 @@ export function RolloutControls({
             type="button"
             onClick={() => patch({ status: "paused" })}
             disabled={pending}
-            className="text-xs font-medium px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="text-xs font-medium px-3 py-1.5 rounded-md border border-om-line bg-om-surface text-om-ink-mute hover:bg-om-surface-tint disabled:opacity-50"
           >
             Pause
           </button>
@@ -141,7 +141,7 @@ export function RolloutControls({
             type="button"
             onClick={() => patch({ status: "live" })}
             disabled={pending}
-            className="text-xs font-medium px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="text-xs font-medium px-3 py-1.5 rounded-md border border-om-line bg-om-surface text-om-ink-mute hover:bg-om-surface-tint disabled:opacity-50"
           >
             Resume
           </button>
@@ -166,7 +166,7 @@ export function RolloutControls({
                 setError(null);
               }}
               disabled={pending}
-              className="text-xs px-3 py-1.5 text-gray-600 hover:text-gray-900"
+              className="text-xs px-3 py-1.5 text-om-ink-mute hover:text-om-ink"
             >
               Cancel
             </button>
@@ -199,7 +199,7 @@ function StatusChip({
         ? "bg-amber-100 text-amber-700"
         : status === "halted"
           ? "bg-rose-100 text-rose-700"
-          : "bg-gray-100 text-gray-700";
+          : "bg-om-line-soft text-om-ink-mute";
   return (
     <span
       className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${tone}`}

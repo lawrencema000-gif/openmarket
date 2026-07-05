@@ -71,7 +71,7 @@ export default function AppDetailPage({
     void load();
   }, [id]);
 
-  if (loading) return <div className="text-sm text-gray-500">Loading…</div>;
+  if (loading) return <div className="text-sm text-om-ink-soft">Loading…</div>;
   if (error)
     return (
       <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -89,17 +89,17 @@ export default function AppDetailPage({
           <img
             src={app.iconUrl}
             alt={`${app.title} icon`}
-            className="w-16 h-16 rounded-xl border border-gray-200 object-cover shrink-0"
+            className="w-16 h-16 rounded-xl border border-om-line object-cover shrink-0"
           />
         )}
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-gray-900 truncate">{app.title}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{app.packageName}</p>
+          <h1 className="text-2xl font-bold text-om-ink truncate">{app.title}</h1>
+          <p className="text-sm text-om-ink-soft mt-0.5">{app.packageName}</p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="text-xs capitalize text-gray-600 bg-gray-100 rounded-full px-2 py-0.5">
+            <span className="text-xs capitalize text-om-ink-mute bg-om-line-soft rounded-full px-2 py-0.5">
               {app.category.replace(/_/g, " ")}
             </span>
-            <span className="text-xs font-medium capitalize text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
+            <span className="text-xs font-medium capitalize text-om-primary bg-om-primary/10 border border-om-primary/25 rounded-full px-2 py-0.5">
               {app.trustTier}
             </span>
           </div>
@@ -107,17 +107,17 @@ export default function AppDetailPage({
       </div>
 
       {/* Listing info */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">Listing Info</h2>
+      <div className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">Listing Info</h2>
         {app.shortDescription && (
-          <p className="text-sm text-gray-600">{app.shortDescription}</p>
+          <p className="text-sm text-om-ink-mute">{app.shortDescription}</p>
         )}
         {app.websiteUrl && (
           <a
             href={app.websiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-om-primary hover:underline"
           >
             {app.websiteUrl}
           </a>
@@ -143,11 +143,11 @@ export default function AppDetailPage({
       {/* Releases */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <h2 className="text-sm font-semibold text-gray-700">Releases</h2>
+          <h2 className="text-sm font-semibold text-om-ink-mute">Releases</h2>
           <div className="flex items-center gap-2">
             <Link
               href={`/apps/${id}/live`}
-              className="bg-white border border-gray-200 hover:border-violet-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors inline-flex items-center gap-1.5"
+              className="bg-om-surface border border-om-line hover:border-violet-300 text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors inline-flex items-center gap-1.5"
             >
               <span className="relative flex h-2 w-2">
                 <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-60 animate-ping" />
@@ -157,79 +157,79 @@ export default function AppDetailPage({
             </Link>
             <Link
               href={`/apps/${id}/statistics`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               View statistics
             </Link>
             <Link
               href={`/apps/${id}/data-safety`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Data safety
             </Link>
             <Link
               href={`/apps/${id}/translations`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Translations
             </Link>
             <Link
               href={`/apps/${id}/crashes`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Crashes
             </Link>
             <Link
               href={`/apps/${id}/preview-videos`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Preview videos
             </Link>
             <Link
               href={`/apps/${id}/distribution`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Distribution
             </Link>
             <Link
               href={`/apps/${id}/promo-codes`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Promo codes
             </Link>
             <Link
               href={`/apps/${id}/experiments`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Experiments
             </Link>
             <Link
               href={`/apps/${id}/pricing`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Pricing
             </Link>
             <Link
               href={`/apps/${id}/subscription`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Subscription
             </Link>
             <Link
               href={`/apps/${id}/iap`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               In-app products
             </Link>
             <Link
               href={`/apps/${id}/revenue`}
-              className="bg-white border border-gray-200 hover:border-gray-300 text-gray-700 text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-surface border border-om-line hover:border-om-line text-om-ink-mute text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Revenue
             </Link>
             <Link
               href={`/apps/${id}/releases/new`}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg px-3 py-2 transition-colors"
+              className="bg-om-primary hover:bg-om-primary-deep text-white text-xs font-medium rounded-lg px-3 py-2 transition-colors"
             >
               Create Release
             </Link>
@@ -237,11 +237,11 @@ export default function AppDetailPage({
         </div>
 
         {releases.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-gray-300 p-8 text-center">
-            <p className="text-sm text-gray-500 mb-3">No releases yet.</p>
+          <div className="bg-om-surface rounded-xl border border-dashed border-om-line p-8 text-center">
+            <p className="text-sm text-om-ink-soft mb-3">No releases yet.</p>
             <Link
               href={`/apps/${id}/releases/new`}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-om-primary hover:underline"
             >
               Upload your first release
             </Link>
@@ -251,21 +251,21 @@ export default function AppDetailPage({
             {releases.map((release) => (
               <li
                 key={release.id}
-                className="bg-white rounded-xl border border-gray-200 px-5 py-4"
+                className="bg-om-surface rounded-xl border border-om-line px-5 py-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium text-sm text-gray-900">
+                    <p className="font-medium text-sm text-om-ink">
                       v{release.versionName}{" "}
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-om-ink-soft">
                         (code {release.versionCode})
                       </span>
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5 capitalize">
+                    <p className="text-xs text-om-ink-soft mt-0.5 capitalize">
                       {release.channel} · {release.status}
                     </p>
                   </div>
-                  <p className="text-xs text-gray-400 shrink-0">
+                  <p className="text-xs text-om-ink-soft shrink-0">
                     {new Date(release.createdAt).toLocaleDateString()}
                   </p>
                 </div>

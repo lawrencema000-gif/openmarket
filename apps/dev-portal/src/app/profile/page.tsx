@@ -79,8 +79,8 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="max-w-xl space-y-6">
-        <div className="h-8 w-32 rounded-lg bg-gray-200 animate-pulse" />
-        <div className="h-64 rounded-xl bg-gray-200 animate-pulse" />
+        <div className="h-8 w-32 rounded-lg bg-om-line animate-pulse" />
+        <div className="h-64 rounded-xl bg-om-line animate-pulse" />
       </div>
     );
   }
@@ -101,15 +101,15 @@ export default function ProfilePage() {
       />
 
       {developer && (
-        <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-blue-700 font-semibold text-sm">
+        <div className="flex items-center gap-3 p-4 bg-om-surface rounded-xl border border-om-line-soft shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-om-primary/15 flex items-center justify-center flex-shrink-0">
+            <span className="text-om-primary font-semibold text-sm">
               {developer.displayName?.charAt(0)?.toUpperCase() ?? "D"}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 truncate">{developer.displayName}</p>
-            <p className="text-xs text-gray-400 truncate">{developer.id}</p>
+            <p className="font-semibold text-om-ink truncate">{developer.displayName}</p>
+            <p className="text-xs text-om-ink-soft truncate">{developer.id}</p>
           </div>
           <StatusBadge status={developer.verificationStatus} />
         </div>
@@ -136,7 +136,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-om-ink-mute mb-1">
                 Display Name
               </label>
               <Input
@@ -149,9 +149,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-om-ink-mute mb-1">
                 Contact Email{" "}
-                <span className="font-normal text-gray-400 text-xs">(optional)</span>
+                <span className="font-normal text-om-ink-soft text-xs">(optional)</span>
               </label>
               <Input
                 type="email"
@@ -162,9 +162,9 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-om-ink-mute mb-1">
                 Website{" "}
-                <span className="font-normal text-gray-400 text-xs">(optional)</span>
+                <span className="font-normal text-om-ink-soft text-xs">(optional)</span>
               </label>
               <Input
                 type="url"
@@ -176,11 +176,11 @@ export default function ProfilePage() {
 
             <div>
               <div className="flex items-baseline justify-between mb-1">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-om-ink-mute">
                   Bio{" "}
-                  <span className="font-normal text-gray-400 text-xs">(optional)</span>
+                  <span className="font-normal text-om-ink-soft text-xs">(optional)</span>
                 </label>
-                <span className="text-xs text-gray-400">{form.bio.length}/500</span>
+                <span className="text-xs text-om-ink-soft">{form.bio.length}/500</span>
               </div>
               <textarea
                 rows={4}
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                 value={form.bio}
                 onChange={(e) => set("bio", e.target.value)}
                 placeholder="Tell users about yourself…"
-                className="flex w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 resize-none"
+                className="flex w-full rounded-md border border-om-line bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-om-ink-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-om-primary resize-none"
               />
             </div>
 
@@ -196,7 +196,7 @@ export default function ProfilePage() {
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-60"
+                className="bg-om-primary hover:bg-om-primary-deep text-white disabled:opacity-60"
               >
                 {saving ? (
                   <span className="flex items-center gap-2">

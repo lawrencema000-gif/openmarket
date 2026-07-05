@@ -133,7 +133,7 @@ export default function TranslationsPage({
     }
   }
 
-  if (loading) return <div className="text-sm text-gray-500">Loading…</div>;
+  if (loading) return <div className="text-sm text-om-ink-soft">Loading…</div>;
   if (error && !data)
     return (
       <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -151,14 +151,14 @@ export default function TranslationsPage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Translations</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">Translations</h1>
+        <p className="text-sm text-om-ink-soft mt-1">
           Default locale:{" "}
-          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+          <span className="font-mono bg-om-line-soft px-1.5 py-0.5 rounded">
             {data?.defaultLocale}
           </span>{" "}
           (edited via the main app form). Add overrides here for any
@@ -172,8 +172,8 @@ export default function TranslationsPage({
         </div>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           Existing translations
         </h2>
         {data && data.translations.length > 0 ? (
@@ -181,20 +181,20 @@ export default function TranslationsPage({
             {data.translations.map((row) => (
               <li key={row.locale} className="py-3 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-om-ink">
                     {LOCALE_LABELS[row.locale] ?? row.locale}{" "}
-                    <span className="text-xs text-gray-400 font-mono">
+                    <span className="text-xs text-om-ink-soft font-mono">
                       ({row.locale})
                     </span>
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-om-ink-soft truncate">
                     {row.title ?? <em className="italic">(no title)</em>}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => startEdit(row)}
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-om-primary hover:underline"
                 >
                   Edit
                 </button>
@@ -209,22 +209,22 @@ export default function TranslationsPage({
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-om-ink-soft italic">
             No translations yet. Add your first below.
           </p>
         )}
       </section>
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-700">
+          <h2 className="text-sm font-semibold text-om-ink-mute">
             {editingExisting ? `Edit ${editor.locale}` : "Add translation"}
           </h2>
           {editingExisting && (
             <button
               type="button"
               onClick={startNew}
-              className="text-xs text-gray-500 hover:underline"
+              className="text-xs text-om-ink-soft hover:underline"
             >
               + New instead
             </button>
@@ -233,14 +233,14 @@ export default function TranslationsPage({
 
         <div className="space-y-3">
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">Locale</span>
+            <span className="text-xs font-medium text-om-ink-mute">Locale</span>
             <select
               value={editor.locale}
               disabled={editingExisting}
               onChange={(e) =>
                 setEditor((s) => ({ ...s, locale: e.target.value }))
               }
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm disabled:bg-gray-50"
+              className="mt-1 block w-full rounded-md border-om-line text-sm disabled:bg-om-surface-tint"
             >
               <option value="">Pick a language…</option>
               {availableForNew.map((loc) => (
@@ -258,7 +258,7 @@ export default function TranslationsPage({
           </label>
 
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">Title</span>
+            <span className="text-xs font-medium text-om-ink-mute">Title</span>
             <input
               type="text"
               value={editor.title}
@@ -266,12 +266,12 @@ export default function TranslationsPage({
                 setEditor((s) => ({ ...s, title: e.target.value }))
               }
               placeholder="(leave blank to use default-locale title)"
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+              className="mt-1 block w-full rounded-md border-om-line text-sm"
             />
           </label>
 
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs font-medium text-om-ink-mute">
               Short description
             </span>
             <input
@@ -281,12 +281,12 @@ export default function TranslationsPage({
                 setEditor((s) => ({ ...s, shortDescription: e.target.value }))
               }
               placeholder="(leave blank to use default-locale short description)"
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+              className="mt-1 block w-full rounded-md border-om-line text-sm"
             />
           </label>
 
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs font-medium text-om-ink-mute">
               Full description
             </span>
             <textarea
@@ -296,7 +296,7 @@ export default function TranslationsPage({
               }
               rows={6}
               placeholder="(leave blank to use default-locale description)"
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm font-mono"
+              className="mt-1 block w-full rounded-md border-om-line text-sm font-mono"
             />
           </label>
         </div>
@@ -306,7 +306,7 @@ export default function TranslationsPage({
             type="button"
             onClick={() => void save()}
             disabled={saving || !editor.locale}
-            className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+            className="rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
           >
             {saving ? "Saving…" : editingExisting ? "Save changes" : "Add translation"}
           </button>

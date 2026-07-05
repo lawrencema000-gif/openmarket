@@ -27,8 +27,8 @@ function typeBadgeClass(type?: string): string {
     case "impersonation": return "bg-fuchsia-100 text-fuchsia-700";
     case "illegal": return "bg-rose-100 text-rose-700";
     case "spam": return "bg-amber-100 text-amber-700";
-    case "broken": return "bg-blue-100 text-blue-700";
-    default: return "bg-gray-100 text-gray-600";
+    case "broken": return "bg-om-primary/15 text-om-primary";
+    default: return "bg-om-line-soft text-om-ink-mute";
   }
 }
 
@@ -150,21 +150,21 @@ export function ReportsTable({ items }: { items: AdminReport[] }) {
 
   return (
     <>
-      <div className="rounded-lg bg-blue-50/70 border border-blue-100 px-3 py-2 text-[11px] text-blue-900 font-mono w-fit">
-        keyboard · <kbd className="px-1 rounded bg-white border border-blue-200">j</kbd>{" "}
-        <kbd className="px-1 rounded bg-white border border-blue-200">k</kbd> move ·{" "}
-        <kbd className="px-1 rounded bg-white border border-blue-200">x</kbd> select ·{" "}
-        <kbd className="px-1 rounded bg-white border border-blue-200">a</kbd> all ·{" "}
-        <kbd className="px-1 rounded bg-white border border-blue-200">Esc</kbd> clear
+      <div className="rounded-lg bg-om-primary/10/70 border border-om-primary/20 px-3 py-2 text-[11px] text-om-primary-deep font-mono w-fit">
+        keyboard · <kbd className="px-1 rounded bg-om-surface border border-om-primary/25">j</kbd>{" "}
+        <kbd className="px-1 rounded bg-om-surface border border-om-primary/25">k</kbd> move ·{" "}
+        <kbd className="px-1 rounded bg-om-surface border border-om-primary/25">x</kbd> select ·{" "}
+        <kbd className="px-1 rounded bg-om-surface border border-om-primary/25">a</kbd> all ·{" "}
+        <kbd className="px-1 rounded bg-om-surface border border-om-primary/25">Esc</kbd> clear
       </div>
 
       {resolvableIds.length > 0 && (
-        <label className="inline-flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+        <label className="inline-flex items-center gap-2 text-xs font-medium text-om-ink-mute cursor-pointer">
           <input
             type="checkbox"
             checked={allResolvableSelected}
             onChange={toggleAllResolvable}
-            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+            className="h-4 w-4 text-om-primary rounded border-om-line"
           />
           Select all open / investigating ({resolvableIds.length})
         </label>
@@ -181,12 +181,12 @@ export function ReportsTable({ items }: { items: AdminReport[] }) {
           return (
             <div
               key={report.id}
-              className={`bg-white rounded-xl border p-5 transition-all ${
+              className={`bg-om-surface rounded-xl border p-5 transition-all ${
                 isCursor
-                  ? "border-blue-300 ring-2 ring-blue-200"
+                  ? "border-om-primary/40 ring-2 ring-om-primary/25"
                   : isChecked
-                    ? "border-blue-200 bg-blue-50/30"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-om-primary/25 bg-om-primary/10/30"
+                    : "border-om-line hover:border-om-line"
               }`}
               onClick={() => setCursor(idx)}
             >
@@ -198,7 +198,7 @@ export function ReportsTable({ items }: { items: AdminReport[] }) {
                     onChange={() => toggle(report.id)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Select report ${report.id}`}
-                    className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 shrink-0"
+                    className="mt-1 h-4 w-4 text-om-primary rounded border-om-line shrink-0"
                   />
                 )}
                 <div className="flex-1 min-w-0">
@@ -214,9 +214,9 @@ export function ReportsTable({ items }: { items: AdminReport[] }) {
                       </span>
                     )}
                     {report.targetType && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-om-ink-soft">
                         Target:{" "}
-                        <span className="font-medium text-gray-700">
+                        <span className="font-medium text-om-ink-mute">
                           {report.targetType}
                           {report.targetId
                             ? ` · ${report.targetId.slice(0, 8)}`
@@ -226,16 +226,16 @@ export function ReportsTable({ items }: { items: AdminReport[] }) {
                     )}
                   </div>
                   {report.description && (
-                    <p className="text-sm text-gray-700 leading-relaxed mb-2 whitespace-pre-line">
+                    <p className="text-sm text-om-ink-mute leading-relaxed mb-2 whitespace-pre-line">
                       {report.description}
                     </p>
                   )}
                   {report.resolutionNotes && (
-                    <p className="text-xs text-gray-500 mt-1 italic">
+                    <p className="text-xs text-om-ink-soft mt-1 italic">
                       Resolution: {report.resolutionNotes}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-om-ink-soft">
                     {report.createdAt
                       ? new Date(report.createdAt).toLocaleString()
                       : "—"}

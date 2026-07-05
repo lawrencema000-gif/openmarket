@@ -141,7 +141,7 @@ export default async function ReportsPage({
       />
 
       {/* Status tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-om-line-soft p-1 rounded-lg w-fit">
         {STATUS_TABS.map((tab) => {
           const isActive =
             (!filterStatus && tab.value === "all") || filterStatus === tab.value;
@@ -151,8 +151,8 @@ export default async function ReportsPage({
               href={`/reports?status=${tab.value}`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 isActive
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-om-surface text-om-ink shadow-sm"
+                  : "text-om-ink-soft hover:text-om-ink"
               }`}
             >
               {tab.label}
@@ -164,7 +164,7 @@ export default async function ReportsPage({
 
       {/* Saved filters */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+        <span className="text-[11px] uppercase tracking-wide text-om-ink-soft font-semibold">
           Saved
         </span>
         {SAVED_FILTERS.map((preset) => {
@@ -179,8 +179,8 @@ export default async function ReportsPage({
               href={`/reports?${qs.toString()}`}
               className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
                 isActive
-                  ? "bg-blue-50 border-blue-200 text-blue-700"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-blue-200 hover:text-blue-700"
+                  ? "bg-om-primary/10 border-om-primary/25 text-om-primary"
+                  : "bg-om-surface border-om-line text-om-ink-mute hover:border-om-primary/25 hover:text-om-primary"
               }`}
             >
               {preset.label}

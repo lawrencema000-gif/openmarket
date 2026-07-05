@@ -66,13 +66,13 @@ const STATUS_TABS: { value: DmcaStatus | "all"; label: string }[] = [
 
 function statusTone(status: DmcaStatus): string {
   switch (status) {
-    case "received": return "bg-blue-100 text-blue-700";
+    case "received": return "bg-om-primary/15 text-om-primary";
     case "valid": return "bg-amber-100 text-amber-700";
-    case "invalid": return "bg-gray-100 text-gray-700";
+    case "invalid": return "bg-om-line-soft text-om-ink-mute";
     case "processed": return "bg-red-100 text-red-700";
     case "counter_noticed": return "bg-violet-100 text-violet-700";
     case "restored": return "bg-emerald-100 text-emerald-700";
-    case "withdrawn": return "bg-gray-100 text-gray-500";
+    case "withdrawn": return "bg-om-line-soft text-om-ink-soft";
   }
 }
 
@@ -103,7 +103,7 @@ export default async function DmcaPage({
         description={`${total} total · ${data.counts.received} awaiting review · ${data.counts.counter_noticed} counter-noticed`}
       />
 
-      <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex flex-wrap gap-1 bg-om-line-soft p-1 rounded-lg w-fit">
         {STATUS_TABS.map((tab) => {
           const isActive =
             (!filterStatus && tab.value === "all") || filterStatus === tab.value;
@@ -113,8 +113,8 @@ export default async function DmcaPage({
               href={`/dmca?status=${tab.value}`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 isActive
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-om-surface text-om-ink shadow-sm"
+                  : "text-om-ink-soft hover:text-om-ink"
               }`}
             >
               {tab.label}
@@ -134,7 +134,7 @@ export default async function DmcaPage({
           {data.items.map((notice) => (
             <div
               key={notice.id}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-3"
+              className="bg-om-surface rounded-xl border border-om-line shadow-sm p-5 space-y-3"
             >
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
@@ -144,52 +144,52 @@ export default async function DmcaPage({
                     >
                       {notice.status.replace("_", " ")}
                     </span>
-                    <code className="text-xs font-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
+                    <code className="text-xs font-mono text-om-ink-mute bg-om-line-soft px-2 py-0.5 rounded">
                       {notice.noticeNumber}
                     </code>
                   </div>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-om-ink">
                     {notice.claimantName}
                     {notice.claimantOrganization && (
-                      <span className="text-xs text-gray-500 font-normal ml-2">
+                      <span className="text-xs text-om-ink-soft font-normal ml-2">
                         ({notice.claimantOrganization})
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-gray-500">{notice.claimantEmail}</p>
+                  <p className="text-xs text-om-ink-soft">{notice.claimantEmail}</p>
                 </div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-om-ink-soft">
                   {new Date(notice.receivedAt).toLocaleString()}
                 </p>
               </div>
 
               <div className="text-sm space-y-1.5">
                 <p>
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wide">
                     Copyrighted work:
                   </span>{" "}
-                  <span className="text-gray-700">{notice.copyrightedWork}</span>
+                  <span className="text-om-ink-mute">{notice.copyrightedWork}</span>
                 </p>
                 <p>
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wide">
                     Infringing URL:
                   </span>{" "}
-                  <span className="text-gray-700 font-mono break-all">
+                  <span className="text-om-ink-mute font-mono break-all">
                     {notice.infringingUrl}
                   </span>
                 </p>
                 {notice.appId && (
                   <p>
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wide">
                       Mapped to:
                     </span>{" "}
-                    <span className="text-gray-700 font-mono">
+                    <span className="text-om-ink-mute font-mono">
                       app · {notice.appId.slice(0, 8)}…
                     </span>
                   </p>
                 )}
                 {notice.reviewNotes && (
-                  <p className="text-xs text-gray-500 italic mt-2">
+                  <p className="text-xs text-om-ink-soft italic mt-2">
                     Review notes: {notice.reviewNotes}
                   </p>
                 )}

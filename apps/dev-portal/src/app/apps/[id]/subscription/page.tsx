@@ -91,16 +91,16 @@ export default function SubscriptionConfigPage({
   }
 
   if (loading) {
-    return <div className="max-w-2xl h-64 rounded-2xl bg-slate-100 animate-pulse" />;
+    return <div className="max-w-2xl h-64 rounded-2xl bg-om-line-soft animate-pulse" />;
   }
 
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-3">
-        <Link href={`/apps/${appId}`} className="text-sm text-slate-400 hover:text-slate-600">
+        <Link href={`/apps/${appId}`} className="text-sm text-om-ink-soft hover:text-om-ink-mute">
           ← App
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Subscription</h1>
+        <h1 className="text-2xl font-bold text-om-ink">Subscription</h1>
       </div>
 
       {error && (
@@ -114,7 +114,7 @@ export default function SubscriptionConfigPage({
           <CardTitle>App-level subscription (P4-C)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-om-ink-soft">
             When enabled, the storefront swaps the install button for
             “Subscribe to install” — users need an active subscription to
             download. Mutually exclusive with a one-time price.
@@ -125,18 +125,18 @@ export default function SubscriptionConfigPage({
               type="checkbox"
               checked={enabled}
               onChange={(e) => setEnabled(e.target.checked)}
-              className="h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-400"
+              className="h-5 w-5 rounded border-om-line text-violet-600 focus:ring-violet-400"
             />
-            <span className="text-sm font-medium text-slate-800">
+            <span className="text-sm font-medium text-om-ink-mute">
               Require a subscription to install this app
             </span>
           </label>
 
           {enabled && (
-            <div className="space-y-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
+            <div className="space-y-4 rounded-xl bg-om-surface-tint border border-om-line p-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-slate-500" htmlFor="interval">
+                  <label className="text-xs font-medium text-om-ink-soft" htmlFor="interval">
                     Billing interval
                   </label>
                   <select
@@ -145,7 +145,7 @@ export default function SubscriptionConfigPage({
                     onChange={(e) =>
                       setIntervalValue(e.target.value as (typeof INTERVALS)[number])
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                    className="mt-1 w-full rounded-lg border border-om-line px-3 py-2 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                   >
                     {INTERVALS.map((i) => (
                       <option key={i} value={i}>
@@ -155,7 +155,7 @@ export default function SubscriptionConfigPage({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500" htmlFor="count">
+                  <label className="text-xs font-medium text-om-ink-soft" htmlFor="count">
                     Interval count (1–12)
                   </label>
                   <Input
@@ -169,7 +169,7 @@ export default function SubscriptionConfigPage({
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-500" htmlFor="trial">
+                <label className="text-xs font-medium text-om-ink-soft" htmlFor="trial">
                   Free trial (days, 0–30)
                 </label>
                 <Input
@@ -181,7 +181,7 @@ export default function SubscriptionConfigPage({
                   onChange={(e) => setTrialDays(Number(e.target.value))}
                 />
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-om-ink-soft">
                 Set the per-period price on the{" "}
                 <Link href={`/apps/${appId}/pricing`} className="text-violet-600 hover:underline">
                   Pricing page

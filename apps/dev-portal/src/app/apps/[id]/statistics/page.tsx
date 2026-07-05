@@ -74,21 +74,21 @@ export default function StatisticsPage({
     <div className="max-w-5xl space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Statistics</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-om-ink">Statistics</h1>
+          <p className="text-sm text-om-ink-soft mt-1">
             Daily installs, library state, and review trends for this app.
             Recomputed every night UTC; the latest day shown is yesterday.
           </p>
         </div>
         <Link
           href={`/apps/${id}`}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-om-primary hover:text-om-primary"
         >
           ← Back to app
         </Link>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-om-line-soft p-1 rounded-lg w-fit">
         {WINDOW_PRESETS.map((p) => {
           const active = windowDays === p.days;
           return (
@@ -98,8 +98,8 @@ export default function StatisticsPage({
               onClick={() => setWindowDays(p.days)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 active
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-om-surface text-om-ink shadow-sm"
+                  : "text-om-ink-soft hover:text-om-ink"
               }`}
             >
               Last {p.label}
@@ -115,11 +115,11 @@ export default function StatisticsPage({
       )}
 
       {loading ? (
-        <div className="text-sm text-gray-500">Loading…</div>
+        <div className="text-sm text-om-ink-soft">Loading…</div>
       ) : !data || data.items.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-10 text-center">
-          <p className="text-gray-700 font-medium">No statistics yet.</p>
-          <p className="text-sm text-gray-500 mt-1">
+        <div className="rounded-xl border border-om-line bg-om-surface-tint px-6 py-10 text-center">
+          <p className="text-om-ink-mute font-medium">No statistics yet.</p>
+          <p className="text-sm text-om-ink-soft mt-1">
             Daily stats land overnight UTC. If your app was published less
             than a day ago, check back tomorrow.
           </p>
@@ -159,7 +159,7 @@ export default function StatisticsPage({
           />
 
           {data.summary.computedAt && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-om-ink-soft">
               Computed {new Date(data.summary.computedAt).toLocaleString()}
             </p>
           )}
@@ -198,13 +198,13 @@ function SummaryCards({
       {cards.map((c) => (
         <div
           key={c.label}
-          className="bg-white border border-gray-200 rounded-xl p-4"
+          className="bg-om-surface border border-om-line rounded-xl p-4"
         >
-          <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold">
+          <p className="text-[11px] uppercase tracking-wide text-om-ink-soft font-semibold">
             {c.label}
           </p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{c.value}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{c.sub}</p>
+          <p className="text-2xl font-bold text-om-ink mt-1">{c.value}</p>
+          <p className="text-xs text-om-ink-soft mt-0.5">{c.sub}</p>
         </div>
       ))}
     </div>
@@ -263,11 +263,11 @@ function ChartCard({
       : [0, Math.floor(points.length / 2), points.length - 1];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
+    <div className="bg-om-surface border border-om-line rounded-xl p-4">
       <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-          <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+          <h3 className="text-sm font-semibold text-om-ink">{title}</h3>
+          <p className="text-xs text-om-ink-soft mt-0.5">{subtitle}</p>
         </div>
       </div>
       <svg

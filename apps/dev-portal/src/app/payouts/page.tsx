@@ -43,7 +43,7 @@ const STATUS_STYLES: Record<PayoutRow["status"], string> = {
   paid: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
   failed: "bg-rose-50 text-rose-700 ring-rose-200",
-  reversed: "bg-slate-100 text-slate-600 ring-slate-200",
+  reversed: "bg-om-line-soft text-om-ink-mute ring-om-primary",
 };
 
 export default function PayoutsPage() {
@@ -107,8 +107,8 @@ export default function PayoutsPage() {
   if (loading) {
     return (
       <div className="max-w-4xl space-y-6">
-        <div className="h-32 rounded-3xl bg-slate-200 animate-pulse" />
-        <div className="h-48 rounded-2xl bg-slate-200 animate-pulse" />
+        <div className="h-32 rounded-3xl bg-om-line animate-pulse" />
+        <div className="h-48 rounded-2xl bg-om-line animate-pulse" />
       </div>
     );
   }
@@ -127,10 +127,10 @@ export default function PayoutsPage() {
           <Eyebrow tone="cta" pulse>
             Payouts
           </Eyebrow>
-          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-om-ink">
             Get <GradientText as="span">paid</GradientText> for your apps.
           </h1>
-          <p className="text-slate-500 max-w-xl">
+          <p className="text-om-ink-soft max-w-xl">
             Connect a Stripe account to receive your earnings. We never see your
             bank details — Stripe handles identity, tax, and transfers.
           </p>
@@ -156,7 +156,7 @@ export default function PayoutsPage() {
         <CardContent className="space-y-4">
           {!account?.configured ? (
             <>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-om-ink-mute">
                 You haven't connected a payout account yet.
               </p>
               <Button
@@ -174,12 +174,12 @@ export default function PayoutsPage() {
                 <StatusPill label="Charges enabled" ok={!!account.chargesEnabled} />
                 <StatusPill label="Payouts enabled" ok={!!account.payoutsEnabled} />
               </div>
-              <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-slate-500">
+              <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-om-ink-soft">
                 {account.countryCode && <span>Country: {account.countryCode}</span>}
                 {account.defaultCurrency && (
                   <span>Currency: {account.defaultCurrency.toUpperCase()}</span>
                 )}
-                <span className="font-mono text-xs text-slate-400">
+                <span className="font-mono text-xs text-om-ink-soft">
                   {account.stripeAccountId}
                 </span>
               </div>
@@ -209,7 +209,7 @@ export default function PayoutsPage() {
         </CardHeader>
         <CardContent>
           {payouts.length === 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-om-ink-soft">
               No payouts yet. Once you have revenue and a connected account,
               payouts appear here each cycle.
             </p>
@@ -217,7 +217,7 @@ export default function PayoutsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200">
+                  <tr className="text-left text-xs uppercase tracking-wide text-om-ink-soft border-b border-om-line">
                     <th className="py-2 pr-4 font-semibold">Period</th>
                     <th className="py-2 pr-4 font-semibold">Gross</th>
                     <th className="py-2 pr-4 font-semibold">Fee</th>
@@ -227,17 +227,17 @@ export default function PayoutsPage() {
                 </thead>
                 <tbody>
                   {payouts.map((p) => (
-                    <tr key={p.id} className="border-b border-slate-100">
-                      <td className="py-2.5 pr-4 text-slate-600">
+                    <tr key={p.id} className="border-b border-om-line-soft">
+                      <td className="py-2.5 pr-4 text-om-ink-mute">
                         {fmtDate(p.periodFrom)} – {fmtDate(p.periodTo)}
                       </td>
-                      <td className="py-2.5 pr-4 text-slate-700">
+                      <td className="py-2.5 pr-4 text-om-ink-mute">
                         {formatPrice(p.grossCents, p.currency)}
                       </td>
-                      <td className="py-2.5 pr-4 text-slate-500">
+                      <td className="py-2.5 pr-4 text-om-ink-soft">
                         {(p.platformFeeBps / 100).toFixed(1)}%
                       </td>
-                      <td className="py-2.5 pr-4 font-semibold text-slate-900">
+                      <td className="py-2.5 pr-4 font-semibold text-om-ink">
                         {formatPrice(p.netCents, p.currency)}
                       </td>
                       <td className="py-2.5 pr-4">
@@ -266,17 +266,17 @@ function StatusPill({ label, ok }: { label: string; ok: boolean }) {
   return (
     <div
       className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ring-1 ${
-        ok ? "bg-emerald-50 ring-emerald-200" : "bg-slate-50 ring-slate-200"
+        ok ? "bg-emerald-50 ring-emerald-200" : "bg-om-surface-tint ring-om-primary"
       }`}
     >
       <span
         className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
-          ok ? "bg-emerald-500 text-white" : "bg-slate-300 text-white"
+          ok ? "bg-emerald-500 text-white" : "bg-om-line text-white"
         }`}
       >
         {ok ? "✓" : "•"}
       </span>
-      <span className={`text-sm font-medium ${ok ? "text-emerald-800" : "text-slate-500"}`}>
+      <span className={`text-sm font-medium ${ok ? "text-emerald-800" : "text-om-ink-soft"}`}>
         {label}
       </span>
     </div>

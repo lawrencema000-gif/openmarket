@@ -58,7 +58,7 @@ export default async function DevelopersPage({
       />
 
       {/* Trust level filter */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-om-line-soft p-1 rounded-lg w-fit">
         {TRUST_TABS.map((tab) => {
           const isActive = (!filterTrust && tab === "all") || filterTrust === tab;
           return (
@@ -67,8 +67,8 @@ export default async function DevelopersPage({
               href={`/developers?trust=${tab}`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors capitalize ${
                 isActive
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-om-surface text-om-ink shadow-sm"
+                  : "text-om-ink-soft hover:text-om-ink"
               }`}
             >
               {tab}
@@ -79,7 +79,7 @@ export default async function DevelopersPage({
       </div>
 
       {/* Developer table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-om-surface rounded-xl border border-om-line shadow-sm overflow-hidden">
         {filtered.length === 0 ? (
           <EmptyState
             title="No developers found"
@@ -92,13 +92,13 @@ export default async function DevelopersPage({
           />
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-om-surface-tint border-b border-om-line">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Developer</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Trust Level</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Apps</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Joined</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">Developer</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">Trust Level</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">Apps</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-om-ink-soft uppercase tracking-wide">Joined</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-om-ink-soft uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -106,24 +106,24 @@ export default async function DevelopersPage({
                 const appCount =
                   dev.appCount ?? (Array.isArray(dev.apps) ? dev.apps.length : 0);
                 return (
-                  <tr key={dev.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={dev.id} className="hover:bg-om-surface-tint transition-colors">
                     <td className="px-6 py-4">
-                      <p className="font-medium text-gray-900">{dev.name ?? "Unknown"}</p>
+                      <p className="font-medium text-om-ink">{dev.name ?? "Unknown"}</p>
                       {dev.email && (
-                        <p className="text-xs text-gray-400 mt-0.5">{dev.email}</p>
+                        <p className="text-xs text-om-ink-soft mt-0.5">{dev.email}</p>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={dev.trustLevel ?? "unknown"} />
                     </td>
-                    <td className="px-6 py-4 text-gray-600">{appCount}</td>
-                    <td className="px-6 py-4 text-gray-500 text-xs">
+                    <td className="px-6 py-4 text-om-ink-mute">{appCount}</td>
+                    <td className="px-6 py-4 text-om-ink-soft text-xs">
                       {dev.createdAt ? new Date(dev.createdAt).toLocaleDateString() : "—"}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
                         href={`/developers/${dev.id}`}
-                        className="text-xs font-medium text-blue-600 hover:underline"
+                        className="text-xs font-medium text-om-primary hover:underline"
                       >
                         View
                       </Link>

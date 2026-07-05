@@ -37,13 +37,13 @@ export function FamilySharingToggle({ appId, initialEnabled }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+    <div className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-gray-700">
+          <h2 className="text-sm font-semibold text-om-ink-mute">
             Family sharing
           </h2>
-          <p className="text-xs text-gray-500 mt-1 max-w-md">
+          <p className="text-xs text-om-ink-soft mt-1 max-w-md">
             When enabled, members of a user's family group will see this app
             in their library after the family owner installs it. Helpful for
             multi-user apps; disable for single-account / per-device apps.
@@ -55,9 +55,9 @@ export function FamilySharingToggle({ appId, initialEnabled }: Props) {
             checked={enabled}
             disabled={saving}
             onChange={(e) => void flip(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-om-line text-om-primary focus:ring-om-primary"
           />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-om-ink-mute">
             {enabled ? "Enabled" : "Disabled"}
           </span>
         </label>

@@ -128,14 +128,14 @@ export default function PreviewVideosPage({
       <div>
         <Link
           href={`/apps/${appId}`}
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-om-primary hover:underline"
         >
           ← Back to app
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">
+        <h1 className="text-2xl font-bold text-om-ink mt-2">
           Preview videos
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-om-ink-soft mt-1">
           Showcase your app with short videos. Accepts direct MP4/WebM URLs
           or YouTube / Vimeo page links — the storefront switches between
           a native player and an embed automatically.
@@ -148,16 +148,16 @@ export default function PreviewVideosPage({
         </div>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-om-ink-mute">
           {videos.length === 0
             ? "No videos yet"
             : `Existing videos (${videos.length})`}
         </h2>
         {loading ? (
-          <p className="text-sm text-gray-500">Loading…</p>
+          <p className="text-sm text-om-ink-soft">Loading…</p>
         ) : videos.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-om-ink-soft italic">
             Add your first below.
           </p>
         ) : (
@@ -165,13 +165,13 @@ export default function PreviewVideosPage({
             {videos.map((v) => (
               <li key={v.id} className="py-3 flex items-start gap-3">
                 <div className="flex-1 min-w-0 space-y-0.5">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-om-ink truncate">
                     {v.label ?? "(no label)"}
                   </p>
-                  <p className="text-xs text-gray-500 truncate font-mono">
+                  <p className="text-xs text-om-ink-soft truncate font-mono">
                     {v.videoUrl}
                   </p>
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-om-ink-soft">
                     {kindLabel(v.videoUrl)} · sort {v.sortOrder}
                     {v.durationSeconds
                       ? ` · ${Math.floor(v.durationSeconds / 60)}:${(v.durationSeconds % 60).toString().padStart(2, "0")}`
@@ -181,7 +181,7 @@ export default function PreviewVideosPage({
                 <button
                   type="button"
                   onClick={() => startEdit(v)}
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-om-primary hover:underline"
                 >
                   Edit
                 </button>
@@ -198,16 +198,16 @@ export default function PreviewVideosPage({
         )}
       </section>
 
-      <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+      <section className="bg-om-surface rounded-xl border border-om-line p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-700">
+          <h2 className="text-sm font-semibold text-om-ink-mute">
             {editor.id ? "Edit video" : "Add a video"}
           </h2>
           {editor.id && (
             <button
               type="button"
               onClick={() => setEditor(EMPTY_EDITOR)}
-              className="text-xs text-gray-500 hover:underline"
+              className="text-xs text-om-ink-soft hover:underline"
             >
               + Add new instead
             </button>
@@ -216,7 +216,7 @@ export default function PreviewVideosPage({
 
         <div className="space-y-3">
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs font-medium text-om-ink-mute">
               Video URL <span className="text-red-600">*</span>
             </span>
             <input
@@ -226,11 +226,11 @@ export default function PreviewVideosPage({
                 setEditor((s) => ({ ...s, videoUrl: e.target.value }))
               }
               placeholder="https://youtube.com/watch?v=... or https://cdn.example.com/trailer.mp4"
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+              className="mt-1 block w-full rounded-md border-om-line text-sm"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs font-medium text-om-ink-mute">
               Poster image URL
             </span>
             <input
@@ -240,11 +240,11 @@ export default function PreviewVideosPage({
                 setEditor((s) => ({ ...s, posterUrl: e.target.value }))
               }
               placeholder="(optional — shown before the user clicks play)"
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+              className="mt-1 block w-full rounded-md border-om-line text-sm"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">Label</span>
+            <span className="text-xs font-medium text-om-ink-mute">Label</span>
             <input
               type="text"
               value={editor.label}
@@ -252,12 +252,12 @@ export default function PreviewVideosPage({
                 setEditor((s) => ({ ...s, label: e.target.value }))
               }
               placeholder='e.g. "Gameplay trailer" or "30-second tour"'
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+              className="mt-1 block w-full rounded-md border-om-line text-sm"
             />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-om-ink-mute">
                 Duration (seconds)
               </span>
               <input
@@ -267,11 +267,11 @@ export default function PreviewVideosPage({
                 onChange={(e) =>
                   setEditor((s) => ({ ...s, durationSeconds: e.target.value }))
                 }
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                className="mt-1 block w-full rounded-md border-om-line text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-om-ink-mute">
                 Sort order
               </span>
               <input
@@ -281,7 +281,7 @@ export default function PreviewVideosPage({
                 onChange={(e) =>
                   setEditor((s) => ({ ...s, sortOrder: e.target.value }))
                 }
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                className="mt-1 block w-full rounded-md border-om-line text-sm"
               />
             </label>
           </div>
@@ -292,7 +292,7 @@ export default function PreviewVideosPage({
             type="button"
             onClick={() => void save()}
             disabled={saving || !editor.videoUrl}
-            className="rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+            className="rounded-md bg-om-primary hover:bg-om-primary-deep disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
           >
             {saving ? "Saving…" : editor.id ? "Save changes" : "Add video"}
           </button>

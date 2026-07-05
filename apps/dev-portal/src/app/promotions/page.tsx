@@ -46,8 +46,8 @@ const STATUS_STYLES: Record<Promotion["status"], string> = {
   pending_review: "bg-amber-50 text-amber-700 ring-amber-200",
   paused_budget: "bg-sky-50 text-sky-700 ring-sky-200",
   paused_policy: "bg-rose-50 text-rose-700 ring-rose-200",
-  draft: "bg-slate-100 text-slate-600 ring-slate-200",
-  ended: "bg-slate-100 text-slate-500 ring-slate-200",
+  draft: "bg-om-line-soft text-om-ink-mute ring-om-primary",
+  ended: "bg-om-line-soft text-om-ink-soft ring-om-primary",
 };
 
 const STATUS_LABEL: Record<Promotion["status"], string> = {
@@ -135,8 +135,8 @@ export default function PromotionsPage() {
   if (loading) {
     return (
       <div className="max-w-4xl space-y-6">
-        <div className="h-32 rounded-3xl bg-slate-200 animate-pulse" />
-        <div className="h-40 rounded-2xl bg-slate-200 animate-pulse" />
+        <div className="h-32 rounded-3xl bg-om-line animate-pulse" />
+        <div className="h-40 rounded-2xl bg-om-line animate-pulse" />
       </div>
     );
   }
@@ -149,10 +149,10 @@ export default function PromotionsPage() {
           <Eyebrow tone="primary" pulse>
             Promoted listings
           </Eyebrow>
-          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="om-display text-3xl sm:text-4xl font-bold tracking-tight text-om-ink">
             Promote your <GradientText as="span">apps</GradientText>.
           </h1>
-          <p className="text-slate-500 max-w-xl">
+          <p className="text-om-ink-soft max-w-xl">
             Sponsored placements, clearly labeled. You set a max bid per click
             and a daily budget; every campaign is reviewed before it goes live
             and never bumps an app's trust signals.
@@ -167,7 +167,7 @@ export default function PromotionsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Your campaigns</h2>
+        <h2 className="text-lg font-semibold text-om-ink">Your campaigns</h2>
         <Button
           onClick={() => setShowForm((s) => !s)}
           className="bg-violet-600 hover:bg-violet-500 text-white"
@@ -178,7 +178,7 @@ export default function PromotionsPage() {
       </div>
 
       {apps.length === 0 && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-om-ink-soft">
           Create an app first — promotions run against a published app.
         </p>
       )}
@@ -190,14 +190,14 @@ export default function PromotionsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-xs font-medium text-slate-500" htmlFor="promo-app">
+              <label className="text-xs font-medium text-om-ink-soft" htmlFor="promo-app">
                 App
               </label>
               <select
                 id="promo-app"
                 value={appId}
                 onChange={(e) => setAppId(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                className="mt-1 w-full rounded-lg border border-om-line px-3 py-2 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
               >
                 {apps.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -208,7 +208,7 @@ export default function PromotionsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-slate-500" htmlFor="bid">
+                <label className="text-xs font-medium text-om-ink-soft" htmlFor="bid">
                   Max bid / click ($)
                 </label>
                 <Input
@@ -221,7 +221,7 @@ export default function PromotionsPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-500" htmlFor="budget">
+                <label className="text-xs font-medium text-om-ink-soft" htmlFor="budget">
                   Daily budget ($)
                 </label>
                 <Input
@@ -234,7 +234,7 @@ export default function PromotionsPage() {
                 />
               </div>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-om-ink-soft">
               Daily budget must be at least one click's bid. Campaign starts in
               review; you'll see it flip to Active once approved.
             </p>
@@ -250,17 +250,17 @@ export default function PromotionsPage() {
       )}
 
       {promos.length === 0 ? (
-        <p className="text-sm text-slate-500">No campaigns yet.</p>
+        <p className="text-sm text-om-ink-soft">No campaigns yet.</p>
       ) : (
         <div className="space-y-3">
           {promos.map((p) => (
             <Card key={p.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
                 <div className="space-y-1">
-                  <p className="font-semibold text-slate-900">
+                  <p className="font-semibold text-om-ink">
                     {appLabel(apps, p.appId)}
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-om-ink-soft">
                     {formatPrice(p.bidCentsPerClick, p.currency)}/click ·{" "}
                     {formatPrice(p.dailyBudgetCents, p.currency)}/day
                   </p>

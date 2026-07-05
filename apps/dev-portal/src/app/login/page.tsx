@@ -28,24 +28,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-om-surface-tint flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mb-3 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-om-primary flex items-center justify-center mb-3 shadow-sm">
             <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 1.5a.75.75 0 0 1 .75.75V7.5h-1.5V2.25A.75.75 0 0 1 12 1.5ZM11.25 7.5v5.69l-3.22-3.22a.75.75 0 0 0-1.06 1.06l4.5 4.5a.75.75 0 0 0 1.06 0l4.5-4.5a.75.75 0 1 0-1.06-1.06l-3.22 3.22V7.5h-1.5Z" />
               <path fillRule="evenodd" d="M3 15.75a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75ZM3 18.75a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">OpenMarket</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Developer Console</p>
+          <h1 className="text-xl font-bold text-om-ink">OpenMarket</h1>
+          <p className="text-sm text-om-ink-soft mt-0.5">Developer Console</p>
         </div>
 
         <Card>
           <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Sign in</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <h2 className="text-lg font-semibold text-om-ink mb-1">Sign in</h2>
+            <p className="text-sm text-om-ink-soft mb-6">
               Access the OpenMarket Developer Console
             </p>
 
@@ -57,7 +57,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-om-ink-mute mb-1">
                   Email
                 </label>
                 <Input
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-om-ink-mute mb-1">
                   Password
                 </label>
                 <Input
@@ -83,7 +83,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="mt-1 w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-60"
+                className="mt-1 w-full bg-om-primary hover:bg-om-primary-deep text-white disabled:opacity-60"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -99,9 +99,9 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <p className="mt-6 text-sm text-center text-gray-500">
+            <p className="mt-6 text-sm text-center text-om-ink-soft">
               Don&apos;t have an account?{" "}
-              <Link href="/register" className="text-blue-600 hover:underline font-medium">
+              <Link href="/register" className="text-om-primary hover:underline font-medium">
                 Create account
               </Link>
             </p>

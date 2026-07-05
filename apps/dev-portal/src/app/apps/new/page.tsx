@@ -53,12 +53,12 @@ function Field({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-om-ink-mute">
           {label}
-          {hint && <span className="ml-1 font-normal text-gray-400 text-xs">({hint})</span>}
+          {hint && <span className="ml-1 font-normal text-om-ink-soft text-xs">({hint})</span>}
         </label>
         {charCount !== undefined && maxLength !== undefined && (
-          <span className={`text-xs ${charCount > maxLength * 0.9 ? "text-amber-600" : "text-gray-400"}`}>
+          <span className={`text-xs ${charCount > maxLength * 0.9 ? "text-amber-600" : "text-om-ink-soft"}`}>
             {charCount}/{maxLength}
           </span>
         )}
@@ -87,20 +87,20 @@ function Toggle({
           role="switch"
           aria-checked={checked}
           onClick={() => onChange(!checked)}
-          className={`relative w-10 h-5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            checked ? "bg-blue-600" : "bg-gray-300"
+          className={`relative w-10 h-5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-om-primary focus:ring-offset-2 ${
+            checked ? "bg-om-primary" : "bg-om-line"
           }`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-om-surface rounded-full shadow transition-transform ${
               checked ? "translate-x-5" : "translate-x-0"
             }`}
           />
         </button>
       </div>
       <div>
-        <p className="text-sm font-medium text-gray-700">{label}</p>
-        {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+        <p className="text-sm font-medium text-om-ink-mute">{label}</p>
+        {description && <p className="text-xs text-om-ink-soft mt-0.5">{description}</p>}
       </div>
     </label>
   );
@@ -155,7 +155,7 @@ export default function NewAppPage() {
   }
 
   const selectCls =
-    "flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+    "flex h-9 w-full rounded-md border border-om-line bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-om-primary disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div className="max-w-2xl">
@@ -253,7 +253,7 @@ export default function NewAppPage() {
                 value={form.fullDescription}
                 onChange={(e) => set("fullDescription", e.target.value)}
                 placeholder="Detailed description of your app…"
-                className="flex w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                className="flex w-full rounded-md border border-om-line bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-om-ink-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-om-primary disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
             </Field>
           </CardContent>
@@ -328,7 +328,7 @@ export default function NewAppPage() {
               </select>
             </Field>
 
-            <div className="pt-2 space-y-4 border-t border-gray-100">
+            <div className="pt-2 space-y-4 border-t border-om-line-soft">
               <Toggle
                 label="Contains Ads"
                 description="Your app displays advertisements"
@@ -349,7 +349,7 @@ export default function NewAppPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-60"
+            className="bg-om-primary hover:bg-om-primary-deep text-white disabled:opacity-60"
           >
             {loading ? (
               <span className="flex items-center gap-2">
