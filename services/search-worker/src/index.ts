@@ -6,13 +6,13 @@ import {
   removeApp,
   type AppDocument,
 } from "./meilisearch-client.js";
+import { buildRedisConnection } from "./lib/redis-connection.js";
 
-const REDIS_URL = process.env.REDIS_URL ?? "redis://localhost:6379";
-
-const redisConnection = {
-  host: new URL(REDIS_URL).hostname,
-  port: parseInt(new URL(REDIS_URL).port || "6379", 10),
-};
+// MUST use the shared builder — the previous hand-rolled `{host, port}`
+// parsed only host+port from REDIS_URL and DROPPED username/password/TLS,
+// so against Upstash (`rediss://` auth+TLS) the worker never connected and
+// no search-index job the API enqueued was ever consumed in production.
+const redisConnection = buildRedisConnection();
 
 type SearchIndexJobData =
   | { action: "index"; app: AppDocument }
@@ -54,7 +54,7 @@ async function main() {
     console.error(`Job ${job?.id} failed:`, err);
   });
 
-  console.log("Search worker started, listening on openmarket:search-index");
+  console.log("Search worker started, listening on openmarket-search-index");
 
   async function shutdown() {
     console.log("Shutting down search worker...");

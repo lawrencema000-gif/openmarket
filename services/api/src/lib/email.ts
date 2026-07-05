@@ -5,6 +5,7 @@ import {
   type EmailTemplateMap,
   NOTIFY_QUEUE_NAME,
 } from "@openmarket/contracts";
+import { buildRedisConnection } from "./redis-connection";
 
 /**
  * Typed enqueue helper. The API must never call Resend directly — every
@@ -21,10 +22,13 @@ import {
  * The compiler enforces that `props` matches the template's expected shape.
  */
 
-const redisConnection = {
-  host: process.env.REDIS_HOST ?? "localhost",
-  port: parseInt(process.env.REDIS_PORT ?? "6379", 10),
-};
+// MUST use the shared builder — it prefers REDIS_URL (the production /
+// Upstash convention) and attaches TLS + auth + maxRetriesPerRequest:null.
+// Hand-rolling {host: REDIS_HOST, port: REDIS_PORT} sent every email job to
+// localhost:6379 in prod (where only REDIS_URL is set) while the
+// notify-worker listened on Upstash — so all transactional email silently
+// vanished. Every sibling producer/worker already uses this helper.
+const redisConnection = buildRedisConnection();
 
 const defaultJobOptions = {
   attempts: 5,
