@@ -19,6 +19,8 @@ import { ReleasePublished } from "./release-published.js";
 import { ReleaseRejected } from "./release-rejected.js";
 import { ReportResolved } from "./report-resolved.js";
 import { DeveloperTakedown } from "./developer-takedown.js";
+import { DeveloperSuspended } from "./developer-suspended.js";
+import { DeveloperReinstated } from "./developer-reinstated.js";
 import { ReviewResponse } from "./review-response.js";
 import { DmcaNoticeReceived } from "./dmca-notice-received.js";
 import { DmcaNoticeRejected } from "./dmca-notice-rejected.js";
@@ -42,6 +44,8 @@ export const TEMPLATES: { [K in EmailTemplate]: TemplateModule<EmailTemplateMap[
   "release-rejected": ReleaseRejected,
   "report-resolved": ReportResolved,
   "developer-takedown": DeveloperTakedown,
+  "developer-suspended": DeveloperSuspended,
+  "developer-reinstated": DeveloperReinstated,
   "review-response": ReviewResponse,
   "dmca-notice-received": DmcaNoticeReceived,
   "dmca-notice-rejected": DmcaNoticeRejected,

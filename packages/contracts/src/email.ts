@@ -64,6 +64,22 @@ export interface DeveloperTakedownProps {
   effectiveAt: string;
 }
 
+export interface DeveloperSuspendedProps {
+  developerName: string;
+  reason: string;
+  rulesUrl: string;
+  appealUrl: string;
+  effectiveAt: string;
+}
+
+export interface DeveloperReinstatedProps {
+  developerName: string;
+  /** Optional moderator note explaining the reinstatement. */
+  note?: string | null;
+  dashboardUrl: string;
+  effectiveAt: string;
+}
+
 export interface ReviewResponseProps {
   appName: string;
   developerName: string;
@@ -138,6 +154,8 @@ export type EmailTemplateMap = {
   "release-rejected": ReleaseRejectedProps;
   "report-resolved": ReportResolvedProps;
   "developer-takedown": DeveloperTakedownProps;
+  "developer-suspended": DeveloperSuspendedProps;
+  "developer-reinstated": DeveloperReinstatedProps;
   "review-response": ReviewResponseProps;
   "dmca-notice-received": DmcaNoticeReceivedProps;
   "dmca-notice-rejected": DmcaNoticeRejectedProps;

@@ -17,7 +17,7 @@ import {
   scanResults,
 } from "@openmarket/db/schema";
 import { requireAdmin } from "../middleware/admin";
-import { notifyQueue, scanQueue } from "../lib/queue";
+import { scanQueue } from "../lib/queue";
 import {
   appendTransparencyEvent,
   CURRENT_CONTENT_POLICY_VERSION,
@@ -32,6 +32,35 @@ import { sourceCodeVerificationPatchSchema } from "@openmarket/contracts/source-
 import type { Variables } from "../lib/types";
 
 export const adminRouter = new Hono<{ Variables: Variables }>();
+
+const webBase = () => process.env.WEB_BASE_URL ?? "https://openmarket.app";
+const devBase = () => process.env.DEV_PORTAL_URL ?? "https://dev.openmarket.app";
+const today = () => new Date().toISOString().slice(0, 10);
+
+/**
+ * Resolve an app's owner email + display name for moderation emails.
+ * Returns null when the app or owner email is missing (caller skips the
+ * email rather than throwing — a notification must never fail the
+ * moderation action itself).
+ */
+async function ownerEmailAndAppName(
+  appId: string,
+): Promise<{ email: string; appName: string } | null> {
+  const app = await db.query.apps.findFirst({
+    where: eq(apps.id, appId),
+    with: { listings: true },
+  });
+  if (!app) return null;
+  const developer = await db.query.developers.findFirst({
+    where: eq(developers.id, app.developerId),
+  });
+  if (!developer?.email) return null;
+  const listing =
+    (app.currentListingId
+      ? app.listings?.find((l) => l.id === app.currentListingId)
+      : null) ?? app.listings?.[app.listings.length - 1];
+  return { email: developer.email, appName: listing?.title ?? app.packageName };
+}
 
 const approveRejectSchema = z.object({
   reason: z.string().optional(),
@@ -140,12 +169,27 @@ adminRouter.post(
       .set({ isPublished: true, updatedAt: new Date() })
       .where(and(eq(apps.id, release.appId), eq(apps.isPublished, false)));
 
-    await notifyQueue.add("notify", {
-      type: "release_approved",
-      releaseId,
-      appId: release.appId,
-      moderatorId: moderator?.id ?? null,
-    });
+    // Tell the developer their release is live. Uses enqueueEmail (the
+    // {template,to,props} shape the notify-worker actually renders) — the
+    // old {type} notify payload was silently dead-lettered.
+    try {
+      const ctx = await ownerEmailAndAppName(release.appId);
+      if (ctx) {
+        await enqueueEmail({
+          template: "release-published",
+          to: ctx.email,
+          props: {
+            appName: ctx.appName,
+            versionName: release.versionName,
+            versionCode: release.versionCode,
+            releaseUrl: `${webBase()}/apps/${release.appId}`,
+          },
+          idempotencyKey: `release-published:${releaseId}`,
+        });
+      }
+    } catch (err) {
+      console.error("[admin] release-published email enqueue failed:", err);
+    }
 
     // Fire-and-forget push fan-out (P2-P). Errors logged but don't
     // block the approval response — the email path above is the
@@ -232,13 +276,28 @@ adminRouter.post(
       });
     }
 
-    await notifyQueue.add("notify", {
-      type: "release_rejected",
-      releaseId,
-      appId: release.appId,
-      reason: body.reason ?? null,
-      moderatorId: moderator?.id ?? null,
-    });
+    // Tell the developer WHY their release was rejected — otherwise the
+    // app just silently never appears and they have no path to fix it.
+    try {
+      const ctx = await ownerEmailAndAppName(release.appId);
+      if (ctx) {
+        await enqueueEmail({
+          template: "release-rejected",
+          to: ctx.email,
+          props: {
+            appName: ctx.appName,
+            versionName: release.versionName,
+            versionCode: release.versionCode,
+            reason: body.reason ?? "Release rejected during review",
+            fixUrl: `${devBase()}/apps/${release.appId}`,
+            appealUrl: `${devBase()}/apps/${release.appId}/appeal`,
+          },
+          idempotencyKey: `release-rejected:${releaseId}:${release.versionCode}`,
+        });
+      }
+    } catch (err) {
+      console.error("[admin] release-rejected email enqueue failed:", err);
+    }
 
     return c.json(updated);
   }
@@ -384,12 +443,23 @@ adminRouter.post(
       });
     }
 
-    await notifyQueue.add("notify", {
-      type: "developer_suspended",
-      developerId,
-      reason: body.reason,
-      moderatorId: moderator?.id ?? null,
-    });
+    try {
+      if (developer.email) {
+        await enqueueEmail({
+          template: "developer-suspended",
+          to: developer.email,
+          props: {
+            developerName: developer.displayName,
+            reason: body.reason,
+            rulesUrl: `${webBase()}/content-policy`,
+            appealUrl: `${devBase()}/appeals/new`,
+            effectiveAt: today(),
+          },
+        });
+      }
+    } catch (err) {
+      console.error("[admin] developer-suspended email enqueue failed:", err);
+    }
 
     return c.json(updated);
   }
@@ -438,12 +508,22 @@ adminRouter.post(
       });
     }
 
-    await notifyQueue.add("notify", {
-      type: "developer_reinstated",
-      developerId,
-      reason: body.reason ?? null,
-      moderatorId: moderator?.id ?? null,
-    });
+    try {
+      if (developer.email) {
+        await enqueueEmail({
+          template: "developer-reinstated",
+          to: developer.email,
+          props: {
+            developerName: developer.displayName,
+            note: body.reason ?? null,
+            dashboardUrl: `${devBase()}`,
+            effectiveAt: today(),
+          },
+        });
+      }
+    } catch (err) {
+      console.error("[admin] developer-reinstated email enqueue failed:", err);
+    }
 
     return c.json(updated);
   }
