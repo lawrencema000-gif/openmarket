@@ -31,7 +31,7 @@ export function PriceBadge({ price, refundWindowHours }: PriceBadgeProps) {
         </span>
       </span>
       {refundWindowHours && refundWindowHours > 0 ? (
-        <span className="text-[10px] text-gray-500">
+        <span className="text-[10px] text-om-ink-soft">
           {refundWindowHours}h refund window
         </span>
       ) : null}

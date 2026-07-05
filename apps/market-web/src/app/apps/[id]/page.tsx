@@ -217,10 +217,10 @@ function FactItem({
 }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-gray-500 font-semibold">
+      <dt className="text-xs uppercase tracking-wide text-om-ink-soft font-semibold">
         {label}
       </dt>
-      <dd className="mt-0.5 text-gray-800">{value}</dd>
+      <dd className="mt-0.5 text-om-ink-mute">{value}</dd>
     </div>
   );
 }
@@ -286,8 +286,8 @@ export default async function AppDetailPage({
           title="We can't load this app right now"
           description="The OpenMarket API is temporarily unreachable. The page itself is fine — refresh in a minute, or check the status page if you're curious."
         />
-        <p className="mt-6 text-sm text-gray-500">
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
+        <p className="mt-6 text-sm text-om-ink-soft">
+          <Link href="/" className="text-om-primary hover:text-om-primary">
             ← Back home
           </Link>
         </p>
@@ -351,16 +351,16 @@ export default async function AppDetailPage({
       </Suspense>
       {/* Breadcrumb */}
       <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
-        <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-          <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
-          <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <nav className="flex items-center gap-1.5 text-sm text-om-ink-soft">
+          <Link href="/" className="hover:text-om-ink transition-colors">Home</Link>
+          <svg className="w-4 h-4 text-om-line" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
-          <Link href="/search" className="hover:text-gray-900 transition-colors">Browse</Link>
-          <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <Link href="/search" className="hover:text-om-ink transition-colors">Browse</Link>
+          <svg className="w-4 h-4 text-om-line" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
-          <span className="text-gray-900 font-medium truncate max-w-[200px]">{app.name}</span>
+          <span className="text-om-ink font-medium truncate max-w-[200px]">{app.name}</span>
         </nav>
         {app.locale && app.locale.available.length > 0 && (
           <LocalePicker
@@ -381,24 +381,24 @@ export default async function AppDetailPage({
               <img
                 src={app.iconUrl}
                 alt={app.name}
-                className="w-20 h-20 rounded-2xl object-cover shadow-md shrink-0 border border-gray-100"
+                className="w-20 h-20 rounded-2xl object-cover shadow-md shrink-0 border border-om-line-soft"
               />
             ) : (
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shrink-0 flex items-center justify-center border border-blue-100">
-                <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <div className="w-20 h-20 bg-gradient-to-br from-om-primary/10 to-om-primary/20 rounded-2xl shrink-0 flex items-center justify-center border border-om-primary/20">
+                <svg className="w-8 h-8 text-om-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3" />
                 </svg>
               </div>
             )}
 
             <div className="flex-1 min-w-0 space-y-2">
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight leading-tight">{app.name}</h1>
+              <h1 className="text-3xl font-bold text-om-ink tracking-tight leading-tight">{app.name}</h1>
 
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <div className="flex items-center gap-1.5 text-sm text-om-ink-soft">
                 <span>by</span>
                 <Link
                   href={`/developers/${app.developer.id}`}
-                  className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                  className="text-om-primary hover:text-om-primary hover:underline font-medium"
                 >
                   {app.developer.name}
                 </Link>
@@ -409,7 +409,7 @@ export default async function AppDetailPage({
                   <Badge variant="secondary">{app.category}</Badge>
                 )}
                 {app.version && (
-                  <span className="text-xs text-gray-400 font-mono bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-md">
+                  <span className="text-xs text-om-ink-soft font-mono bg-om-surface-tint border border-om-line px-2 py-0.5 rounded-md">
                     v{app.version}
                   </span>
                 )}
@@ -501,7 +501,7 @@ export default async function AppDetailPage({
           {/* Screenshots */}
           {app.screenshots && app.screenshots.length > 0 && (
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("appDetail.screenshots")}</h2>
+              <h2 className="text-lg font-semibold text-om-ink mb-4">{t("appDetail.screenshots")}</h2>
               <div
                 className="relative"
                 style={{
@@ -515,7 +515,7 @@ export default async function AppDetailPage({
                       key={i}
                       src={url}
                       alt={`Screenshot ${i + 1}`}
-                      className="h-60 w-auto rounded-xl object-cover shrink-0 snap-start border border-gray-200 shadow-sm"
+                      className="h-60 w-auto rounded-xl object-cover shrink-0 snap-start border border-om-line shadow-sm"
                     />
                   ))}
                 </div>
@@ -527,13 +527,13 @@ export default async function AppDetailPage({
           <div className="space-y-6">
             {/* About */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">{t("appDetail.about")}</h2>
+              <h2 className="text-lg font-semibold text-om-ink mb-3 pb-2 border-b border-om-line-soft">{t("appDetail.about")}</h2>
               {app.description ? (
-                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-[15px]">{app.description}</p>
+                <p className="text-om-ink-mute whitespace-pre-wrap leading-relaxed text-[15px]">{app.description}</p>
               ) : app.shortDescription ? (
-                <p className="text-gray-700 leading-relaxed">{app.shortDescription}</p>
+                <p className="text-om-ink-mute leading-relaxed">{app.shortDescription}</p>
               ) : (
-                <p className="text-gray-400 text-sm italic">No description provided.</p>
+                <p className="text-om-ink-soft text-sm italic">No description provided.</p>
               )}
 
               {/* About this app — facts table (P1-D) */}
@@ -578,7 +578,7 @@ export default async function AppDetailPage({
                   {app.packageName ? (
                     <FactItem
                       label="Package"
-                      value={<code className="text-xs font-mono text-gray-700">{app.packageName}</code>}
+                      value={<code className="text-xs font-mono text-om-ink-mute">{app.packageName}</code>}
                     />
                   ) : null}
                 </dl>
@@ -588,27 +588,27 @@ export default async function AppDetailPage({
             {/* What's new (P1-E) */}
             {app.latestRelease?.releaseNotes ? (
               <section>
-                <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-om-ink mb-3 pb-2 border-b border-om-line-soft">
                   What's new in {app.latestRelease.versionName}
                 </h2>
                 <ReleaseNotes markdown={app.latestRelease.releaseNotes} />
                 {app.recentReleases && app.recentReleases.length > 1 ? (
                   <details className="mt-4 text-sm">
-                    <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
+                    <summary className="cursor-pointer text-om-primary hover:text-om-primary font-medium">
                       Version history
                     </summary>
-                    <ul className="mt-3 space-y-4 border-l-2 border-gray-100 pl-4">
+                    <ul className="mt-3 space-y-4 border-l-2 border-om-line-soft pl-4">
                       {app.recentReleases.slice(1).map((r) => (
                         <li key={r.id}>
-                          <p className="font-medium text-gray-900">
-                            v{r.versionName} <span className="text-gray-500 font-normal text-xs">· {fmtRelative(r.publishedAt ?? r.createdAt)}</span>
+                          <p className="font-medium text-om-ink">
+                            v{r.versionName} <span className="text-om-ink-soft font-normal text-xs">· {fmtRelative(r.publishedAt ?? r.createdAt)}</span>
                           </p>
                           {r.releaseNotes ? (
                             <div className="mt-1">
                               <ReleaseNotes markdown={r.releaseNotes} />
                             </div>
                           ) : (
-                            <p className="text-gray-400 italic text-xs mt-1">No notes for this release.</p>
+                            <p className="text-om-ink-soft italic text-xs mt-1">No notes for this release.</p>
                           )}
                         </li>
                       ))}
@@ -621,7 +621,7 @@ export default async function AppDetailPage({
             {/* Permissions */}
             {((app.permissions && app.permissions.length > 0) || dangerousPerms.length > 0) && (
               <section>
-                <h2 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-om-ink mb-3 pb-2 border-b border-om-line-soft">
                   {t("appDetail.permissions")}
                 </h2>
                 <div className="space-y-4">
@@ -644,12 +644,12 @@ export default async function AppDetailPage({
                     </div>
                   )}
                   {normalPerms.length > 0 && (
-                    <div className="rounded-xl bg-gray-50 border border-gray-200 p-4">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-3">{t("appDetail.standardPermissions")}</h3>
+                    <div className="rounded-xl bg-om-surface-tint border border-om-line p-4">
+                      <h3 className="text-sm font-semibold text-om-ink-mute mb-3">{t("appDetail.standardPermissions")}</h3>
                       <ul className="space-y-1.5">
                         {normalPerms.map((perm) => (
-                          <li key={perm} className="flex items-center gap-2 text-sm text-gray-600">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
+                          <li key={perm} className="flex items-center gap-2 text-sm text-om-ink-mute">
+                            <span className="w-1.5 h-1.5 rounded-full bg-om-ink-soft shrink-0" />
                             <code className="font-mono text-xs">{perm}</code>
                           </li>
                         ))}
@@ -680,7 +680,7 @@ export default async function AppDetailPage({
           {/* Developer card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+              <CardTitle className="text-sm font-semibold text-om-ink-soft uppercase tracking-wider">
                 Developer
               </CardTitle>
             </CardHeader>
@@ -689,15 +689,15 @@ export default async function AppDetailPage({
                 href={`/developers/${app.developer.id}`}
                 className="flex items-center gap-3 group"
               >
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-base">
+                <div className="w-10 h-10 rounded-xl bg-om-primary/10 border border-om-primary/20 flex items-center justify-center text-om-primary font-bold text-base">
                   {app.developer.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-sm">
+                  <p className="font-semibold text-om-ink group-hover:text-om-primary transition-colors text-sm">
                     {app.developer.name}
                   </p>
                   {app.developer.trustLevel && (
-                    <p className="text-xs text-gray-400">{app.developer.trustLevel}</p>
+                    <p className="text-xs text-om-ink-soft">{app.developer.trustLevel}</p>
                   )}
                 </div>
               </Link>
@@ -710,7 +710,7 @@ export default async function AppDetailPage({
               )}
               <Link
                 href={`/developers/${app.developer.id}`}
-                className="block text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="block text-sm text-om-primary hover:text-om-primary font-medium"
               >
                 View all apps →
               </Link>
@@ -720,7 +720,7 @@ export default async function AppDetailPage({
           {/* App info card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+              <CardTitle className="text-sm font-semibold text-om-ink-soft uppercase tracking-wider">
                 App Info
               </CardTitle>
             </CardHeader>
@@ -728,26 +728,26 @@ export default async function AppDetailPage({
               <dl className="space-y-3 text-sm">
                 {app.version && (
                   <div className="flex justify-between items-center">
-                    <dt className="text-gray-500">Version</dt>
-                    <dd className="font-medium text-gray-900 font-mono text-xs bg-gray-50 px-2 py-0.5 rounded">v{app.version}</dd>
+                    <dt className="text-om-ink-soft">Version</dt>
+                    <dd className="font-medium text-om-ink font-mono text-xs bg-om-surface-tint px-2 py-0.5 rounded">v{app.version}</dd>
                   </div>
                 )}
                 {app.category && (
                   <div className="flex justify-between items-center">
-                    <dt className="text-gray-500">Category</dt>
-                    <dd className="font-medium text-gray-900">{app.category}</dd>
+                    <dt className="text-om-ink-soft">Category</dt>
+                    <dd className="font-medium text-om-ink">{app.category}</dd>
                   </div>
                 )}
                 {app.sizeBytes && (
                   <div className="flex justify-between items-center">
-                    <dt className="text-gray-500">Size</dt>
-                    <dd className="font-medium text-gray-900">{formatBytes(app.sizeBytes)}</dd>
+                    <dt className="text-om-ink-soft">Size</dt>
+                    <dd className="font-medium text-om-ink">{formatBytes(app.sizeBytes)}</dd>
                   </div>
                 )}
                 {app.packageName && (
-                  <div className="pt-2 border-t border-gray-100">
-                    <dt className="text-gray-500 mb-1">Package</dt>
-                    <dd className="font-mono text-xs text-gray-700 break-all bg-gray-50 px-2 py-1.5 rounded-lg">
+                  <div className="pt-2 border-t border-om-line-soft">
+                    <dt className="text-om-ink-soft mb-1">Package</dt>
+                    <dd className="font-mono text-xs text-om-ink-mute break-all bg-om-surface-tint px-2 py-1.5 rounded-lg">
                       {app.packageName}
                     </dd>
                   </div>

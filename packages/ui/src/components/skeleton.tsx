@@ -8,18 +8,14 @@ interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      className={cn(
-        "animate-pulse rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%]",
-        className
-      )}
-      style={{ animation: "shimmer 1.5s ease-in-out infinite" }}
+      className={cn("om-skeleton rounded-lg", className)}
     />
   );
 }
 
 export function AppCardSkeleton() {
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-om-line bg-om-surface p-4 shadow-sm">
       <div className="flex items-start gap-3 mb-3">
         <Skeleton className="w-14 h-14 rounded-2xl" />
         <div className="flex-1 space-y-2">

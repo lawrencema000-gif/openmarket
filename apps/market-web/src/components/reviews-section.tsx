@@ -143,16 +143,16 @@ export function ReviewsSection({ appId }: { appId: string }) {
 
   return (
     <section id="reviews">
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900">Reviews</h2>
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-om-line-soft">
+        <h2 className="text-lg font-semibold text-om-ink">Reviews</h2>
         {data && data.summary.total > 0 ? (
           <div className="flex items-center gap-2 text-sm">
             <StarRating rating={data.summary.average} size="sm" />
-            <span className="text-gray-700 font-medium">
+            <span className="text-om-ink-mute font-medium">
               {data.summary.average.toFixed(1)}
             </span>
-            <span className="text-gray-400">·</span>
-            <span className="text-gray-500">
+            <span className="text-om-ink-soft">·</span>
+            <span className="text-om-ink-soft">
               {data.summary.total.toLocaleString()} review
               {data.summary.total === 1 ? "" : "s"}
             </span>
@@ -171,12 +171,12 @@ export function ReviewsSection({ appId }: { appId: string }) {
 
       <div className="flex items-center justify-between gap-2 mt-4 mb-3 flex-wrap">
         <div className="flex items-center gap-2 text-sm">
-          <label htmlFor="review-sort" className="text-gray-500">Sort:</label>
+          <label htmlFor="review-sort" className="text-om-ink-soft">Sort:</label>
           <select
             id="review-sort"
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
-            className="rounded-md border border-gray-300 px-2 py-1 text-sm bg-white"
+            className="rounded-md border border-om-line px-2 py-1 text-sm bg-om-surface"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.key} value={o.key}>{o.label}</option>
@@ -186,7 +186,7 @@ export function ReviewsSection({ appId }: { appId: string }) {
             <button
               type="button"
               onClick={() => setRatingFilter(null)}
-              className="text-xs text-blue-600 hover:text-blue-800"
+              className="text-xs text-om-primary hover:text-om-primary"
             >
               Clear filter ({ratingFilter}★)
             </button>
@@ -195,7 +195,7 @@ export function ReviewsSection({ appId }: { appId: string }) {
         <button
           type="button"
           onClick={() => setShowCompose((s) => !s)}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+          className="rounded-md bg-om-primary px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep"
         >
           {showCompose ? "Cancel" : "Write a review"}
         </button>
@@ -220,7 +220,7 @@ export function ReviewsSection({ appId }: { appId: string }) {
       ) : loading ? (
         <ul className="space-y-3">
           {[0, 1].map((i) => (
-            <li key={i} className="h-24 rounded-xl bg-gray-100 animate-pulse" />
+            <li key={i} className="h-24 rounded-xl bg-om-line-soft animate-pulse" />
           ))}
         </ul>
       ) : data && data.items.length > 0 ? (
@@ -235,8 +235,8 @@ export function ReviewsSection({ appId }: { appId: string }) {
           ))}
         </ul>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-8 text-center">
-          <p className="text-sm text-gray-700">
+        <div className="rounded-xl border border-om-line bg-om-surface-tint px-6 py-8 text-center">
+          <p className="text-sm text-om-ink-mute">
             No reviews yet. Be the first — install the app, then click
             "Write a review".
           </p>
@@ -269,21 +269,21 @@ function RatingHistogram({
             type="button"
             onClick={() => onSelect(star as 1 | 2 | 3 | 4 | 5)}
             aria-label={`Filter by ${star} stars (${count} reviews)`}
-            className={`flex items-center gap-2 text-xs hover:bg-gray-50 rounded px-1 py-0.5 transition-colors ${
-              active ? "bg-blue-50" : ""
+            className={`flex items-center gap-2 text-xs hover:bg-om-surface-tint rounded px-1 py-0.5 transition-colors ${
+              active ? "bg-om-primary/10" : ""
             }`}
           >
-            <span className="w-6 text-right text-gray-600 font-medium">
+            <span className="w-6 text-right text-om-ink-mute font-medium">
               {star}★
             </span>
-            <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+            <div className="flex-1 h-2 rounded-full bg-om-line-soft overflow-hidden">
               <div
                 className="h-full bg-amber-400"
                 style={{ width: `${pct}%` }}
                 aria-hidden
               />
             </div>
-            <span className="w-12 text-left text-gray-500 tabular-nums">
+            <span className="w-12 text-left text-om-ink-soft tabular-nums">
               {count.toLocaleString()}
             </span>
           </button>
@@ -305,7 +305,7 @@ function ReviewCard({
   const [reporting, setReporting] = useState(false);
   const initial = (review.author.displayName ?? "?").charAt(0).toUpperCase();
   return (
-    <li className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <li className="rounded-xl border border-om-line bg-om-surface p-4 shadow-sm">
       <header className="flex items-start gap-3 mb-2">
         {review.author.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -315,15 +315,15 @@ function ReviewCard({
             className="w-9 h-9 rounded-full object-cover"
           />
         ) : (
-          <span className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center text-sm">
+          <span className="w-9 h-9 rounded-full bg-om-primary/15 text-om-primary font-semibold flex items-center justify-center text-sm">
             {initial}
           </span>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-sm font-medium text-om-ink truncate">
             {review.author.displayName ?? "Anonymous"}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-om-ink-soft">
             <StarRating rating={review.rating} size="sm" />{" "}
             <span>· {fmtRelative(review.createdAt)}</span>
             {review.versionCodeReviewed ? (
@@ -333,22 +333,22 @@ function ReviewCard({
         </div>
       </header>
       {review.title ? (
-        <h3 className="text-sm font-semibold text-gray-900 mb-1">
+        <h3 className="text-sm font-semibold text-om-ink mb-1">
           {review.title}
         </h3>
       ) : null}
       {review.body ? (
-        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+        <p className="text-sm text-om-ink-mute whitespace-pre-wrap leading-relaxed">
           {review.body}
         </p>
       ) : null}
 
       {review.response ? (
-        <div className="mt-3 ml-6 rounded-md border-l-4 border-blue-200 bg-blue-50/50 px-3 py-2">
-          <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+        <div className="mt-3 ml-6 rounded-md border-l-4 border-om-primary/25 bg-om-primary/10/50 px-3 py-2">
+          <p className="text-xs font-semibold text-om-primary uppercase tracking-wide">
             Developer response · {fmtRelative(review.response.createdAt)}
           </p>
-          <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+          <p className="mt-1 text-sm text-om-ink-mute whitespace-pre-wrap">
             {review.response.body}
           </p>
         </div>
@@ -363,7 +363,7 @@ function ReviewCard({
             className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${
               review.viewerHasMarkedHelpful
                 ? "bg-emerald-50 text-emerald-700"
-                : "text-gray-600 hover:bg-gray-50"
+                : "text-om-ink-mute hover:bg-om-surface-tint"
             }`}
           >
             <svg className="w-3.5 h-3.5" fill={review.viewerHasMarkedHelpful ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -372,8 +372,8 @@ function ReviewCard({
             Helpful ({review.helpfulCount})
           </button>
         ) : (
-          <span className="text-gray-500">
-            <Link href="/sign-in" className="text-blue-600 hover:underline">
+          <span className="text-om-ink-soft">
+            <Link href="/sign-in" className="text-om-primary hover:underline">
               Sign in
             </Link>{" "}
             to mark helpful
@@ -414,7 +414,7 @@ function ReportButton({
       <button
         type="button"
         onClick={() => setReporting(true)}
-        className="text-gray-500 hover:text-gray-800"
+        className="text-om-ink-soft hover:text-om-ink-mute"
       >
         Report
       </button>
@@ -439,7 +439,8 @@ function ReportButton({
       <select
         value={type}
         onChange={(e) => setType(e.target.value)}
-        className="rounded border border-gray-300 px-2 py-1 text-xs"
+        aria-label="Report reason"
+        className="rounded border border-om-line px-2 py-1 text-xs"
       >
         <option value="spam">Spam</option>
         <option value="impersonation">Impersonation</option>
@@ -450,21 +451,22 @@ function ReportButton({
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
         placeholder="Why?"
-        className="rounded border border-gray-300 px-2 py-1 text-xs flex-1 min-w-[120px]"
+        aria-label="Reason details"
+        className="rounded border border-om-line px-2 py-1 text-xs flex-1 min-w-[120px]"
         maxLength={2000}
       />
       <button
         type="button"
         onClick={submit}
         disabled={!desc.trim()}
-        className="rounded bg-gray-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+        className="rounded bg-om-ink px-2 py-1 text-xs text-white disabled:opacity-50"
       >
         Submit
       </button>
       <button
         type="button"
         onClick={() => setReporting(false)}
-        className="text-xs text-gray-500 hover:text-gray-800"
+        className="text-xs text-om-ink-soft hover:text-om-ink-mute"
       >
         Cancel
       </button>
@@ -522,9 +524,9 @@ function ReviewComposer({
   }
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 mb-3 space-y-3">
+    <div className="rounded-xl border border-om-primary/25 bg-om-primary/10/50 p-4 mb-3 space-y-3">
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700">Your rating:</label>
+        <label className="text-sm font-medium text-om-ink-mute">Your rating:</label>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
@@ -532,7 +534,7 @@ function ReviewComposer({
               type="button"
               onClick={() => setRating(n)}
               aria-label={`${n} star${n === 1 ? "" : "s"}`}
-              className={`text-2xl ${n <= rating ? "text-amber-400" : "text-gray-300"} hover:text-amber-400`}
+              className={`text-2xl ${n <= rating ? "text-amber-400" : "text-om-line"} hover:text-amber-400`}
             >
               ★
             </button>
@@ -543,16 +545,18 @@ function ReviewComposer({
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Title (optional)"
+        aria-label="Review title"
         maxLength={120}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+        className="w-full rounded-md border border-om-line px-3 py-2 text-sm bg-om-surface"
       />
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="What did you like or dislike? Be specific — version, device, what worked or didn't."
+        aria-label="Review body"
         maxLength={4000}
         rows={4}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white resize-y"
+        className="w-full rounded-md border border-om-line px-3 py-2 text-sm bg-om-surface resize-y"
       />
       {error ? (
         <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -564,7 +568,7 @@ function ReviewComposer({
           type="button"
           onClick={submit}
           disabled={submitting}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+          className="rounded-md bg-om-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep disabled:opacity-60"
         >
           {submitting ? "Posting…" : "Post review"}
         </button>

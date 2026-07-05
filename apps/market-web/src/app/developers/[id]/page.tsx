@@ -76,8 +76,8 @@ export default async function DeveloperPage({
           title="We can't load this developer right now"
           description="The OpenMarket API is temporarily unreachable. Refresh in a minute, or check the status page."
         />
-        <p className="mt-6 text-sm text-gray-500">
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
+        <p className="mt-6 text-sm text-om-ink-soft">
+          <Link href="/" className="text-om-primary hover:text-om-primary">
             ← Back home
           </Link>
         </p>
@@ -94,26 +94,26 @@ export default async function DeveloperPage({
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
-        <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <nav className="flex items-center gap-1.5 text-sm text-om-ink-soft mb-6">
+        <Link href="/" className="hover:text-om-ink transition-colors">Home</Link>
+        <svg className="w-4 h-4 text-om-line" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
         </svg>
-        <span className="text-gray-900 font-medium">{developer.name}</span>
+        <span className="text-om-ink font-medium">{developer.name}</span>
       </nav>
 
       {/* Developer header */}
       <div className="flex flex-col sm:flex-row items-start gap-6 mb-10">
         {/* Avatar */}
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-3xl font-bold text-white shadow-md shrink-0">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-om-primary-soft to-om-primary flex items-center justify-center text-3xl font-bold text-white shadow-md shrink-0">
           {developer.name.charAt(0).toUpperCase()}
         </div>
 
         <div className="flex-1 min-w-0 space-y-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{developer.name}</h1>
+            <h1 className="text-3xl font-bold text-om-ink tracking-tight">{developer.name}</h1>
             {developer.bio && (
-              <p className="text-gray-500 mt-1.5 leading-relaxed">{developer.bio}</p>
+              <p className="text-om-ink-soft mt-1.5 leading-relaxed">{developer.bio}</p>
             )}
           </div>
 
@@ -131,7 +131,7 @@ export default async function DeveloperPage({
               href={developer.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
+              className="inline-flex items-center gap-1.5 text-sm text-om-primary hover:text-om-primary hover:underline font-medium"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
@@ -144,20 +144,20 @@ export default async function DeveloperPage({
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm text-center">
-          <p className="text-3xl font-bold text-gray-900">{appCount}</p>
-          <p className="text-sm text-gray-500 mt-0.5">Published {appCount === 1 ? "App" : "Apps"}</p>
+        <div className="rounded-xl border border-om-line bg-om-surface p-4 shadow-sm text-center">
+          <p className="text-3xl font-bold text-om-ink">{appCount}</p>
+          <p className="text-sm text-om-ink-soft mt-0.5">Published {appCount === 1 ? "App" : "Apps"}</p>
         </div>
         {memberSinceYear && (
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm text-center">
-            <p className="text-3xl font-bold text-gray-900">{memberSinceYear}</p>
-            <p className="text-sm text-gray-500 mt-0.5">Member Since</p>
+          <div className="rounded-xl border border-om-line bg-om-surface p-4 shadow-sm text-center">
+            <p className="text-3xl font-bold text-om-ink">{memberSinceYear}</p>
+            <p className="text-sm text-om-ink-soft mt-0.5">Member Since</p>
           </div>
         )}
         {developer.trustLevel && (
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm text-center">
-            <p className="text-lg font-bold text-blue-600">{developer.trustLevel}</p>
-            <p className="text-sm text-gray-500 mt-0.5">Trust Level</p>
+          <div className="rounded-xl border border-om-line bg-om-surface p-4 shadow-sm text-center">
+            <p className="text-lg font-bold text-om-primary">{developer.trustLevel}</p>
+            <p className="text-sm text-om-ink-soft mt-0.5">Trust Level</p>
           </div>
         )}
       </div>
@@ -165,7 +165,7 @@ export default async function DeveloperPage({
       {/* Apps section */}
       {appCount > 0 ? (
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-5 tracking-tight">
+          <h2 className="text-xl font-bold text-om-ink mb-5 tracking-tight">
             Apps by {developer.name}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -188,14 +188,14 @@ export default async function DeveloperPage({
           </div>
         </section>
       ) : (
-        <div className="text-center py-16 rounded-xl border border-dashed border-gray-200 bg-gray-50">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <div className="text-center py-16 rounded-xl border border-dashed border-om-line bg-om-surface-tint">
+          <div className="w-14 h-14 rounded-2xl bg-om-line-soft flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-om-ink-soft" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
             </svg>
           </div>
-          <p className="font-semibold text-gray-700">No published apps yet</p>
-          <p className="text-sm text-gray-400 mt-1">This developer hasn't published any apps yet.</p>
+          <p className="font-semibold text-om-ink-mute">No published apps yet</p>
+          <p className="text-sm text-om-ink-soft mt-1">This developer hasn't published any apps yet.</p>
         </div>
       )}
     </div>

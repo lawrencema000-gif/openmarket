@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "@/lib/auth-client";
@@ -9,10 +9,27 @@ export function UserMenu() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // Close only when focus actually leaves the whole menu (keyboard Tab
+  // through the items keeps it open); the old blur-timeout closed the
+  // menu before a keyboard user could reach any item.
+  function onContainerBlur(e: React.FocusEvent<HTMLDivElement>) {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+      setOpen(false);
+    }
+  }
+
+  function onContainerKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Escape" && open) {
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
+  }
 
   // Don't flicker between states while session resolves.
   if (isPending) {
-    return <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse" />;
+    return <div className="w-9 h-9 rounded-full bg-om-line-soft animate-pulse" />;
   }
 
   if (!session) {
@@ -20,13 +37,13 @@ export function UserMenu() {
       <div className="flex items-center gap-2">
         <Link
           href="/sign-in"
-          className="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+          className="px-3 py-2 rounded-lg text-sm font-medium text-om-ink-mute hover:bg-om-line-soft"
         >
           Sign in
         </Link>
         <Link
           href="/sign-up"
-          className="px-3 py-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700"
+          className="px-3 py-2 rounded-lg text-sm font-semibold text-white bg-om-primary hover:bg-om-primary-deep"
         >
           Sign up
         </Link>
@@ -45,12 +62,12 @@ export function UserMenu() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" onBlur={onContainerBlur} onKeyDown={onContainerKeyDown}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        onBlur={() => setTimeout(() => setOpen(false), 120)}
-        className="flex items-center gap-2 rounded-full p-1 hover:bg-gray-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="flex items-center gap-2 rounded-full p-1 hover:bg-om-line-soft transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-om-primary"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Account menu for ${user.name ?? user.email}`}
@@ -63,7 +80,7 @@ export function UserMenu() {
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
-          <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+          <span className="w-8 h-8 rounded-full bg-om-primary text-white flex items-center justify-center text-sm font-semibold">
             {initial}
           </span>
         )}
@@ -71,47 +88,43 @@ export function UserMenu() {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden z-50"
+          className="absolute right-0 mt-2 w-56 rounded-lg border border-om-line bg-om-surface shadow-lg overflow-hidden z-50"
         >
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-medium text-gray-900 truncate">
+          <div className="px-4 py-3 border-b border-om-line-soft">
+            <p className="text-sm font-medium text-om-ink truncate">
               {user.name ?? user.email.split("@")[0]}
             </p>
-            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            <p className="text-xs text-om-ink-soft truncate">{user.email}</p>
           </div>
           <div className="py-1">
             <Link
               href="/library"
               role="menuitem"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onMouseDown={(e) => e.preventDefault()}
+              className="block px-4 py-2 text-sm text-om-ink-mute hover:bg-om-surface-tint"
             >
               My library
             </Link>
             <Link
               href="/wishlist"
               role="menuitem"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onMouseDown={(e) => e.preventDefault()}
+              className="block px-4 py-2 text-sm text-om-ink-mute hover:bg-om-surface-tint"
             >
               Saved
             </Link>
             <Link
               href="/account"
               role="menuitem"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onMouseDown={(e) => e.preventDefault()}
+              className="block px-4 py-2 text-sm text-om-ink-mute hover:bg-om-surface-tint"
             >
               Account settings
             </Link>
           </div>
-          <div className="py-1 border-t border-gray-100">
+          <div className="py-1 border-t border-om-line-soft">
             <button
               type="button"
               role="menuitem"
               onClick={handleSignOut}
-              onMouseDown={(e) => e.preventDefault()}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="block w-full text-left px-4 py-2 text-sm text-om-ink-mute hover:bg-om-surface-tint"
             >
               Sign out
             </button>

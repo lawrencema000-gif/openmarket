@@ -21,55 +21,58 @@ const trustBadgeConfig: Record<
   TrustBadgeType,
   { label: string; className: string }
 > = {
+  // Translucent /12 fills + dark: text so the tints read on both themes
+  // (a fixed *-100 tint glares on a dark surface). new/updated/open-source
+  // move off legacy blue/purple onto the brand violet token.
   verified: {
     label: "Verified Developer",
     className:
-      "bg-green-100 text-green-800 border-green-200",
+      "bg-green-500/12 text-green-700 dark:text-green-300 border-green-500/25",
   },
   experimental: {
     label: "Experimental",
     className:
-      "bg-yellow-100 text-yellow-800 border-yellow-200",
+      "bg-amber-500/12 text-amber-700 dark:text-amber-300 border-amber-500/25",
   },
   new: {
     label: "New",
     className:
-      "bg-blue-100 text-blue-800 border-blue-200",
+      "bg-om-primary/12 text-om-primary border-om-primary/25",
   },
   updated: {
     label: "Recently Updated",
     className:
-      "bg-blue-100 text-blue-800 border-blue-200",
+      "bg-om-primary/12 text-om-primary border-om-primary/25",
   },
   "security-reviewed": {
     label: "Security Reviewed",
     className:
-      "bg-green-100 text-green-800 border-green-200",
+      "bg-green-500/12 text-green-700 dark:text-green-300 border-green-500/25",
   },
   "high-risk": {
     label: "High-Risk Permissions",
     className:
-      "bg-red-100 text-red-800 border-red-200",
+      "bg-red-500/12 text-red-700 dark:text-red-300 border-red-500/25",
   },
   ads: {
     label: "Contains Ads",
     className:
-      "bg-gray-100 text-gray-700 border-gray-200",
+      "bg-om-line-soft text-om-ink-mute border-om-line",
   },
   "open-source": {
     label: "Open Source",
     className:
-      "bg-purple-100 text-purple-800 border-purple-200",
+      "bg-om-primary/12 text-om-primary border-om-primary/25",
   },
   "source-verified": {
     label: "Source Verified",
     className:
-      "bg-emerald-100 text-emerald-800 border-emerald-200",
+      "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/25",
   },
   "reproducible-build": {
     label: "Reproducible Build",
     className:
-      "bg-teal-100 text-teal-800 border-teal-200",
+      "bg-teal-500/12 text-teal-700 dark:text-teal-300 border-teal-500/25",
   },
 };
 

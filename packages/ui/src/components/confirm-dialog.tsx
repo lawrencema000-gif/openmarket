@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useId, useRef } from "react";
 import { cn } from "../lib/utils";
 
 interface ConfirmDialogProps {
@@ -19,18 +19,51 @@ export function ConfirmDialog({
   confirmLabel = "Confirm", cancelLabel = "Cancel",
   variant = "default", loading = false,
 }: ConfirmDialogProps) {
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-  }, [onClose]);
+  const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  // Remember what had focus so we can restore it when the dialog closes.
+  const restoreRef = useRef<Element | null>(null);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Trap Tab within the panel so keyboard focus can't leave the modal.
+      if (e.key === "Tab" && panelRef.current) {
+        const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
+        const active = document.activeElement;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onClose],
+  );
 
   useEffect(() => {
-    if (open) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
+    if (!open) return;
+    restoreRef.current = document.activeElement;
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    // Move focus into the dialog (the confirm button) on open.
+    confirmRef.current?.focus();
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      // Restore focus to whatever opened the dialog.
+      if (restoreRef.current instanceof HTMLElement) restoreRef.current.focus();
     };
   }, [open, handleKeyDown]);
 
@@ -40,29 +73,31 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6 animate-in fade-in zoom-in-95 duration-200"
+        ref={panelRef}
+        className="relative bg-om-surface text-om-ink rounded-2xl shadow-xl max-w-md w-full mx-4 p-6 animate-in fade-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="dialog-title"
+        aria-labelledby={titleId}
       >
-        <h2 id="dialog-title" className="text-lg font-semibold text-gray-900 mb-2">{title}</h2>
-        <p className="text-sm text-gray-500 mb-6">{description}</p>
+        <h2 id={titleId} className="text-lg font-semibold text-om-ink mb-2">{title}</h2>
+        <p className="text-sm text-om-ink-mute mb-6">{description}</p>
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-om-ink bg-om-surface border border-om-line rounded-lg hover:bg-om-surface-tint transition-colors"
           >
             {cancelLabel}
           </button>
           <button
+            ref={confirmRef}
             onClick={onConfirm}
             disabled={loading}
             className={cn(
               "px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-60",
               variant === "danger"
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-blue-600 hover:bg-blue-700"
+                ? "bg-om-danger hover:bg-om-danger/90"
+                : "bg-om-primary hover:bg-om-primary-deep"
             )}
           >
             {loading ? "Processing..." : confirmLabel}

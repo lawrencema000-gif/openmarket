@@ -35,12 +35,12 @@ export function ChartRail({
     <section>
       <div className="flex items-end justify-between mb-4 gap-3 flex-wrap">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h2>
-          <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
+          <h2 className="text-2xl font-bold text-om-ink tracking-tight">{title}</h2>
+          <p className="text-sm text-om-ink-soft mt-0.5">{subtitle}</p>
         </div>
         <Link
           href={href}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+          className="text-sm text-om-primary hover:text-om-primary-deep font-medium flex items-center gap-1"
         >
           View full chart
           <svg
@@ -69,7 +69,7 @@ export function ChartRail({
             <li key={item.appId} className="snap-start shrink-0 w-[260px]">
               <Link
                 href={`/apps/${item.appId}`}
-                className="group flex flex-col h-full bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md rounded-xl p-4 transition-all"
+                className="group flex flex-col h-full bg-om-surface border border-om-line hover:border-om-primary/40 hover:shadow-md rounded-xl p-4 transition-all"
               >
                 <div className="flex items-start gap-3">
                   <PositionPill
@@ -87,16 +87,16 @@ export function ChartRail({
                       decoding="async"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-xl bg-gray-100 shrink-0" />
+                    <div className="w-12 h-12 rounded-xl bg-om-line-soft shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                    <p className="font-semibold text-om-ink truncate group-hover:text-om-primary transition-colors">
                       {item.title}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">{item.packageName}</p>
+                    <p className="text-xs text-om-ink-soft truncate">{item.packageName}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 line-clamp-2 mt-3">
+                <p className="text-sm text-om-ink-mute line-clamp-2 mt-3">
                   {item.shortDescription}
                 </p>
               </Link>
@@ -117,7 +117,7 @@ function PositionPill({
 }) {
   return (
     <div className="flex flex-col items-center justify-center w-9 shrink-0">
-      <span className="text-lg font-bold text-gray-900 leading-none">{position}</span>
+      <span className="text-lg font-bold text-om-ink leading-none">{position}</span>
       <DeltaArrow delta={delta} />
     </div>
   );
@@ -125,20 +125,20 @@ function PositionPill({
 
 function DeltaArrow({ delta }: { delta: number | null }) {
   if (delta == null) {
-    return <span className="text-[9px] text-gray-300 mt-0.5">new</span>;
+    return <span className="text-[9px] text-om-ink-soft mt-0.5">new</span>;
   }
   if (delta === 0) {
-    return <span className="text-[9px] text-gray-400 mt-0.5">·</span>;
+    return <span className="text-[9px] text-om-ink-soft mt-0.5">·</span>;
   }
   if (delta > 0) {
     return (
-      <span className="text-[9px] text-emerald-600 mt-0.5 font-mono">
+      <span className="text-[9px] text-om-cta mt-0.5 font-mono">
         ▲{delta}
       </span>
     );
   }
   return (
-    <span className="text-[9px] text-rose-600 mt-0.5 font-mono">
+    <span className="text-[9px] text-om-danger mt-0.5 font-mono">
       ▼{Math.abs(delta)}
     </span>
   );

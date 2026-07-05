@@ -59,12 +59,12 @@ export function InstallBar({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+      <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-om-surface-tint border border-om-line">
         <a
           href={apkUrl ?? "#"}
           download={apkUrl ? true : undefined}
           onClick={onClick}
-          className={`inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm text-sm ${!apkUrl ? "opacity-50 pointer-events-none" : ""}`}
+          className={`inline-flex items-center gap-2 bg-om-cta text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-om-cta-deep active:bg-om-cta-deep transition-colors shadow-sm text-sm ${!apkUrl ? "opacity-50 pointer-events-none" : ""}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -72,10 +72,10 @@ export function InstallBar({
           Download APK
         </a>
         {sizeLabel && (
-          <span className="text-sm text-blue-600 font-medium">{sizeLabel}</span>
+          <span className="text-sm text-om-ink-mute font-medium">{sizeLabel}</span>
         )}
         {packageName && (
-          <code className="text-xs text-blue-500 font-mono bg-blue-100/60 px-2 py-1 rounded-md">
+          <code className="text-xs text-om-ink-soft font-mono bg-om-line-soft px-2 py-1 rounded-md">
             {packageName}
           </code>
         )}

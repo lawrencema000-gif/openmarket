@@ -11,6 +11,8 @@
  */
 
 :root {
+  color-scheme: light dark;
+
   /* Brand */
   --om-primary: 124 58 237;       /* violet-600  #7C3AED */
   --om-primary-soft: 167 139 250; /* violet-400  #A78BFA */
@@ -22,11 +24,15 @@
   --om-bg: 250 245 255;           /* purple-50   #FAF5FF */
   --om-surface: 255 255 255;
   --om-surface-tint: 245 243 255; /* violet-50   #F5F3FF */
-  --om-ink: 76 29 149;            /* violet-900  #4C1D95 */
+  --om-ink: 30 27 46;             /* near-black violet, body text (was violet-900 — too light for 4.5:1) */
   --om-ink-mute: 71 85 105;       /* slate-600   #475569 */
   --om-ink-soft: 100 116 139;     /* slate-500   #64748B */
   --om-line: 226 232 240;         /* slate-200   #E2E8F0 */
   --om-line-soft: 241 245 249;    /* slate-100   #F1F5F9 */
+
+  /* On-color foreground (text that sits ON --om-primary / --om-cta fills). */
+  --om-on-primary: 255 255 255;
+  --om-on-cta: 255 255 255;
 
   /* Semantic */
   --om-success: 16 185 129;
@@ -58,6 +64,92 @@
   --om-shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -8px rgb(76 29 149 / 0.08);
   --om-shadow-lift: 0 10px 30px -12px rgb(76 29 149 / 0.18);
   --om-shadow-glow: 0 0 0 1px rgb(167 139 250 / 0.3), 0 18px 40px -16px rgb(124 58 237 / 0.5);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ *  Dark mode — OS-driven (prefers-color-scheme). Only SURFACE + INK +
+ *  LINE + GLASS tokens flip; the brand violet/green accents stay vibrant.
+ *  Because the Tailwind @theme colors below reference these vars, every
+ *  bg-om-surface / text-om-ink / border-om-line utility re-themes with no
+ *  per-component dark: variants. A future toggle can add
+ *  [data-theme="dark"] with the same block.
+ * ─────────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --om-primary: 139 92 246;       /* violet-500 — a touch brighter on dark */
+    --om-primary-soft: 196 181 253; /* violet-300 — for primary-as-text on dark */
+
+    --om-bg: 2 6 23;                /* slate-950 */
+    --om-surface: 15 23 42;         /* slate-900 */
+    --om-surface-tint: 30 27 55;    /* violet-tinted slate */
+    --om-ink: 241 245 249;          /* slate-100  — body text, ~15:1 */
+    --om-ink-mute: 203 213 225;     /* slate-300 */
+    --om-ink-soft: 148 163 184;     /* slate-400  — softest still ≥4.5:1 */
+    --om-line: 51 65 85;            /* slate-700  — visible on dark */
+    --om-line-soft: 30 41 59;       /* slate-800 */
+
+    --om-glass-bg: 15 23 42;
+    --om-glass-opacity: 0.6;
+    --om-glass-border: 148 163 184;
+    --om-glass-border-opacity: 0.14;
+
+    --om-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+    --om-shadow-lift: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+  }
+
+  /* Decorative app background + skeleton shimmer are hardcoded light
+     gradients; retint for dark so they don't glow white behind content. */
+  .om-bg-app {
+    background:
+      radial-gradient(ellipse at top left, rgb(30 27 55) 0%, transparent 60%),
+      radial-gradient(ellipse at top right, rgb(23 20 48) 0%, transparent 60%),
+      rgb(2 6 23);
+  }
+  .om-skeleton {
+    background: linear-gradient(90deg,
+      rgb(30 41 59) 0%,
+      rgb(51 65 85) 50%,
+      rgb(30 41 59) 100%);
+    background-size: 200% 100%;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ *  Tailwind v4 theme wiring. Maps the --om-* tokens to Tailwind color
+ *  utilities so pages use bg-om-primary / text-om-ink / border-om-line
+ *  instead of raw blue and gray utilities — the single fix for the
+ *  "legacy palette clashes with the brand" problem. Values reference the
+ *  vars above, so the dark-mode overrides flow through automatically
+ *  (including opacity modifiers via color-mix).
+ * ─────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-om-primary: rgb(var(--om-primary));
+  --color-om-primary-soft: rgb(var(--om-primary-soft));
+  --color-om-primary-deep: rgb(var(--om-primary-deep));
+  --color-om-cta: rgb(var(--om-cta));
+  --color-om-cta-deep: rgb(var(--om-cta-deep));
+  --color-om-on-primary: rgb(var(--om-on-primary));
+  --color-om-on-cta: rgb(var(--om-on-cta));
+
+  --color-om-bg: rgb(var(--om-bg));
+  --color-om-surface: rgb(var(--om-surface));
+  --color-om-surface-tint: rgb(var(--om-surface-tint));
+  --color-om-ink: rgb(var(--om-ink));
+  --color-om-ink-mute: rgb(var(--om-ink-mute));
+  --color-om-ink-soft: rgb(var(--om-ink-soft));
+  --color-om-line: rgb(var(--om-line));
+  --color-om-line-soft: rgb(var(--om-line-soft));
+
+  --color-om-success: rgb(var(--om-success));
+  --color-om-warning: rgb(var(--om-warning));
+  --color-om-danger: rgb(var(--om-danger));
+  --color-om-info: rgb(var(--om-info));
+
+  --radius-om-sm: var(--om-radius-sm);
+  --radius-om-md: var(--om-radius-md);
+  --radius-om-lg: var(--om-radius-lg);
+  --radius-om-xl: var(--om-radius-xl);
+  --radius-om-2xl: var(--om-radius-2xl);
 }
 
 /* Reduced-motion respect — disables decorative aurora animations

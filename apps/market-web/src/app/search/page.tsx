@@ -173,13 +173,14 @@ export default async function SearchPage({
         {/* Category chips */}
         {cats.length > 0 && (
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Category:</span>
+            <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wider mr-1">Category:</span>
             <Link
               href={buildSearchUrl(baseParams, { category: "", page: "" })}
+              aria-current={!category ? "page" : undefined}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
                 !category
-                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-700"
+                  ? "bg-om-primary text-white border-om-primary shadow-sm"
+                  : "bg-om-surface text-om-ink-mute border-om-line hover:border-om-primary/40 hover:text-om-primary"
               }`}
             >
               All
@@ -188,10 +189,11 @@ export default async function SearchPage({
               <Link
                 key={cat.id}
                 href={buildSearchUrl(baseParams, { category: cat.slug, page: "" })}
+                aria-current={category === cat.slug ? "page" : undefined}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
                   category === cat.slug
-                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-700"
+                    ? "bg-om-primary text-white border-om-primary shadow-sm"
+                    : "bg-om-surface text-om-ink-mute border-om-line hover:border-om-primary/40 hover:text-om-primary"
                 }`}
               >
                 {cat.name}
@@ -202,17 +204,16 @@ export default async function SearchPage({
 
         {/* Trust tier chips */}
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Trust:</span>
+          <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wider mr-1">Trust:</span>
           {TRUST_TIERS.map((tier) => (
             <Link
               key={tier.value}
               href={buildSearchUrl(baseParams, { trustTier: tier.value, page: "" })}
+              aria-current={trustTier === tier.value ? "page" : undefined}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
                 trustTier === tier.value
-                  ? tier.value === "experimental"
-                    ? "bg-violet-600 text-white border-violet-600 shadow-sm"
-                    : "bg-blue-600 text-white border-blue-600 shadow-sm"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-700"
+                  ? "bg-om-primary text-white border-om-primary shadow-sm"
+                  : "bg-om-surface text-om-ink-mute border-om-line hover:border-om-primary/40 hover:text-om-primary"
               }`}
             >
               {tier.label}
@@ -224,7 +225,7 @@ export default async function SearchPage({
             API layer; surface the four common opt-outs here. Click toggles
             the slug in/out of the excludeAntiFeature comma list. */}
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">
+          <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wider mr-1">
             Hide:
           </span>
           {EXCLUDABLE_FILTERS.map((f) => {
@@ -244,7 +245,7 @@ export default async function SearchPage({
                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
                   active
                     ? "bg-rose-600 text-white border-rose-600 shadow-sm"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-rose-300 hover:text-rose-700"
+                    : "bg-om-surface text-om-ink-mute border-om-line hover:border-rose-300 hover:text-rose-700"
                 }`}
               >
                 {active ? "✓ " : ""}
@@ -254,7 +255,7 @@ export default async function SearchPage({
           })}
           <Link
             href="/anti-features"
-            className="ml-1 text-xs text-blue-600 hover:text-blue-700"
+            className="ml-1 text-xs text-om-primary hover:text-om-primary"
           >
             What's this?
           </Link>
@@ -308,7 +309,7 @@ export default async function SearchPage({
             action={
               <Link
                 href="/search"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-om-line bg-om-surface text-sm font-medium text-om-ink-mute hover:bg-om-surface-tint transition-colors"
               >
                 Clear all filters
               </Link>
@@ -323,7 +324,7 @@ export default async function SearchPage({
               surfaces here. */}
           {!q && popular.length > 0 && (
             <div className="mt-4">
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">
+              <h2 className="text-sm font-semibold text-om-ink mb-3">
                 What others are searching for
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -331,18 +332,18 @@ export default async function SearchPage({
                   <Link
                     key={p.query}
                     href={`/search?q=${encodeURIComponent(p.query)}`}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-om-surface border border-om-line text-sm text-om-ink-mute hover:border-om-primary/40 hover:text-om-primary transition-colors"
                   >
                     <span>{p.query}</span>
                     {p.lastResultCount != null && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-om-ink-soft">
                         {p.lastResultCount} result{p.lastResultCount === 1 ? "" : "s"}
                       </span>
                     )}
                   </Link>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-om-ink-soft mt-2">
                 Last 24 hours · only queries with multiple submitters appear
               </p>
             </div>
@@ -357,7 +358,7 @@ export default async function SearchPage({
           {currentPage > 1 ? (
             <Link
               href={buildSearchUrl(baseParams, { page: String(currentPage - 1) })}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg border border-om-line bg-om-surface text-sm text-om-ink-mute hover:bg-om-surface-tint hover:border-om-line transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
@@ -365,7 +366,7 @@ export default async function SearchPage({
               Prev
             </Link>
           ) : (
-            <span className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-gray-300 cursor-not-allowed">
+            <span className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-om-line cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 19.5-7.5-7.5 7.5-7.5" />
               </svg>
@@ -392,8 +393,8 @@ export default async function SearchPage({
               href={buildSearchUrl(baseParams, { page: String(pageNum) })}
               className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                 pageNum === currentPage
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                  ? "bg-om-primary text-white shadow-sm"
+                  : "border border-om-line bg-om-surface text-om-ink-mute hover:bg-om-surface-tint hover:border-om-line"
               }`}
             >
               {pageNum}
@@ -404,7 +405,7 @@ export default async function SearchPage({
           {currentPage < totalPages ? (
             <Link
               href={buildSearchUrl(baseParams, { page: String(currentPage + 1) })}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg border border-om-line bg-om-surface text-sm text-om-ink-mute hover:bg-om-surface-tint hover:border-om-line transition-colors"
             >
               Next
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -412,7 +413,7 @@ export default async function SearchPage({
               </svg>
             </Link>
           ) : (
-            <span className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-gray-300 cursor-not-allowed">
+            <span className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-om-line cursor-not-allowed">
               Next
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />

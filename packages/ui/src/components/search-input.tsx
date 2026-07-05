@@ -24,11 +24,13 @@ export function SearchInput({
 
   return (
     <form
+      role="search"
       onSubmit={(e) => { e.preventDefault(); onSubmit?.(); }}
       className={cn("relative", className)}
     >
       <svg
-        className={cn("absolute top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none", iconSizes[size])}
+        aria-hidden="true"
+        className={cn("absolute top-1/2 -translate-y-1/2 text-om-ink-soft pointer-events-none", iconSizes[size])}
         fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -38,15 +40,16 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder}
         className={cn(
-          "w-full rounded-xl border border-gray-200 bg-white",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400",
-          "placeholder:text-gray-400 transition-all duration-200",
+          "w-full rounded-xl border border-om-line bg-om-surface text-om-ink",
+          "focus:outline-none focus:ring-2 focus:ring-om-primary focus:border-om-primary",
+          "placeholder:text-om-ink-soft transition-all duration-200",
           sizeClasses[size]
         )}
       />
       {shortcut && !value && (
-        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs text-gray-400 font-mono">
+        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 rounded-md border border-om-line bg-om-surface-tint px-1.5 py-0.5 text-xs text-om-ink-soft font-mono">
           {shortcut}
         </kbd>
       )}
@@ -54,7 +57,8 @@ export function SearchInput({
         <button
           type="button"
           onClick={() => onChange("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Clear search"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-om-ink-soft hover:text-om-ink transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />

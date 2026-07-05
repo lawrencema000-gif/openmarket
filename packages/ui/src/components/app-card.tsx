@@ -25,7 +25,7 @@ export function AppCard({
       <div
         onClick={onClick}
         className={cn(
-          "group cursor-pointer rounded-xl border border-gray-100 bg-white p-4 shadow-sm",
+          "group cursor-pointer rounded-xl border border-om-line bg-om-surface p-4 shadow-sm",
           "hover:shadow-md hover:-translate-y-0.5 transition-all duration-200",
           className
         )}
@@ -44,18 +44,18 @@ export function AppCard({
             }}
           />
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+            <h3 className="font-semibold text-om-ink truncate group-hover:text-om-primary transition-colors">
               {title}
             </h3>
-            <p className="text-sm text-gray-500 truncate">{developerName}</p>
+            <p className="text-sm text-om-ink-soft truncate">{developerName}</p>
           </div>
         </div>
-        <p className="text-sm text-gray-600 line-clamp-2 mb-3">{shortDescription}</p>
+        <p className="text-sm text-om-ink-mute line-clamp-2 mb-3">{shortDescription}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{category}</span>
+          <span className="text-xs font-medium text-om-ink-soft uppercase tracking-wider">{category}</span>
           <div className="flex items-center gap-1.5">
             {isExperimental && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-700">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-om-primary/10 text-om-primary">
                 Experimental
               </span>
             )}
@@ -76,8 +76,8 @@ export function AppCard({
     <div
       onClick={onClick}
       className={cn(
-        "group flex items-center gap-4 cursor-pointer rounded-xl border border-gray-100 bg-white p-4 shadow-sm",
-        "hover:shadow-md hover:border-gray-200 transition-all duration-200",
+        "group flex items-center gap-4 cursor-pointer rounded-xl border border-om-line bg-om-surface p-4 shadow-sm",
+        "hover:shadow-md hover:border-om-primary/40 transition-all duration-200",
         className
       )}
     >
@@ -111,7 +111,7 @@ export function AppCard({
             {rating.toFixed(1)}
           </span>
         )}
-        <span className="text-xs text-gray-400 uppercase tracking-wider">{category}</span>
+        <span className="text-xs text-om-ink-soft uppercase tracking-wider">{category}</span>
       </div>
     </div>
   );

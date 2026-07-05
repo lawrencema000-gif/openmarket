@@ -5,6 +5,7 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
     | "default"
+    | "cta"
     | "destructive"
     | "outline"
     | "secondary"
@@ -15,15 +16,17 @@ export interface ButtonProps
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   default:
-    "bg-slate-900 text-slate-50 hover:bg-slate-900/90 shadow",
+    "bg-om-primary text-white hover:bg-om-primary-deep shadow",
+  cta:
+    "bg-om-cta text-white hover:bg-om-cta-deep shadow",
   destructive:
-    "bg-red-500 text-slate-50 hover:bg-red-500/90 shadow-sm",
+    "bg-om-danger text-white hover:bg-om-danger/90 shadow-sm",
   outline:
-    "border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 shadow-sm",
+    "border border-om-line bg-om-surface text-om-ink hover:bg-om-surface-tint shadow-sm",
   secondary:
-    "bg-slate-100 text-slate-900 hover:bg-slate-100/80 shadow-sm",
-  ghost: "hover:bg-slate-100 hover:text-slate-900",
-  link: "text-slate-900 underline-offset-4 hover:underline",
+    "bg-om-surface-tint text-om-ink hover:bg-om-surface-tint/70 shadow-sm",
+  ghost: "text-om-ink hover:bg-om-surface-tint",
+  link: "text-om-primary underline-offset-4 hover:underline",
 };
 
 const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
@@ -41,7 +44,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-om-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
           variantClasses[variant],
           sizeClasses[size],
           className
