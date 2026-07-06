@@ -23,7 +23,9 @@ import { PreRegisterButton } from "@/components/pre-register-button";
 import { ExperimentEvents } from "@/components/experiment-events";
 import { AffiliateRefCapture } from "@/components/affiliate-ref-capture";
 import { InstallBar } from "@/components/install-bar";
+import { StickyInstallBar } from "@/components/sticky-install-bar";
 import { PriceBadge } from "@/components/price-badge";
+import { formatPrice } from "@openmarket/contracts/pricing";
 import { PurchaseButton } from "@/components/purchase-button";
 import { IapRail } from "@/components/iap-rail";
 import { LocalePicker } from "@/components/locale-picker";
@@ -203,9 +205,11 @@ function fmtRelative(iso: string | null | undefined): string {
   const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
   if (days < 1) return "today";
   if (days === 1) return "yesterday";
-  if (days < 30) return `${days} days ago`;
-  if (days < 365) return `${Math.floor(days / 30)} months ago`;
-  return `${Math.floor(days / 365)} years ago`;
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  const months = Math.floor(days / 30);
+  if (days < 365) return `${months} month${months === 1 ? "" : "s"} ago`;
+  const years = Math.floor(days / 365);
+  return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
 function FactItem({
@@ -435,34 +439,12 @@ export default async function AppDetailPage({
             </div>
           </div>
 
-          {/* Anti-features disclosure block — only shown when present.
-              Lives BETWEEN the app header and the download action bar so
-              the user sees the disclosure before they install. */}
-          {app.antiFeatures && app.antiFeatures.length > 0 && (
-            <AntiFeaturesBlock slugs={app.antiFeatures} />
-          )}
-
-          {/* Data safety declaration. Always rendered — the component
-              handles "not yet declared" + "no data collected" states
-              internally. Pairs with anti-features as the two trust
-              surfaces above the install button. */}
-          <DataSafetyBlock appId={app.id} />
-
-          {/* Pre-registration CTA — only when the developer has flipped
-              preRegistrationEnabled. Mutually exclusive with the regular
-              install bar in practice. */}
+          {/* Install actions — the primary CTA cluster sits directly under
+              the header so the download decision is above the fold, not
+              behind trust disclosures and a pricing table. */}
           <PreRegisterButton appId={app.id} />
-
-          {/* Beta program join CTA. Renders nothing when the developer
-              hasn't enabled the program or there's no beta release yet. */}
           <BetaJoinButton appId={app.id} />
 
-          {/* Price badge + purchase button (P4-A / P4-A-2). Renders
-              only when the app has an active pricing row for the
-              viewer's country / default. PurchaseButton talks to
-              Stripe via the adapter — when the adapter is the Noop
-              default, the API returns a note and the button shows
-              the "Stripe not configured" hint inline. */}
           {app.pricing?.isPaid && app.pricing.price ? (
             <div className="flex flex-wrap items-end gap-4">
               <PriceBadge
@@ -474,31 +456,30 @@ export default async function AppDetailPage({
           ) : null}
 
           {/* Download action bar — P3-F gates installs through a
-              parental PIN dialog when the API flags requiresPinUnlock. */}
-          <InstallBar
-            appId={app.id}
-            appTitle={app.name}
-            apkUrl={app.apkUrl}
-            sizeLabel={app.sizeBytes ? formatBytes(app.sizeBytes) : null}
-            packageName={app.packageName ?? null}
-            parental={app.parental ?? null}
-          >
-            <div className="ml-auto flex items-center gap-2">
-              <WishlistHeart appId={app.id} variant="labeled" />
-              <LibraryButton appId={app.id} />
-            </div>
-          </InstallBar>
+              parental PIN dialog when the API flags requiresPinUnlock.
+              id="app-install" is observed by the mobile sticky bar. */}
+          <div id="app-install">
+            <InstallBar
+              appId={app.id}
+              appTitle={app.name}
+              apkUrl={app.apkUrl}
+              sizeLabel={app.sizeBytes ? formatBytes(app.sizeBytes) : null}
+              packageName={app.packageName ?? null}
+              parental={app.parental ?? null}
+            >
+              <div className="ml-auto flex items-center gap-2">
+                <WishlistHeart appId={app.id} variant="labeled" />
+                <LibraryButton appId={app.id} />
+              </div>
+            </InstallBar>
+          </div>
 
-          {/* In-app purchases rail (P4-B) — fetched client-side; renders
-              nothing when the app has no active IAP products. */}
-          <IapRail appId={app.id} />
-
-          {/* Preview videos — rendered above screenshots when present. */}
+          {/* Preview videos + screenshots — the biggest install-intent
+              driver, so they sit high, right under the install action
+              (Play leads its listing with them for the same reason). */}
           {app.previewVideos && app.previewVideos.length > 0 && (
             <PreviewVideosRail videos={app.previewVideos} />
           )}
-
-          {/* Screenshots */}
           {app.screenshots && app.screenshots.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold text-om-ink mb-4">{t("appDetail.screenshots")}</h2>
@@ -522,6 +503,18 @@ export default async function AppDetailPage({
               </div>
             </section>
           )}
+
+          {/* Trust surfaces — anti-features + data-safety, below the
+              screenshots. Informational context for the install decision,
+              not the loud amber lead they used to be. */}
+          {app.antiFeatures && app.antiFeatures.length > 0 && (
+            <AntiFeaturesBlock slugs={app.antiFeatures} />
+          )}
+          <DataSafetyBlock appId={app.id} />
+
+          {/* In-app purchases rail (P4-B) — pricing detail, demoted below
+              the visual + trust content. Renders nothing without IAP. */}
+          <IapRail appId={app.id} />
 
           {/* Tabbed sections — About / What's new / Permissions / Reviews */}
           <div className="space-y-6">
@@ -675,8 +668,9 @@ export default async function AppDetailPage({
           </div>
         </div>
 
-        {/* Sidebar */}
-        <aside className="space-y-4">
+        {/* Sidebar — sticky on desktop so Developer + App-Info stay in view
+            down the long page and the tall right column isn't dead space. */}
+        <aside className="space-y-4 lg:sticky lg:top-20 self-start">
           {/* Developer card */}
           <Card>
             <CardHeader>
@@ -757,6 +751,23 @@ export default async function AppDetailPage({
           </Card>
         </aside>
       </div>
+
+      {/* Mobile-only sticky install bar — keeps the primary CTA reachable
+          after it scrolls off the top of a long listing. */}
+      <StickyInstallBar
+        targetId="app-install"
+        appTitle={app.name}
+        iconUrl={app.iconUrl}
+        apkUrl={app.apkUrl}
+        priceLabel={
+          app.pricing?.isPaid && app.pricing.price
+            ? formatPrice(app.pricing.price.priceCents, app.pricing.price.currency)
+            : null
+        }
+        gated={
+          app.parental?.role === "child" && !!app.parental?.requiresPinUnlock
+        }
+      />
     </div>
   );
 }

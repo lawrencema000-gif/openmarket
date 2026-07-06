@@ -107,68 +107,10 @@ export default async function HomePage() {
             <div className="max-w-xl mx-auto pt-3">
               <SearchForm
                 size="lg"
-                placeholder="Search 12,000+ apps, developers, categories…"
+                placeholder="Search apps, developers, categories…"
               />
             </div>
-
-            {/* Trust strip — the four numbers that tell the marketplace
-                story at a glance. */}
-            <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 max-w-2xl mx-auto pt-6">
-              {[
-                { label: "Apps reviewed", value: "12,400+" },
-                { label: "Verified devs", value: "1,800+" },
-                { label: "Open audits", value: "9,200" },
-                { label: "Avg trust", value: "92 / 100" },
-              ].map((s) => (
-                <div key={s.label} className="text-center">
-                  <dt className="text-[11px] uppercase tracking-[0.12em] font-semibold text-om-ink-soft">
-                    {s.label}
-                  </dt>
-                  <dd className="text-xl sm:text-2xl font-bold om-display text-om-ink mt-1">
-                    {s.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
           </div>
-
-          {/* Category chips below the search — quick taps into the
-              most-requested verticals. */}
-          {categories.length > 0 && (
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-2">
-              {categories.slice(0, 8).map((cat) => (
-                <Link
-                  key={cat.slug}
-                  href={`/categories/${cat.slug}`}
-                  className="om-tile om-glass om-glow-ring inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-om-ink-mute hover:text-violet-700 cursor-pointer"
-                >
-                  <span aria-hidden className="text-base">
-                    {cat.icon ?? "▸"}
-                  </span>
-                  {cat.name}
-                </Link>
-              ))}
-              <Link
-                href="/search"
-                className="om-tile om-glow-ring inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-semibold text-violet-700 hover:bg-violet-50 cursor-pointer"
-              >
-                All categories
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                  />
-                </svg>
-              </Link>
-            </div>
-          )}
         </div>
 
         {/* Live marquee — quietly signals "this thing has a heartbeat". */}
@@ -190,7 +132,7 @@ export default async function HomePage() {
                   href={`/apps/${app.appId}`}
                   className="flex items-center gap-3 om-glass rounded-full pl-2 pr-5 py-1.5 om-tile cursor-pointer"
                 >
-                  <span className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-100 to-violet-50 flex items-center justify-center text-xs font-semibold text-violet-700 shrink-0">
+                  <span className="h-7 w-7 rounded-full bg-gradient-to-br from-om-primary/15 to-om-primary/10 flex items-center justify-center text-xs font-semibold text-om-primary shrink-0">
                     {app.iconUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -205,7 +147,7 @@ export default async function HomePage() {
                   <span className="text-sm font-medium text-om-ink-mute truncate max-w-[12rem]">
                     {app.title}
                   </span>
-                  <span className="text-[11px] uppercase tracking-wide font-semibold text-emerald-600">
+                  <span className="text-[11px] uppercase tracking-wide font-semibold text-om-cta">
                     #{app.position}
                   </span>
                 </Link>
@@ -222,6 +164,26 @@ export default async function HomePage() {
             tracked client-side. Hidden entirely when none are active. */}
         {promoted.length > 0 && <SponsoredRail promotions={promoted} />}
 
+        {/* Ranked app rails lead — real apps above the category directory,
+            so the homepage reads as a store, not a manifesto. */}
+        {trending.length > 0 && (
+          <ChartRail
+            title="Top trending this week"
+            subtitle="Ranked by install velocity over the last 7 days · refreshed hourly"
+            items={trending}
+            href="/charts/top-trending"
+          />
+        )}
+
+        {topNew.length > 0 && (
+          <ChartRail
+            title="New on OpenMarket"
+            subtitle="First stable release in the last 30 days"
+            items={topNew}
+            href="/charts/top-new"
+          />
+        )}
+
         {/* Categories */}
         {categories.length > 0 && (
           <section>
@@ -236,7 +198,7 @@ export default async function HomePage() {
               </div>
               <Link
                 href="/search"
-                className="text-sm text-violet-700 hover:text-violet-900 font-semibold flex items-center gap-1"
+                className="text-sm text-om-primary hover:text-om-primary-deep font-semibold flex items-center gap-1"
               >
                 View all
                 <svg
@@ -281,7 +243,7 @@ export default async function HomePage() {
                       </span>
                     </FeatureIcon>
                     <div>
-                      <p className="text-sm font-semibold text-om-ink group-hover:text-violet-700 transition-colors leading-tight">
+                      <p className="text-sm font-semibold text-om-ink group-hover:text-om-primary transition-colors leading-tight">
                         {cat.name}
                       </p>
                       {cat.appCount !== undefined && cat.appCount > 0 && (
@@ -296,24 +258,6 @@ export default async function HomePage() {
               ))}
             </div>
           </section>
-        )}
-
-        {trending.length > 0 && (
-          <ChartRail
-            title="Top trending this week"
-            subtitle="Ranked by install velocity over the last 7 days · refreshed hourly"
-            items={trending}
-            href="/charts/top-trending"
-          />
-        )}
-
-        {topNew.length > 0 && (
-          <ChartRail
-            title="New on OpenMarket"
-            subtitle="First stable release in the last 30 days"
-            items={topNew}
-            href="/charts/top-new"
-          />
         )}
 
         {/* Developer CTA */}

@@ -90,7 +90,7 @@ export function LegalLayout({
             </p>
           </header>
           {banner ? <div className="mb-8">{banner}</div> : null}
-          <div className="prose prose-gray max-w-none prose-headings:scroll-mt-24 prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:font-semibold prose-h3:mt-6 prose-h3:text-lg prose-h3:font-semibold prose-a:text-om-primary hover:prose-a:text-om-primary prose-strong:text-om-ink">
+          <div className="prose prose-gray dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-xl prose-h2:font-semibold prose-h3:mt-6 prose-h3:text-lg prose-h3:font-semibold prose-a:text-om-primary hover:prose-a:text-om-primary prose-strong:text-om-ink">
             {children}
           </div>
         </article>

@@ -183,7 +183,10 @@
 }
 
 .om-text-gradient {
-  background: linear-gradient(120deg, rgb(124 58 237), rgb(167 139 250) 40%, rgb(34 197 94));
+  /* Keep the headline gradient inside the violet brand family — the old
+     green stop made the last word the lowest-contrast, off-brand part of
+     the H1. */
+  background: linear-gradient(120deg, rgb(124 58 237), rgb(139 92 246) 50%, rgb(196 181 253));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

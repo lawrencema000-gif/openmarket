@@ -18,17 +18,19 @@ const SIZES = {
   lg: "h-14 w-14",
 };
 
+// Light pastel tiles in light mode; translucent tinted tiles in dark
+// (a fixed *-100 gradient glows as an opaque pastel block on a dark page).
 const TONE_BG: Record<NonNullable<FeatureIconProps["tone"]>, string> = {
   violet:
-    "bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600 ring-violet-200/70",
+    "bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600 ring-violet-200/70 dark:from-violet-500/20 dark:to-violet-500/10 dark:text-violet-300 dark:ring-violet-500/25",
   emerald:
-    "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 ring-emerald-200/70",
+    "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 ring-emerald-200/70 dark:from-emerald-500/20 dark:to-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/25",
   amber:
-    "bg-gradient-to-br from-amber-100 to-amber-50 text-amber-700 ring-amber-200/70",
+    "bg-gradient-to-br from-amber-100 to-amber-50 text-amber-700 ring-amber-200/70 dark:from-amber-500/20 dark:to-amber-500/10 dark:text-amber-300 dark:ring-amber-500/25",
   rose:
-    "bg-gradient-to-br from-rose-100 to-rose-50 text-rose-600 ring-rose-200/70",
+    "bg-gradient-to-br from-rose-100 to-rose-50 text-rose-600 ring-rose-200/70 dark:from-rose-500/20 dark:to-rose-500/10 dark:text-rose-300 dark:ring-rose-500/25",
   sky:
-    "bg-gradient-to-br from-sky-100 to-sky-50 text-sky-600 ring-sky-200/70",
+    "bg-gradient-to-br from-sky-100 to-sky-50 text-sky-600 ring-sky-200/70 dark:from-sky-500/20 dark:to-sky-500/10 dark:text-sky-300 dark:ring-sky-500/25",
 };
 
 export const FeatureIcon = React.forwardRef<HTMLDivElement, FeatureIconProps>(

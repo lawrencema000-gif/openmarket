@@ -46,10 +46,12 @@ export async function DataSafetyBlock({ appId }: { appId: string }) {
   if (!data) return null;
 
   if (!data.declared) {
+    // Neutral, not alarming: "not yet declared" is an absence of info, not a
+    // red flag — so it shouldn't be the loudest colored block on the page.
     return (
-      <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-        <h2 className="text-sm font-semibold text-amber-900">Data safety</h2>
-        <p className="text-xs text-amber-700 mt-1">
+      <section className="rounded-xl border border-om-line bg-om-surface-tint p-4">
+        <h2 className="text-sm font-semibold text-om-ink">Data safety</h2>
+        <p className="text-xs text-om-ink-mute mt-1">
           The developer has not yet filled out the data-safety declaration
           for this app. Treat as "unknown" until they do.
         </p>
@@ -59,9 +61,9 @@ export async function DataSafetyBlock({ appId }: { appId: string }) {
 
   if (!data.collectsData) {
     return (
-      <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-        <h2 className="text-sm font-semibold text-emerald-900">Data safety</h2>
-        <p className="text-xs text-emerald-700 mt-1">
+      <section className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/40 p-4">
+        <h2 className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Data safety</h2>
+        <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
           The developer has declared this app does <strong>not collect</strong>{" "}
           any user data.
           {data.dataEncryptedInTransit && " All network traffic is encrypted in transit."}
@@ -105,7 +107,7 @@ export async function DataSafetyBlock({ appId }: { appId: string }) {
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {entry.shared && (
-                      <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
+                      <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300">
                         shared
                       </span>
                     )}

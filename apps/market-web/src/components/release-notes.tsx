@@ -32,7 +32,7 @@ const ALLOWED = [
 export function ReleaseNotes({ markdown }: { markdown: string }) {
   if (!markdown.trim()) return null;
   return (
-    <div className="prose prose-sm prose-gray max-w-none prose-a:text-om-primary hover:prose-a:text-om-primary prose-strong:text-om-ink prose-headings:font-semibold">
+    <div className="prose prose-sm prose-gray dark:prose-invert max-w-none prose-a:text-om-primary hover:prose-a:text-om-primary prose-strong:text-om-ink prose-headings:font-semibold">
       <ReactMarkdown
         skipHtml
         allowedElements={ALLOWED}
