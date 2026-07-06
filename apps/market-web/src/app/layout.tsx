@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
 import { UserMenu } from "@/components/user-menu";
 import { UILocalePicker } from "@/components/ui-locale-picker";
+import { MobileNav } from "@/components/mobile-nav";
 import { I18nProvider } from "@/i18n/provider";
 import { getUIT } from "@/i18n/server";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -104,6 +105,7 @@ export default async function RootLayout({
                 <UILocalePicker />
               </div>
               <UserMenu />
+              <MobileNav />
             </nav>
           </div>
 

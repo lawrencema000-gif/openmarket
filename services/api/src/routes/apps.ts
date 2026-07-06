@@ -15,6 +15,7 @@ import {
   parentalControls,
   releaseArtifacts,
   releases,
+  scanResults,
   users,
 } from "@openmarket/db/schema";
 import {
@@ -306,6 +307,49 @@ appsRouter.get("/apps/:id", async (c) => {
       }
     : null;
 
+  // P?-security-review: surface the automated security review on the public
+  // listing so the trust claim ("static analysis, SDK fingerprinting,
+  // signature audit") is visible where the install decision happens — not
+  // just asserted on the home page. Pulls the latest completed scan for the
+  // verified artifact plus its signing-key fingerprint.
+  let securityReview: {
+    reviewed: boolean;
+    status: string | null;
+    riskScore: number | null;
+    reviewedAt: string | null;
+    signingKeyFingerprint: string | null;
+  } | null = null;
+  if (latestArtifact) {
+    const [scanRow] = await db
+      .select({
+        status: scanResults.status,
+        riskScore: scanResults.riskScore,
+        completedAt: scanResults.completedAt,
+      })
+      .from(scanResults)
+      .where(eq(scanResults.artifactId, latestArtifact.id))
+      .orderBy(desc(scanResults.completedAt))
+      .limit(1);
+    // signingKeyFingerprint lives on artifact_metadata, already joined above.
+    const fp =
+      latestRelease && latestArtifact
+        ? (
+            await db
+              .select({ fp: artifactMetadata.signingKeyFingerprint })
+              .from(artifactMetadata)
+              .where(eq(artifactMetadata.artifactId, latestArtifact.id))
+              .limit(1)
+          )[0]?.fp ?? null
+        : null;
+    securityReview = {
+      reviewed: !!scanRow?.completedAt,
+      status: scanRow?.status ?? null,
+      riskScore: scanRow?.riskScore ?? null,
+      reviewedAt: scanRow?.completedAt?.toISOString() ?? null,
+      signingKeyFingerprint: fp,
+    };
+  }
+
   // Resolve currentListing convenience: the listing referenced by
   // app.currentListingId, or the most recent listing if currentListingId
   // isn't set yet.
@@ -549,6 +593,7 @@ appsRouter.get("/apps/:id", async (c) => {
     latestRelease,
     latestArtifact,
     compatibility,
+    securityReview,
     recentReleases,
     previewVideos,
     sourceCode,

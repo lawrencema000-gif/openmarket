@@ -120,6 +120,14 @@ interface AppDetail {
     maxContentRating: "everyone" | "teen" | "mature";
     requiresPinUnlock: boolean;
   } | null;
+  // security-review summary (surfaced on the public listing)
+  securityReview?: {
+    reviewed: boolean;
+    status: string | null;
+    riskScore: number | null;
+    reviewedAt: string | null;
+    signingKeyFingerprint: string | null;
+  } | null;
   // P4-A pricing
   pricing?: {
     isPaid: boolean;
@@ -512,6 +520,80 @@ export default async function AppDetailPage({
           )}
           <DataSafetyBlock appId={app.id} />
 
+          {/* Security review — makes the home-page trust claim ("static
+              analysis, SDK fingerprinting, signature audit") TRUE at the
+              install decision, not just asserted elsewhere. */}
+          {app.securityReview && (
+            <section className="rounded-xl border border-om-line bg-om-surface p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold text-om-ink flex items-center gap-2">
+                  <svg className="w-4 h-4 text-om-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  Security review
+                </h2>
+                <Link href="/security" className="text-xs text-om-primary hover:underline shrink-0">
+                  How we review →
+                </Link>
+              </div>
+
+              {app.securityReview.reviewed ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(() => {
+                      const s = app.securityReview.status;
+                      const cls =
+                        s === "passed"
+                          ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/25"
+                          : s === "failed"
+                            ? "bg-red-500/12 text-red-700 dark:text-red-300 border-red-500/25"
+                            : "bg-amber-500/12 text-amber-700 dark:text-amber-300 border-amber-500/25";
+                      const label =
+                        s === "passed" ? "Passed" : s === "failed" ? "Failed" : "Flagged for review";
+                      return (
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cls}`}>
+                          {label}
+                        </span>
+                      );
+                    })()}
+                    {app.securityReview.riskScore != null && (
+                      <span className="text-xs text-om-ink-soft">
+                        Risk score {app.securityReview.riskScore}/100
+                      </span>
+                    )}
+                  </div>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                    {app.securityReview.reviewedAt && (
+                      <div>
+                        <dt className="text-om-ink-soft">Automated scan</dt>
+                        <dd className="text-om-ink-mute">
+                          {new Date(app.securityReview.reviewedAt).toLocaleDateString()}
+                        </dd>
+                      </div>
+                    )}
+                    {app.securityReview.signingKeyFingerprint && (
+                      <div className="min-w-0">
+                        <dt className="text-om-ink-soft">Signing key</dt>
+                        <dd className="text-om-ink-mute font-mono truncate">
+                          {app.securityReview.signingKeyFingerprint.slice(0, 24)}…
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  <p className="text-[11px] text-om-ink-soft pt-1 border-t border-om-line-soft">
+                    Every build is statically analysed and its signing key checked for
+                    continuity before listing.
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-om-ink-mute">
+                  Automated review runs when the developer uploads a build. This app
+                  has no reviewed release yet.
+                </p>
+              )}
+            </section>
+          )}
+
           {/* In-app purchases rail (P4-B) — pricing detail, demoted below
               the visual + trust content. Renders nothing without IAP. */}
           <IapRail appId={app.id} />
@@ -611,47 +693,57 @@ export default async function AppDetailPage({
               </section>
             ) : null}
 
-            {/* Permissions */}
-            {((app.permissions && app.permissions.length > 0) || dangerousPerms.length > 0) && (
-              <section>
-                <h2 className="text-lg font-semibold text-om-ink mb-3 pb-2 border-b border-om-line-soft">
-                  {t("appDetail.permissions")}
-                </h2>
-                <div className="space-y-4">
-                  {dangerousPerms.length > 0 && (
-                    <div className="rounded-xl bg-red-50 border border-red-100 p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                        </svg>
-                        <h3 className="text-sm font-semibold text-red-700">{t("appDetail.dangerousPermissions")}</h3>
-                      </div>
-                      <ul className="space-y-1.5">
-                        {dangerousPerms.map((perm) => (
-                          <li key={perm} className="flex items-center gap-2 text-sm text-red-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                            <code className="font-mono text-xs">{perm}</code>
-                          </li>
-                        ))}
-                      </ul>
+            {/* Permissions — ALWAYS rendered. For a transparency-first store,
+                "declares no special permissions" is a strong positive signal,
+                so an empty permission set is shown, not hidden. */}
+            <section>
+              <h2 className="text-lg font-semibold text-om-ink mb-3 pb-2 border-b border-om-line-soft">
+                {t("appDetail.permissions")}
+              </h2>
+              <div className="space-y-4">
+                {dangerousPerms.length > 0 && (
+                  <div className="rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                      </svg>
+                      <h3 className="text-sm font-semibold text-red-700 dark:text-red-300">{t("appDetail.dangerousPermissions")}</h3>
                     </div>
-                  )}
-                  {normalPerms.length > 0 && (
-                    <div className="rounded-xl bg-om-surface-tint border border-om-line p-4">
-                      <h3 className="text-sm font-semibold text-om-ink-mute mb-3">{t("appDetail.standardPermissions")}</h3>
-                      <ul className="space-y-1.5">
-                        {normalPerms.map((perm) => (
-                          <li key={perm} className="flex items-center gap-2 text-sm text-om-ink-mute">
-                            <span className="w-1.5 h-1.5 rounded-full bg-om-ink-soft shrink-0" />
-                            <code className="font-mono text-xs">{perm}</code>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
+                    <ul className="space-y-1.5">
+                      {dangerousPerms.map((perm) => (
+                        <li key={perm} className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                          <code className="font-mono text-xs">{perm}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {normalPerms.length > 0 && (
+                  <div className="rounded-xl bg-om-surface-tint border border-om-line p-4">
+                    <h3 className="text-sm font-semibold text-om-ink-mute mb-3">{t("appDetail.standardPermissions")}</h3>
+                    <ul className="space-y-1.5">
+                      {normalPerms.map((perm) => (
+                        <li key={perm} className="flex items-center gap-2 text-sm text-om-ink-mute">
+                          <span className="w-1.5 h-1.5 rounded-full bg-om-ink-soft shrink-0" />
+                          <code className="font-mono text-xs">{perm}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {dangerousPerms.length === 0 && normalPerms.length === 0 && (
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 p-4 flex items-center gap-2.5">
+                    <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                      This app declares <strong>no special permissions</strong>.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
 
             {/* Review highlights (P3-D) — auto-extracted chips above
                 the full reviews surface. Renders nothing if there

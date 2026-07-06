@@ -172,12 +172,12 @@ export default async function SearchPage({
       <div className="space-y-3">
         {/* Category chips */}
         {cats.length > 0 && (
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2 items-center pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
             <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wider mr-1">Category:</span>
             <Link
               href={buildSearchUrl(baseParams, { category: "", page: "" })}
               aria-current={!category ? "page" : undefined}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+              className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-150 ${
                 !category
                   ? "bg-om-primary text-white border-om-primary shadow-sm"
                   : "bg-om-surface text-om-ink-mute border-om-line hover:border-om-primary/40 hover:text-om-primary"
@@ -190,7 +190,7 @@ export default async function SearchPage({
                 key={cat.id}
                 href={buildSearchUrl(baseParams, { category: cat.slug, page: "" })}
                 aria-current={category === cat.slug ? "page" : undefined}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+                className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-150 ${
                   category === cat.slug
                     ? "bg-om-primary text-white border-om-primary shadow-sm"
                     : "bg-om-surface text-om-ink-mute border-om-line hover:border-om-primary/40 hover:text-om-primary"
@@ -203,14 +203,14 @@ export default async function SearchPage({
         )}
 
         {/* Trust tier chips */}
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2 items-center pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
           <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wider mr-1">Trust:</span>
           {TRUST_TIERS.map((tier) => (
             <Link
               key={tier.value}
               href={buildSearchUrl(baseParams, { trustTier: tier.value, page: "" })}
               aria-current={trustTier === tier.value ? "page" : undefined}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+              className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-150 ${
                 trustTier === tier.value
                   ? "bg-om-primary text-white border-om-primary shadow-sm"
                   : "bg-om-surface text-om-ink-mute border-om-line hover:border-om-primary/40 hover:text-om-primary"
@@ -224,7 +224,7 @@ export default async function SearchPage({
         {/* Hide-by-anti-feature chips. NSFW is excluded by default at the
             API layer; surface the four common opt-outs here. Click toggles
             the slug in/out of the excludeAntiFeature comma list. */}
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2 items-center pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
           <span className="text-xs font-semibold text-om-ink-soft uppercase tracking-wider mr-1">
             Hide:
           </span>
@@ -242,7 +242,7 @@ export default async function SearchPage({
                   page: "",
                 })}
                 title={meta?.description ?? f.label}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+                className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-150 ${
                   active
                     ? "bg-rose-600 text-white border-rose-600 shadow-sm"
                     : "bg-om-surface text-om-ink-mute border-om-line hover:border-rose-300 hover:text-rose-700"
