@@ -94,14 +94,14 @@ export function AppCard({
         }}
       />
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+        <h3 className="font-semibold text-om-ink truncate group-hover:text-om-primary transition-colors">
           {title}
         </h3>
-        <p className="text-sm text-gray-500 truncate">{developerName}</p>
+        <p className="text-sm text-om-ink-soft truncate">{developerName}</p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {isExperimental && (
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-700">
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-om-primary/10 text-om-primary">
             Experimental
           </span>
         )}

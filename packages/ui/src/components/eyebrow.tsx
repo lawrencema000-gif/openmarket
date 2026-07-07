@@ -10,16 +10,19 @@ export interface EyebrowProps extends React.HTMLAttributes<HTMLSpanElement> {
   pulse?: boolean;
 }
 
+// Token-driven so the chip themes for dark (bg-white/70 glowed on dark and
+// text-*-700 hues lost contrast). Brand hues via --om-primary / --om-cta;
+// neutral via the ink/line tokens.
 const TONE: Record<NonNullable<EyebrowProps["tone"]>, string> = {
-  primary: "border-violet-200/70 bg-white/70 text-violet-700",
-  cta: "border-emerald-200/70 bg-white/70 text-emerald-700",
-  neutral: "border-slate-200/80 bg-white/70 text-slate-700",
+  primary: "border-om-primary/30 bg-om-surface/70 text-om-primary",
+  cta: "border-om-cta/30 bg-om-surface/70 text-om-cta",
+  neutral: "border-om-line bg-om-surface/70 text-om-ink-mute",
 };
 
 const DOT: Record<NonNullable<EyebrowProps["tone"]>, string> = {
-  primary: "bg-violet-500",
-  cta: "bg-emerald-500",
-  neutral: "bg-slate-400",
+  primary: "bg-om-primary",
+  cta: "bg-om-cta",
+  neutral: "bg-om-ink-soft",
 };
 
 export const Eyebrow = React.forwardRef<HTMLSpanElement, EyebrowProps>(

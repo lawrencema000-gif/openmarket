@@ -255,6 +255,9 @@ importers:
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
+      vitest:
+        specifier: ^3.1.0
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)
 
   services/api:
     dependencies:
@@ -328,6 +331,9 @@ importers:
       '@openmarket/security-rules':
         specifier: workspace:*
         version: link:../../packages/security-rules
+      '@sentry/node':
+        specifier: ^10.0.0
+        version: 10.51.0
       '@types/yauzl':
         specifier: ^2.10.3
         version: 2.10.3
@@ -414,6 +420,9 @@ importers:
       '@openmarket/security-rules':
         specifier: workspace:*
         version: link:../../packages/security-rules
+      '@sentry/node':
+        specifier: ^10.0.0
+        version: 10.51.0
       bullmq:
         specifier: ^5.34.0
         version: 5.73.4
@@ -442,6 +451,9 @@ importers:
 
   services/search-worker:
     dependencies:
+      '@sentry/node':
+        specifier: ^10.0.0
+        version: 10.51.0
       bullmq:
         specifier: ^5.34.0
         version: 5.73.4

@@ -82,8 +82,8 @@ export function ComingSoon({
   eta,
 }: ComingSoonProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-6 py-12 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-600">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-om-line bg-om-surface-tint px-6 py-12 text-center">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-om-line text-om-ink-mute">
         <svg
           className="h-5 w-5"
           fill="none"
@@ -100,12 +100,12 @@ export function ComingSoon({
         </svg>
       </div>
       <div>
-        <p className="m-0 text-base font-semibold text-gray-900">{title}</p>
-        <p className="m-0 mt-1 max-w-md text-sm text-gray-600">
+        <p className="m-0 text-base font-semibold text-om-ink">{title}</p>
+        <p className="m-0 mt-1 max-w-md text-sm text-om-ink-mute">
           {description}
         </p>
         {eta ? (
-          <p className="m-0 mt-2 text-xs uppercase tracking-wide text-gray-500">
+          <p className="m-0 mt-2 text-xs uppercase tracking-wide text-om-ink-soft">
             {eta}
           </p>
         ) : null}

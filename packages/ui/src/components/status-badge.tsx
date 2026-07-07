@@ -7,7 +7,7 @@ import { cn } from "../lib/utils";
 const STATUS_STYLES: Record<string, string> = {
   // Release statuses
   draft: "bg-om-line-soft text-om-ink-mute",
-  scanning: "bg-blue-500/12 text-blue-700 dark:text-blue-300",
+  scanning: "bg-om-info/12 text-om-info",
   review: "bg-amber-500/12 text-amber-700 dark:text-amber-300",
   staged_rollout: "bg-om-primary/12 text-om-primary",
   published: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
@@ -17,12 +17,12 @@ const STATUS_STYLES: Record<string, string> = {
   rejected: "bg-red-500/12 text-red-700 dark:text-red-300",
   // Trust levels
   verified: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
-  audited: "bg-blue-500/12 text-blue-700 dark:text-blue-300",
+  audited: "bg-om-info/12 text-om-info",
   experimental: "bg-om-primary/12 text-om-primary",
   suspended: "bg-red-500/12 text-red-700 dark:text-red-300",
   // Report/scan statuses
   open: "bg-amber-500/12 text-amber-700 dark:text-amber-300",
-  investigating: "bg-blue-500/12 text-blue-700 dark:text-blue-300",
+  investigating: "bg-om-info/12 text-om-info",
   resolved: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
   dismissed: "bg-om-line-soft text-om-ink-mute",
   passed: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
