@@ -31,6 +31,7 @@ export interface AuditAction {
     | "report"
     | "appeal"
     | "category"
+    | "collection"
     | "release"
     | null;
   targetId?: string | null;

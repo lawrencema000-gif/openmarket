@@ -27,6 +27,7 @@ export * from "./iap";
 export * from "./app-subscriptions";
 export * from "./payouts";
 export * from "./promoted-listings";
+export * from "./editorial-collections";
 export * from "./affiliates";
 export * from "./enterprise";
 export * from "./federation";

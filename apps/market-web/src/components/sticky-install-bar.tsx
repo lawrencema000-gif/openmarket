@@ -66,8 +66,10 @@ export function StickyInstallBar({
       ref={barRef}
       aria-hidden={!show}
       className={
-        "lg:hidden fixed inset-x-0 bottom-0 z-40 om-glass-strong border-t border-om-line " +
-        "px-4 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] transition-transform duration-200 " +
+        // Sits directly ABOVE the global mobile BottomTabBar (h-14 = 3.5rem +
+        // safe-area), so the two fixed bottom bars never overlap on a phone.
+        "lg:hidden fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-40 om-glass-strong border-t border-om-line " +
+        "px-4 py-2.5 transition-transform duration-200 " +
         (show ? "translate-y-0" : "translate-y-full pointer-events-none")
       }
     >

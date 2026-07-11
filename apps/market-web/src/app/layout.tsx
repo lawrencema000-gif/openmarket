@@ -6,6 +6,7 @@ import { SearchForm } from "@/components/search-form";
 import { UserMenu } from "@/components/user-menu";
 import { UILocalePicker } from "@/components/ui-locale-picker";
 import { MobileNav } from "@/components/mobile-nav";
+import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { I18nProvider } from "@/i18n/provider";
 import { getUIT } from "@/i18n/server";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -44,7 +45,7 @@ export default async function RootLayout({
   const { locale, messages, t } = await getUIT();
   return (
     <html lang={locale}>
-      <body className="min-h-screen om-bg-app text-om-ink flex flex-col">
+      <body className="min-h-screen om-bg-app text-om-ink flex flex-col pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
         {/* Plausible — privacy-respecting analytics. No cookies, no personal IDs.
             Active only when NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set in env. */}
         {PLAUSIBLE_DOMAIN ? (
@@ -191,6 +192,10 @@ export default async function RootLayout({
             </div>
           </div>
         </footer>
+
+        {/* Mobile primary navigation. Fixed bottom, lg:hidden. On app-detail
+            pages the StickyInstallBar stacks directly above this bar. */}
+        <BottomTabBar />
         </I18nProvider>
       </body>
     </html>

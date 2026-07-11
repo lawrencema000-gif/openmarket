@@ -3,9 +3,14 @@ import { apiFetch } from "@/lib/api";
 import { SearchForm } from "@/components/search-form";
 import { ChartRail } from "@/components/chart-rail";
 import {
+  CollectionRail,
+  type CollectionRailData,
+} from "@/components/collection-rail";
+import {
   SponsoredRail,
   type SponsoredPromotion,
 } from "@/components/sponsored-rail";
+import { features } from "@/lib/features";
 import {
   Aurora,
   Eyebrow,
@@ -72,13 +77,27 @@ async function getPromoted(): Promise<SponsoredPromotion[]> {
   }
 }
 
+async function getCollections(): Promise<CollectionRailData[]> {
+  if (!features.collections) return [];
+  try {
+    const r = await apiFetch<{ collections: CollectionRailData[] }>(
+      "/api/collections",
+    );
+    return r.collections ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const [categories, trending, topNew, promoted] = await Promise.all([
-    getFeaturedCategories(),
-    getChart("top-trending", "7d", 6),
-    getChart("top-new", "30d", 6),
-    getPromoted(),
-  ]);
+  const [categories, trending, topNew, promoted, collections] =
+    await Promise.all([
+      getFeaturedCategories(),
+      getChart("top-trending", "7d", 6),
+      getChart("top-new", "30d", 6),
+      getPromoted(),
+      getCollections(),
+    ]);
 
   return (
     <div className="om-bg-app">
@@ -164,7 +183,14 @@ export default async function HomePage() {
             tracked client-side. Hidden entirely when none are active. */}
         {promoted.length > 0 && <SponsoredRail promotions={promoted} />}
 
-        {/* Ranked app rails lead — real apps above the category directory,
+        {/* Editorial collections lead — HUMAN curation before the algorithmic
+            charts. Each rail carries a named-curator byline; unlike the
+            sponsored rail above, no slot here can be bought. */}
+        {collections.map((col) => (
+          <CollectionRail key={col.slug} collection={col} />
+        ))}
+
+        {/* Ranked app rails — real apps above the category directory,
             so the homepage reads as a store, not a manifesto. */}
         {trending.length > 0 && (
           <ChartRail
