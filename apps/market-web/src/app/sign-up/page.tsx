@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth-form";
 
 export const metadata: Metadata = {
-  title: "Sign up — OpenMarket",
+  title: "Sign up",
   description: "Create an OpenMarket account.",
 };
 

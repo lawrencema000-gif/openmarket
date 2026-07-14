@@ -24,3 +24,21 @@ export const SITE_NAME = "OpenMarket";
 
 /** Used for og:image fallback when an app has no icon. */
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.png`;
+
+/**
+ * Developer-portal origin. Env-driven so a local storefront links to the
+ * local dev-portal and a self-hosted instance links to its own — hardcoding
+ * the Vercel URL made every developer on-ramp leave the environment.
+ */
+export const DEV_PORTAL_URL = (
+  process.env.NEXT_PUBLIC_DEV_PORTAL_URL ??
+  "https://openmarket-dev-portal.vercel.app"
+).replace(/\/$/, "");
+
+/**
+ * Repo source links. `blob/HEAD/...` resolves against the repository's
+ * DEFAULT branch — the old `blob/main/...` links 404'd because this repo's
+ * default branch is `master`.
+ */
+export const REPO_URL = "https://github.com/lawrencema000-gif/openmarket";
+export const IMPLEMENTATION_PLAN_URL = `${REPO_URL}/blob/HEAD/docs/IMPLEMENTATION-PLAN.md`;

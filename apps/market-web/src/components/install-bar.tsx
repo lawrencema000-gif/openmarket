@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PinUnlockDialog } from "./pin-unlock-dialog";
 
 interface InstallBarProps {
@@ -91,6 +92,17 @@ export function InstallBar({
           </span>
         ) : null}
         {children}
+        {/* One-line decoder for the store's most jargon-heavy word. "APK"
+            is on every install button but was never defined anywhere. */}
+        <p className="w-full text-xs text-om-ink-soft mt-1">
+          An APK is the Android app file — open it on your phone to install.{" "}
+          <Link
+            href="/how-we-review#installing"
+            className="text-om-primary hover:underline"
+          >
+            How installing works
+          </Link>
+        </p>
       </div>
       <PinUnlockDialog
         open={dialogOpen}

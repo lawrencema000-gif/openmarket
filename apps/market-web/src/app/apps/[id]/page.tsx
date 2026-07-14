@@ -62,6 +62,8 @@ interface ArtifactSummary {
 interface AppDetail {
   id: string;
   name: string;
+  /** standard | enhanced | experimental — defined on /how-we-review#tiers. */
+  trustTier?: string;
   description?: string;
   shortDescription?: string;
   iconUrl?: string;
@@ -220,6 +222,41 @@ function fmtRelative(iso: string | null | undefined): string {
   return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
+// Human labels + one-line meanings for the three app trust tiers
+// (contracts enum: standard | enhanced | experimental). The chip links to
+// /how-we-review#tiers so the label is never an unexplained trust claim.
+const TRUST_TIER_META: Record<string, { label: string; blurb: string; className: string }> = {
+  standard: {
+    label: "Standard",
+    blurb: "Passed the security review pipeline",
+    className: "bg-om-surface-tint text-om-ink-mute border-om-line",
+  },
+  enhanced: {
+    label: "Enhanced trust",
+    blurb: "Clean track record plus extra transparency signals",
+    className: "bg-om-primary/10 text-om-primary border-om-primary/25",
+  },
+  experimental: {
+    label: "Experimental",
+    blurb: "Early software — same safety floor, expect rough edges",
+    className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
+  },
+};
+
+function TrustTierChip({ tier }: { tier: string }) {
+  const meta = TRUST_TIER_META[tier];
+  if (!meta) return null;
+  return (
+    <Link
+      href="/how-we-review#tiers"
+      title={`${meta.blurb} — tap to see how tiers work`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold hover:underline ${meta.className}`}
+    >
+      {meta.label}
+    </Link>
+  );
+}
+
 function FactItem({
   label,
   value,
@@ -242,7 +279,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   try {
     const raw = await apiFetch<ApiAppResponse>(`/api/apps/${id}`);
     const app = flattenApp(raw);
-    const title = `${app.name ?? "App"} — ${SITE_NAME}`;
+    // Bare name — the root layout's title template appends "— OpenMarket".
+    const title = app.name ?? "App";
     const description =
       app.shortDescription ??
       `Android app ${app.packageName ?? "on OpenMarket"} — full transparency about permissions, security review, and developer track record.`;
@@ -268,7 +306,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       },
     };
   } catch {
-    return { title: `App — ${SITE_NAME}` };
+    return { title: "App" };
   }
 }
 
@@ -417,6 +455,9 @@ export default async function AppDetailPage({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                {/* Trust tier — the content policy promises this appears next
+                    to every app. Links to the plain-language definition. */}
+                {app.trustTier && <TrustTierChip tier={app.trustTier} />}
                 {app.category && (
                   <Badge variant="secondary">{app.category}</Badge>
                 )}
@@ -532,7 +573,7 @@ export default async function AppDetailPage({
                   </svg>
                   Security review
                 </h2>
-                <Link href="/security" className="text-xs text-om-primary hover:underline shrink-0">
+                <Link href="/how-we-review" className="text-xs text-om-primary hover:underline shrink-0">
                   How we review →
                 </Link>
               </div>
@@ -782,11 +823,23 @@ export default async function AppDetailPage({
                   <p className="font-semibold text-om-ink group-hover:text-om-primary transition-colors text-sm">
                     {app.developer.name}
                   </p>
-                  {app.developer.trustLevel && (
-                    <p className="text-xs text-om-ink-soft">{app.developer.trustLevel}</p>
-                  )}
                 </div>
               </Link>
+              {/* Publisher trust level as a real, explained badge — a bare
+                  lowercase "verified" was the store's central trust signal
+                  rendered with zero styling or definition. */}
+              {app.developer.trustLevel === "verified" && (
+                <Link
+                  href="/how-we-review#developers"
+                  title="Identity-checked publisher with a clean track record — tap to see what verification involves"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:underline"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                  Verified developer
+                </Link>
+              )}
               {app.developer.trustBadges && app.developer.trustBadges.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-1">
                   {app.developer.trustBadges.map((badge) => (

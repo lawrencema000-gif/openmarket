@@ -1,3 +1,10 @@
+"use client";
+
+// Client component: the icon <img> carries an onError fallback handler, and
+// event handlers cannot cross the server->client boundary. Without this
+// directive any SERVER component rendering AppCard (search results, developer
+// profiles) crashes with "Event handlers cannot be passed to Client Component
+// props" - a latent failure that only surfaced once those pages had results.
 import React from "react";
 import { cn } from "../lib/utils";
 

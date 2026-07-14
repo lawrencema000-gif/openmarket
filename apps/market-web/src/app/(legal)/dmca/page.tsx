@@ -3,7 +3,7 @@ import Link from "next/link";
 import { DraftBanner, LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "DMCA Notice & Counter-Notice Procedure — OpenMarket",
+  title: "DMCA Notice & Counter-Notice Procedure",
   description:
     "How to file a DMCA copyright takedown notice with OpenMarket, and how to counter-notice if your content is removed.",
 };
@@ -114,8 +114,8 @@ export default function DMCAPage() {
         </li>
         <li>
           The web form at{" "}
-          <Link href="/dmca/submit">/dmca/submit</Link> — coming soon — captures
-          every required field.
+          <Link href="/dmca/submit">/dmca/submit</Link> captures every
+          required field.
         </li>
       </ul>
       <p>

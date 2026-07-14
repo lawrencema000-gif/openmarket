@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "About — OpenMarket",
+  title: "About",
   description:
     "OpenMarket is a viewpoint-neutral Android app marketplace. Our mission, principles, and contact information.",
 };
@@ -93,7 +93,7 @@ export default function AboutPage() {
       <p>
         The full set is documented in the{" "}
         <a
-          href="https://github.com/lawrencema000-gif/openmarket/blob/main/docs/IMPLEMENTATION-PLAN.md"
+          href="https://github.com/lawrencema000-gif/openmarket/blob/HEAD/docs/IMPLEMENTATION-PLAN.md"
           target="_blank"
           rel="noreferrer"
         >

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { DraftBanner, LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — OpenMarket",
+  title: "Privacy Policy",
   description: "How OpenMarket collects, uses, and protects your information.",
 };
 

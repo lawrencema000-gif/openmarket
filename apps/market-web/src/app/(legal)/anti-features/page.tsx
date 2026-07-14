@@ -9,7 +9,7 @@ import {
 import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "Anti-Features Taxonomy — OpenMarket",
+  title: "Anti-Features Taxonomy",
   description:
     "Machine-checkable trust labels we attach to apps so users can filter on what they want and don't want. Honest disclosure beats hidden dark patterns.",
 };

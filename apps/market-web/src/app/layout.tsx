@@ -9,7 +9,13 @@ import { MobileNav } from "@/components/mobile-nav";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { I18nProvider } from "@/i18n/provider";
 import { getUIT } from "@/i18n/server";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import {
+  DEV_PORTAL_URL,
+  IMPLEMENTATION_PLAN_URL,
+  REPO_URL,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 const PLAUSIBLE_HOST =
@@ -133,9 +139,12 @@ export default async function RootLayout({
                 </h3>
                 <ul className="space-y-2.5 text-sm text-om-ink-soft">
                   <li><Link href="/search" className="hover:text-om-primary transition-colors">Browse All Apps</Link></li>
-                  <li><Link href="/search?trustTier=verified" className="hover:text-om-primary transition-colors">Verified Apps</Link></li>
-                  <li><Link href="/search?category=productivity" className="hover:text-om-primary transition-colors">Productivity</Link></li>
-                  <li><Link href="/search?category=tools" className="hover:text-om-primary transition-colors">Tools</Link></li>
+                  {/* "verified" isn't a real tier — the API enum is
+                      standard|enhanced|experimental; the old link 400'd. */}
+                  <li><Link href="/search?trustTier=enhanced" className="hover:text-om-primary transition-colors">Enhanced-trust Apps</Link></li>
+                  <li><Link href="/collections" className="hover:text-om-primary transition-colors">Collections</Link></li>
+                  <li><Link href="/charts" className="hover:text-om-primary transition-colors">Top Charts</Link></li>
+                  <li><Link href="/categories" className="hover:text-om-primary transition-colors">Categories</Link></li>
                 </ul>
               </div>
 
@@ -145,9 +154,9 @@ export default async function RootLayout({
                   Developers
                 </h3>
                 <ul className="space-y-2.5 text-sm text-om-ink-soft">
-                  <li><a href="https://openmarket-dev-portal.vercel.app" className="hover:text-om-primary transition-colors">Developer Portal</a></li>
-                  <li><a href="https://openmarket-dev-portal.vercel.app/apps/new" className="hover:text-om-primary transition-colors">Publish an App</a></li>
-                  <li><a href="https://github.com/lawrencema000-gif/openmarket/blob/main/docs/IMPLEMENTATION-PLAN.md" className="hover:text-om-primary transition-colors">Implementation plan</a></li>
+                  <li><a href={DEV_PORTAL_URL} className="hover:text-om-primary transition-colors">Developer Portal</a></li>
+                  <li><a href={`${DEV_PORTAL_URL}/apps/new`} className="hover:text-om-primary transition-colors">Publish an App</a></li>
+                  <li><a href={IMPLEMENTATION_PLAN_URL} className="hover:text-om-primary transition-colors">Implementation plan</a></li>
                   <li><span className="text-om-ink-soft cursor-not-allowed" title="Tier 2 — coming after Tier 1 ships">API Reference (planned)</span></li>
                 </ul>
               </div>
@@ -159,9 +168,11 @@ export default async function RootLayout({
                 </h3>
                 <ul className="space-y-2.5 text-sm text-om-ink-soft">
                   <li><Link href="/about" className="hover:text-om-primary transition-colors">About OpenMarket</Link></li>
+                  <li><Link href="/how-we-review" className="hover:text-om-primary transition-colors">How We Review Apps</Link></li>
+                  <li><Link href="/anti-features" className="hover:text-om-primary transition-colors">Anti-Features</Link></li>
                   <li><Link href="/content-policy" className="hover:text-om-primary transition-colors">Content Policy</Link></li>
                   <li><Link href="/transparency-report" className="hover:text-om-primary transition-colors">Transparency Report</Link></li>
-                  <li><a href="https://github.com/lawrencema000-gif/openmarket" className="hover:text-om-primary transition-colors">GitHub</a></li>
+                  <li><a href={REPO_URL} className="hover:text-om-primary transition-colors">GitHub</a></li>
                 </ul>
               </div>
 

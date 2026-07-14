@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "Content Policy — OpenMarket",
+  title: "Content Policy",
   description:
     "What apps we will and won't host on OpenMarket, and how we make those decisions.",
 };

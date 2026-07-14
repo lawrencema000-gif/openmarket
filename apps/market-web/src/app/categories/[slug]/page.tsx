@@ -53,10 +53,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const r = await getCategory(slug);
-  if (r.kind !== "ok") return { title: "Category — OpenMarket" };
+  if (r.kind !== "ok") return { title: "Category" };
   const c = r.data.category;
   return {
-    title: `${c.name} — OpenMarket`,
+    title: `${c.name}`,
     description:
       c.description ?? `Browse ${c.name} apps on OpenMarket.`,
   };
@@ -174,14 +174,18 @@ export default async function CategoryDetailPage({
         </ul>
       )}
 
-      <div className="text-center">
-        <Link
-          href={`/search?category=${category.slug}`}
-          className="text-sm text-om-primary hover:text-om-primary"
-        >
-          Browse more {category.name} →
-        </Link>
-      </div>
+      {/* Only offer "browse more" when there is actually more to browse —
+          on an empty category this linked straight into an empty search. */}
+      {apps.length > 0 && (
+        <div className="text-center">
+          <Link
+            href={`/search?category=${category.slug}`}
+            className="text-sm text-om-primary hover:text-om-primary"
+          >
+            Browse more {category.name} →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

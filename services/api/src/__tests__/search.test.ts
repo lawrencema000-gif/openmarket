@@ -10,15 +10,35 @@ vi.mock("meilisearch", () => ({
   })),
 }));
 
-// db.select().from().where() resolves to the live (non-delisted, published)
-// subset of the requested ids. db.insert().values() is the query-log write.
+// Two select() styles are in play:
+//  - Meili-path moderation gate: .from().where() → live-ids subset (liveIds).
+//  - Browse mode: two chained-join queries per request (rows, then count),
+//    fed FIFO from browseResults.
+// The chain is thenable so any call depth resolves to the queued result.
 const liveIds = vi.fn<() => Array<{ id: string }>>(() => []);
+const browseResults: unknown[][] = [];
 vi.mock("../lib/db", () => ({
   db: {
     select: vi.fn(() => {
+      const result =
+        browseResults.length > 0 ? browseResults.shift()! : liveIds();
       const chain: any = {};
-      chain.from = vi.fn().mockReturnValue(chain);
-      chain.where = vi.fn(() => Promise.resolve(liveIds()));
+      for (const m of [
+        "from",
+        "innerJoin",
+        "leftJoin",
+        "where",
+        "orderBy",
+        "limit",
+        "offset",
+        "groupBy",
+      ]) {
+        chain[m] = vi.fn().mockReturnValue(chain);
+      }
+      chain.then = (
+        onOk: (v: unknown) => unknown,
+        onErr?: (e: unknown) => unknown,
+      ) => Promise.resolve(result).then(onOk, onErr);
       return chain;
     }),
     insert: vi.fn(() => ({
@@ -37,6 +57,7 @@ describe("GET /api/search — moderation gate", () => {
     vi.clearAllMocks();
     meiliSearch.mockReset();
     liveIds.mockReset();
+    browseResults.length = 0;
   });
 
   it("drops hits that are delisted in the live DB", async () => {
@@ -106,5 +127,70 @@ describe("GET /api/search — moderation gate", () => {
     expect(body.totalHits).toBe(0);
     // No hit ids → no gate query issued.
     expect(liveIds).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/search — browse mode (no q)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    meiliSearch.mockReset();
+    liveIds.mockReset();
+    browseResults.length = 0;
+  });
+
+  const BROWSE_ROW = {
+    id: "a1",
+    packageName: "com.demo.vault",
+    title: "Vault",
+    shortDescription: "Offline password vault",
+    category: "tools",
+    iconUrl: null,
+    developerName: "Demo Studios",
+    trustTier: "enhanced",
+    isExperimental: false,
+  };
+
+  it("serves a Postgres listing without touching Meilisearch", async () => {
+    browseResults.push([BROWSE_ROW], [{ count: 1 }]);
+
+    const res = await app.request("/api/search");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(meiliSearch).not.toHaveBeenCalled();
+    expect(body.hits).toHaveLength(1);
+    expect(body.hits[0]).toMatchObject({
+      id: "a1",
+      title: "Vault",
+      developerName: "Demo Studios",
+      trustTier: "enhanced",
+    });
+    // Nullable columns are coalesced to the contract's string shape.
+    expect(body.hits[0].iconUrl).toBe("");
+    expect(body.totalHits).toBe(1);
+    expect(body.page).toBe(1);
+  });
+
+  it("treats an explicit empty q as browse, not a 400", async () => {
+    browseResults.push([], [{ count: 0 }]);
+    const res = await app.request("/api/search?q=");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.hits).toEqual([]);
+    expect(meiliSearch).not.toHaveBeenCalled();
+  });
+
+  it("accepts filter-only requests (the storefront's category/trust chips)", async () => {
+    browseResults.push([BROWSE_ROW], [{ count: 1 }]);
+    const res = await app.request(
+      "/api/search?category=tools&trustTier=enhanced&excludeAntiFeature=tracking",
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.hits).toHaveLength(1);
+  });
+
+  it("still 400s on an invalid trustTier value", async () => {
+    const res = await app.request("/api/search?trustTier=verified");
+    expect(res.status).toBe(400);
   });
 });

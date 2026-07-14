@@ -6,7 +6,7 @@ import { features } from "@/lib/features";
 import { CuratorByline, type CollectionRailData } from "@/components/collection-rail";
 
 export const metadata: Metadata = {
-  title: "Collections — OpenMarket",
+  title: "Collections",
   description:
     "Hand-picked editorial app collections. Every list is chosen by a named curator with a written rationale — human curation you can audit, never paid placement.",
 };

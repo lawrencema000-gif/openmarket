@@ -4,7 +4,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "Transparency Report — OpenMarket",
+  title: "Transparency Report",
   description:
     "Public log of every moderation action, takedown, and policy change on OpenMarket.",
 };

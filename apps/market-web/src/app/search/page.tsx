@@ -51,11 +51,15 @@ interface Category {
   slug: string;
 }
 
+// Values MUST match the API's trustTier enum (standard | enhanced |
+// experimental) — the old chips sent "verified"/"new", which the API
+// rejected with a 400, so those filters always showed "No apps found".
+// Tier meanings are defined on /how-we-review.
 const TRUST_TIERS = [
   { value: "", label: "All" },
-  { value: "verified", label: "Verified" },
+  { value: "enhanced", label: "Enhanced trust" },
+  { value: "standard", label: "Standard" },
   { value: "experimental", label: "Experimental" },
-  { value: "new", label: "New" },
 ];
 
 async function searchApps(params: Record<string, string>): Promise<SearchResult> {
@@ -98,8 +102,9 @@ function buildSearchUrl(base: Record<string, string>, overrides: Record<string, 
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string }> }): Promise<Metadata> {
   const { q } = await searchParams;
+  // Bare titles — the root layout's template appends "— OpenMarket".
   return {
-    title: q ? `"${q}" — Search OpenMarket` : "Browse Apps — OpenMarket",
+    title: q ? `Search: "${q}"` : "Browse Apps",
     description: "Search and discover Android apps on OpenMarket",
   };
 }
@@ -130,14 +135,13 @@ export default async function SearchPage({
     ...(excludeAntiFeature && { excludeAntiFeature }),
   };
 
-  // The search route requires a non-empty `q`, so when no query is given
-  // we skip the API call and just render the empty-state. Filtering still
-  // works via category + anti-feature URL params.
+  // Always call the API: with a query it's full-text search (Meilisearch);
+  // without one the API serves BROWSE mode straight from Postgres (newest
+  // first, same filters), so category/trust/anti-feature entry points work
+  // even before the search index has ever been built.
   const [categories, searchResult, popularQueries] = await Promise.allSettled([
     getCategories(),
-    q
-      ? searchApps({ ...baseParams, page, limit: "21" })
-      : Promise.resolve({ hits: [], totalHits: 0, page: 1, limit: 21 } as SearchResult),
+    searchApps({ ...baseParams, page, limit: "21" }),
     !q ? getPopularQueries() : Promise.resolve([] as PopularQuery[]),
   ]);
 
@@ -303,15 +307,23 @@ export default async function SearchPage({
             title="No apps found"
             description={
               q
-                ? `No results for "${q}". Try a different search term or remove filters.`
-                : "No apps match the current filters. Try adjusting your selection."
+                ? `No results for "${q}". Try a different word, or browse by category instead.`
+                : category || trustTier || excludeAntiFeature
+                  ? "No apps match these filters. Try removing one."
+                  : "The catalog is just getting started — nothing has been published yet. Check back soon."
             }
             action={
               <Link
-                href="/search"
+                href={
+                  category || trustTier || excludeAntiFeature || q
+                    ? "/search"
+                    : "/categories"
+                }
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-om-line bg-om-surface text-sm font-medium text-om-ink-mute hover:bg-om-surface-tint transition-colors"
               >
-                Clear all filters
+                {category || trustTier || excludeAntiFeature || q
+                  ? "Clear all filters"
+                  : "Browse categories"}
               </Link>
             }
           />

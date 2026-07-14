@@ -28,6 +28,25 @@ interface DeveloperProfile {
   }>;
 }
 
+/** Raw API shape — the route speaks displayName/title, the page speaks name. */
+interface DeveloperApiResponse {
+  id: string;
+  displayName: string | null;
+  trustLevel?: string;
+  createdAt?: string;
+  memberSince?: string;
+  apps?: Array<{
+    id: string;
+    packageName: string;
+    trustTier?: string;
+    title: string | null;
+    shortDescription?: string | null;
+    iconUrl?: string | null;
+    category?: string | null;
+    isExperimental?: boolean;
+  }>;
+}
+
 type DevFetchResult =
   | { kind: "ok"; developer: DeveloperProfile }
   | { kind: "not-found" }
@@ -35,7 +54,24 @@ type DevFetchResult =
 
 async function getDeveloper(id: string): Promise<DevFetchResult> {
   try {
-    const developer = await apiFetch<DeveloperProfile>(`/api/developers/${id}`);
+    const raw = await apiFetch<DeveloperApiResponse>(`/api/developers/${id}`);
+    // Normalize once here: the API returns displayName (nullable) and apps
+    // with `title`; rendering `raw.name.charAt(0)` used to crash the page.
+    const developer: DeveloperProfile = {
+      id: raw.id,
+      name: raw.displayName?.trim() || "Unnamed developer",
+      trustLevel: raw.trustLevel,
+      memberSince: raw.memberSince ?? raw.createdAt,
+      apps: (raw.apps ?? []).map((a) => ({
+        id: a.id,
+        name: a.title?.trim() || a.packageName,
+        shortDescription: a.shortDescription ?? undefined,
+        iconUrl: a.iconUrl ?? undefined,
+        category: a.category ?? undefined,
+        trustTier: a.trustTier,
+        isExperimental: a.isExperimental,
+      })),
+    };
     return { kind: "ok", developer };
   } catch (err) {
     if (err instanceof ApiError && err.isUnreachable) return { kind: "unavailable" };
@@ -47,13 +83,15 @@ async function getDeveloper(id: string): Promise<DevFetchResult> {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   try {
-    const dev = await apiFetch<any>(`/api/developers/${id}`);
+    const dev = await apiFetch<DeveloperApiResponse>(`/api/developers/${id}`);
+    const name = dev.displayName?.trim() || "Developer";
+    // Bare title — the root layout's template appends "— OpenMarket".
     return {
-      title: `${dev.name ?? dev.displayName ?? "Developer"} — OpenMarket`,
-      description: `Apps by ${dev.name ?? dev.displayName} on OpenMarket`,
+      title: name,
+      description: `Apps by ${name} on OpenMarket`,
     };
   } catch {
-    return { title: "Developer — OpenMarket" };
+    return { title: "Developer" };
   }
 }
 

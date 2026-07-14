@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "Security Disclosure — OpenMarket",
+  title: "Security Disclosure",
   description:
     "How to responsibly report security vulnerabilities to OpenMarket. Safe-harbor commitment and scope.",
 };

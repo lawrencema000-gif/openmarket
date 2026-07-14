@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { db } from "../lib/db";
-import { developers } from "@openmarket/db/schema";
+import { appListings, apps, developers } from "@openmarket/db/schema";
+import { isUuid } from "../lib/uuid";
 import { requireAuth, requireAuthVerified } from "../middleware/auth";
 import {
   createDeveloperProfileSchema,
@@ -92,9 +93,15 @@ developersRouter.patch(
   }
 );
 
-// Get developer by ID (public)
+// Get developer by ID (public). Answers the storefront's "who made this and
+// what else did they make?" — profile basics plus the developer's PUBLISHED,
+// non-delisted apps (public listing fields only).
 developersRouter.get("/developers/:id", async (c) => {
   const id = c.req.param("id");
+  // Malformed uuid would make Postgres throw (→ 500); treat like unknown.
+  if (!isUuid(id)) {
+    throw new HTTPException(404, { message: "Developer not found" });
+  }
 
   const developer = await db.query.developers.findFirst({
     where: eq(developers.id, id),
@@ -104,10 +111,35 @@ developersRouter.get("/developers/:id", async (c) => {
     throw new HTTPException(404, { message: "Developer not found" });
   }
 
+  const publishedApps = await db
+    .select({
+      id: apps.id,
+      packageName: apps.packageName,
+      trustTier: apps.trustTier,
+      title: appListings.title,
+      shortDescription: appListings.shortDescription,
+      iconUrl: appListings.iconUrl,
+      category: appListings.category,
+      isExperimental: appListings.isExperimental,
+    })
+    .from(apps)
+    .innerJoin(appListings, eq(appListings.id, apps.currentListingId))
+    .where(
+      and(
+        eq(apps.developerId, developer.id),
+        eq(apps.isPublished, true),
+        eq(apps.isDelisted, false),
+      ),
+    )
+    .orderBy(desc(apps.createdAt))
+    .limit(50);
+
   return c.json({
     id: developer.id,
     displayName: developer.displayName,
     trustLevel: developer.trustLevel,
     createdAt: developer.createdAt,
+    memberSince: developer.createdAt,
+    apps: publishedApps,
   });
 });

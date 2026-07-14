@@ -27,6 +27,7 @@ import { updateAppListingSchema } from "@openmarket/contracts/apps";
 import { isInstallAllowedWithoutPin } from "@openmarket/contracts/parental-controls";
 import { resolvePriceForCountry } from "@openmarket/contracts/pricing";
 import { resolveRunningExperiment } from "../lib/listing-experiments";
+import { isUuid } from "../lib/uuid";
 import { syncAppToSearchIndex } from "../lib/search-index";
 import { assertPublishingAllowed } from "../lib/plan";
 import { requireAuth } from "../middleware/auth";
@@ -210,6 +211,11 @@ appsRouter.get(
 
 appsRouter.get("/apps/:id", async (c) => {
   const id = c.req.param("id");
+  // Malformed uuid would make Postgres throw (-> 500) and the storefront
+  // would falsely report the API as unreachable; treat it as not-found.
+  if (!isUuid(id)) {
+    throw new HTTPException(404, { message: "App not found" });
+  }
 
   const app = await db.query.apps.findFirst({
     where: and(eq(apps.id, id), eq(apps.isDelisted, false)),

@@ -4,7 +4,7 @@ import { LegalLayout } from "@/components/legal-layout";
 import { DmcaForm } from "./DmcaForm";
 
 export const metadata: Metadata = {
-  title: "Submit a DMCA notice — OpenMarket",
+  title: "Submit a DMCA notice",
   description:
     "File a copyright takedown notice under 17 USC 512(c). Every notice is logged in the public transparency report.",
 };

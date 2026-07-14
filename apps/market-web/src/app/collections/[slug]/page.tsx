@@ -52,10 +52,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const r = await getCollection(slug);
-  if (r.kind !== "ok") return { title: "Collection — OpenMarket" };
+  if (r.kind !== "ok") return { title: "Collection" };
   const c = r.data.collection;
   return {
-    title: `${c.title} — OpenMarket`,
+    title: `${c.title}`,
     description: c.blurb ?? c.rationale ?? `A curated collection on OpenMarket.`,
   };
 }

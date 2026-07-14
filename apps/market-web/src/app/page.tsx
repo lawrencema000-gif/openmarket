@@ -11,6 +11,7 @@ import {
   type SponsoredPromotion,
 } from "@/components/sponsored-rail";
 import { features } from "@/lib/features";
+import { DEV_PORTAL_URL, REPO_URL } from "@/lib/site";
 import {
   Aurora,
   Eyebrow,
@@ -118,9 +119,19 @@ export default async function HomePage() {
               </GradientText>
             </h1>
 
+            {/* Process claims, not absolute ones — "every developer verified,
+                every build security-reviewed" read as marketing overreach next
+                to the app pages' honest "no reviewed release yet" states. */}
             <p className="text-lg sm:text-xl text-om-ink-soft max-w-2xl mx-auto leading-relaxed">
-              A viewpoint-neutral marketplace. Every developer verified, every
-              build security-reviewed, every metric visible in the open.
+              A{" "}
+              <Link href="/about" className="underline decoration-om-primary/40 underline-offset-2 hover:text-om-ink">
+                neutral marketplace
+              </Link>
+              : every app goes through{" "}
+              <Link href="/how-we-review" className="underline decoration-om-primary/40 underline-offset-2 hover:text-om-ink">
+                security review
+              </Link>{" "}
+              before listing, and the results are public.
             </p>
 
             <div className="max-w-xl mx-auto pt-3">
@@ -286,6 +297,59 @@ export default async function HomePage() {
           </section>
         )}
 
+        {/* How installing works — the answer to the first-time visitor's
+            unasked question: "how does an app get from here onto my phone?"
+            No app store knowledge assumed. */}
+        <section aria-labelledby="how-installing">
+          <div className="rounded-3xl border border-om-line bg-om-surface p-8 sm:p-10">
+            <div className="flex items-end justify-between gap-3 flex-wrap mb-8">
+              <div>
+                <h2 id="how-installing" className="om-display text-2xl sm:text-3xl font-bold text-om-ink tracking-tight">
+                  How installing works
+                </h2>
+                <p className="text-sm text-om-ink-soft mt-1">
+                  No account needed. Three steps, right from your Android phone.
+                </p>
+              </div>
+              <Link
+                href="/how-we-review#installing"
+                className="text-sm text-om-primary hover:text-om-primary-deep font-medium"
+              >
+                Full guide →
+              </Link>
+            </div>
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[
+                {
+                  step: "1",
+                  title: "Find an app",
+                  body: "Search or browse, then check its security review, permissions, and reviews — everything is on the listing.",
+                },
+                {
+                  step: "2",
+                  title: "Download it on your phone",
+                  body: "Press “Download APK” — the APK is the Android app file, the same build we security-reviewed.",
+                },
+                {
+                  step: "3",
+                  title: "Allow the install",
+                  body: "Android asks once to allow installs from your browser. Approve it and the app installs like any other.",
+                },
+              ].map((s) => (
+                <li key={s.step} className="flex gap-4">
+                  <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-om-primary/10 text-om-primary font-bold">
+                    {s.step}
+                  </span>
+                  <div>
+                    <h3 className="font-semibold text-om-ink">{s.title}</h3>
+                    <p className="text-sm text-om-ink-soft mt-1 leading-relaxed">{s.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         {/* Developer CTA */}
         <section>
           <div className="relative overflow-hidden rounded-3xl p-10 sm:p-16 text-white shadow-2xl">
@@ -340,7 +404,7 @@ export default async function HomePage() {
 
               <div className="flex flex-col gap-3 shrink-0">
                 <a
-                  href="https://openmarket-dev-portal.vercel.app/register"
+                  href={`${DEV_PORTAL_URL}/register`}
                   className="om-glow-ring inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-7 py-3.5 rounded-2xl font-semibold shadow-lg shadow-emerald-500/30 transition-colors text-sm cursor-pointer"
                 >
                   Start publishing
@@ -359,7 +423,7 @@ export default async function HomePage() {
                   </svg>
                 </a>
                 <a
-                  href="https://github.com/lawrencema000-gif/openmarket"
+                  href={REPO_URL}
                   className="text-sm text-violet-200 hover:text-white transition-colors text-center"
                 >
                   Read the docs →
@@ -377,13 +441,18 @@ export default async function HomePage() {
               Three guarantees, every app.
             </h2>
           </div>
+          {/* Plain-language cards, each linking to the page that PROVES the
+              guarantee — trust claims a reader can't decode or verify are
+              just marketing. */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
                 tone: "violet" as const,
                 title: "Security reviews",
+                href: "/how-we-review",
+                linkLabel: "How we review →",
                 description:
-                  "Every release runs through static analysis, SDK fingerprinting, and a manual signature audit before listing.",
+                  "Every app is malware-scanned, checked for hidden trackers, and signature-verified before it can be listed. Risky ones get human review.",
                 icon: (
                   <svg
                     className="w-6 h-6"
@@ -403,8 +472,10 @@ export default async function HomePage() {
               {
                 tone: "emerald" as const,
                 title: "Verified developers",
+                href: "/how-we-review#developers",
+                linkLabel: "What verified means →",
                 description:
-                  "Two-factor identity verification, signing-key continuity, and a public track record on every publisher page.",
+                  "Publishers prove who they are, updates must carry the developer's original signature, and every publisher page shows their track record.",
                 icon: (
                   <svg
                     className="w-6 h-6"
@@ -423,9 +494,11 @@ export default async function HomePage() {
               },
               {
                 tone: "sky" as const,
-                title: "Transparent metrics",
+                title: "Everything on the record",
+                href: "/transparency-report",
+                linkLabel: "See the public log →",
                 description:
-                  "Install counts, declared permissions, anti-features, and moderation actions — all of it on the public record.",
+                  "What data an app collects, what permissions it asks for, and every moderation action we take — published for anyone to check.",
                 icon: (
                   <svg
                     className="w-6 h-6"
@@ -443,22 +516,27 @@ export default async function HomePage() {
                 ),
               },
             ].map((item) => (
-              <GlassCard
-                key={item.title}
-                className="p-7 flex flex-col gap-4 om-tile"
-              >
-                <FeatureIcon tone={item.tone} size="lg">
-                  {item.icon}
-                </FeatureIcon>
-                <div className="space-y-1.5">
-                  <h3 className="om-display font-bold text-om-ink text-lg">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-om-ink-soft leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-              </GlassCard>
+              <Link key={item.title} href={item.href} className="block group">
+                <GlassCard
+                  interactive
+                  className="p-7 flex flex-col gap-4 om-tile h-full"
+                >
+                  <FeatureIcon tone={item.tone} size="lg">
+                    {item.icon}
+                  </FeatureIcon>
+                  <div className="space-y-1.5">
+                    <h3 className="om-display font-bold text-om-ink text-lg group-hover:text-om-primary transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-om-ink-soft leading-relaxed">
+                      {item.description}
+                    </p>
+                    <p className="text-sm font-medium text-om-primary pt-1">
+                      {item.linkLabel}
+                    </p>
+                  </div>
+                </GlassCard>
+              </Link>
             ))}
           </div>
         </section>

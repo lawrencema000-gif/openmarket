@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { MeiliSearch } from "meilisearch";
-import { and, eq, inArray, sql } from "drizzle-orm";
-import { searchQuerySchema } from "@openmarket/contracts/search";
-import { apps, searchQueries } from "@openmarket/db/schema";
+import { and, arrayContains, arrayOverlaps, desc, eq, inArray, not, sql } from "drizzle-orm";
+import { searchQuerySchema, type SearchQuery } from "@openmarket/contracts/search";
+import { appListings, apps, developers, searchQueries } from "@openmarket/db/schema";
 import { db } from "../lib/db";
 import { rateLimit } from "../middleware/rate-limit";
 
@@ -41,6 +41,87 @@ const meiliClient = new MeiliSearch({
   apiKey: resolveMeiliKey(),
 });
 
+/** Split a comma-separated filter param into trimmed non-empty slugs. */
+function splitSlugs(csv: string | undefined): string[] {
+  return csv ? csv.split(",").map((s) => s.trim()).filter(Boolean) : [];
+}
+
+/**
+ * BROWSE mode — the no-query path. Served straight from Postgres (newest
+ * first) so "Browse all apps", category chips, trust-tier chips, and the
+ * anti-features "browse apps with this label" links all work even when the
+ * Meilisearch index is cold or empty. Same filter semantics and response
+ * shape as the Meili path, deterministic ordering, no personalization.
+ */
+async function browseApps(params: Omit<SearchQuery, "q">) {
+  const { category, trustTier, antiFeature, excludeAntiFeature, page, limit } =
+    params;
+  const startedAt = Date.now();
+
+  const conditions = [eq(apps.isPublished, true), eq(apps.isDelisted, false)];
+  if (category) conditions.push(eq(appListings.category, category));
+  if (trustTier) conditions.push(eq(apps.trustTier, trustTier));
+
+  // REQUIRE list: every label must be present.
+  const requires = splitSlugs(antiFeature);
+  if (requires.length > 0) {
+    conditions.push(arrayContains(apps.antiFeatures, requires));
+  }
+
+  // EXCLUDE list: none may be present. NSFW stays out unless explicitly
+  // requested — the same default the Meili path applies.
+  const excludes = splitSlugs(excludeAntiFeature);
+  if (!requires.includes("nsfw") && !excludes.includes("nsfw")) {
+    excludes.push("nsfw");
+  }
+  if (excludes.length > 0) {
+    conditions.push(not(arrayOverlaps(apps.antiFeatures, excludes)));
+  }
+
+  const where = and(...conditions);
+
+  const [rows, countRows] = await Promise.all([
+    db
+      .select({
+        id: apps.id,
+        packageName: apps.packageName,
+        title: appListings.title,
+        shortDescription: appListings.shortDescription,
+        category: appListings.category,
+        iconUrl: appListings.iconUrl,
+        developerName: developers.displayName,
+        trustTier: apps.trustTier,
+        isExperimental: appListings.isExperimental,
+      })
+      .from(apps)
+      .innerJoin(appListings, eq(appListings.id, apps.currentListingId))
+      .innerJoin(developers, eq(developers.id, apps.developerId))
+      .where(where)
+      .orderBy(desc(apps.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit),
+    db
+      .select({ count: sql<number>`count(*)`.as("count") })
+      .from(apps)
+      .innerJoin(appListings, eq(appListings.id, apps.currentListingId))
+      .where(where),
+  ]);
+
+  return {
+    hits: rows.map((r) => ({
+      ...r,
+      shortDescription: r.shortDescription ?? "",
+      iconUrl: r.iconUrl ?? "",
+      developerName: r.developerName ?? "",
+      isExperimental: r.isExperimental ?? false,
+    })),
+    totalHits: Number(countRows[0]?.count ?? 0),
+    page,
+    limit,
+    processingTimeMs: Date.now() - startedAt,
+  };
+}
+
 searchRouter.get(
   "/search",
   // 60 searches / minute / IP. Honest users send a few per session; this
@@ -51,6 +132,21 @@ searchRouter.get(
   async (c) => {
     const { q, category, trustTier, antiFeature, excludeAntiFeature, page, limit } =
       c.req.valid("query");
+
+    // No text query → BROWSE mode from Postgres. Filters still apply.
+    const query = q?.trim() ?? "";
+    if (query.length === 0) {
+      return c.json(
+        await browseApps({
+          category,
+          trustTier,
+          antiFeature,
+          excludeAntiFeature,
+          page,
+          limit,
+        }),
+      );
+    }
 
     const filters: string[] = ["isPublished = true"];
 
@@ -93,7 +189,7 @@ searchRouter.get(
     const offset = (page - 1) * limit;
 
     const index = meiliClient.index(APPS_INDEX);
-    const result = await index.search(q, {
+    const result = await index.search(query, {
       filter,
       limit,
       offset,
@@ -135,7 +231,7 @@ searchRouter.get(
     // Best-effort query log. Only on the first page so multi-page
     // pagination doesn't multi-count a single user-intent search.
     if (page === 1) {
-      const normalized = q.toLowerCase().normalize("NFC").trim().slice(0, 200);
+      const normalized = query.toLowerCase().normalize("NFC").trim().slice(0, 200);
       if (normalized.length > 0) {
         try {
           await db.insert(searchQueries).values({

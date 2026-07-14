@@ -1,10 +1,24 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Pin file tracing to the monorepo root. Without this Next infers the
+  // HOME directory as workspace root (a stray package-lock.json lives
+  // there) and warns on every build.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   transpilePackages: ["@openmarket/ui"],
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  // Obvious URL guesses for the auth routes 404'd (/signup vs /sign-up).
+  async redirects() {
+    return [
+      { source: "/signup", destination: "/sign-up", permanent: true },
+      { source: "/signin", destination: "/sign-in", permanent: true },
+      { source: "/login", destination: "/sign-in", permanent: true },
+      { source: "/register", destination: "/sign-up", permanent: true },
+    ];
   },
   images: {
     // Custom loader resolves variant URLs against the storefront's

@@ -15,7 +15,7 @@ interface Category {
 }
 
 export const metadata: Metadata = {
-  title: "Browse categories — OpenMarket",
+  title: "Browse categories",
   description:
     "Every category on OpenMarket. Featured first, then the long tail.",
 };

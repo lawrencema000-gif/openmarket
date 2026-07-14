@@ -35,7 +35,13 @@ export async function SimilarAppsRail({ appId }: { appId: string }) {
     <section>
       <div className="flex items-baseline justify-between gap-3 flex-wrap mb-4">
         <h2 className="text-lg font-semibold text-om-ink">Similar apps</h2>
-        <p className="text-xs text-om-ink-soft">Same category · matched on anti-feature overlap</p>
+        <p className="text-xs text-om-ink-soft">
+          Same category · matched on{" "}
+          <Link href="/anti-features" className="underline hover:text-om-ink">
+            anti-feature
+          </Link>{" "}
+          overlap
+        </p>
       </div>
       <div
         className="relative"

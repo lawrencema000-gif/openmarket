@@ -56,6 +56,13 @@ export default function AccountPage() {
       setDisplayName(p.displayName ?? "");
       setLocale(p.locale);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        // Session cookie missing/expired even though the client-side auth
+        // store thinks we're in — send the user to sign in again instead of
+        // dead-ending on a raw "API error: 401" page.
+        router.push("/sign-in?next=/account");
+        return;
+      }
       if (err instanceof ApiError && err.status === 410) {
         setError("This account is pending deletion.");
       } else if (err instanceof ApiError && err.isUnreachable) {

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, signUp } from "@/lib/auth-client";
+import { sendVerificationEmail, signIn, signUp } from "@/lib/auth-client";
 
 export type AuthMode = "sign-in" | "sign-up";
 
@@ -15,6 +15,24 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
+  // Set when sign-in fails with EMAIL_NOT_VERIFIED so we can offer a resend
+  // right there. Without it users bounced between "sign in to resend" (on
+  // sign-up) and "verify your email first" (on sign-in) with no way out.
+  const [unverifiedSignIn, setUnverifiedSignIn] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+
+  async function resendVerification() {
+    setResendState("sending");
+    try {
+      const r = await sendVerificationEmail({
+        email,
+        callbackURL: `${window.location.origin}/verify-email`,
+      });
+      setResendState(r.error ? "failed" : "sent");
+    } catch {
+      setResendState("failed");
+    }
+  }
 
   const isSignUp = mode === "sign-up";
 
@@ -38,6 +56,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       }
       const res = await signIn.email({ email, password });
       if (res.error) {
+        setUnverifiedSignIn(
+          (res.error as { code?: string }).code === "EMAIL_NOT_VERIFIED",
+        );
         setError(humanizeError(res.error));
         return;
       }
@@ -77,12 +98,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           finish setting up your OpenMarket account. The link expires in 60
           minutes.
         </p>
+        <ResendButton state={resendState} onClick={resendVerification} />
         <p className="text-xs text-om-ink-soft">
-          Didn't get it? Check spam, or{" "}
-          <Link href="/sign-in" className="text-om-primary underline">
-            sign in
-          </Link>{" "}
-          to resend.
+          Didn't get it? Check your spam folder, or resend above.
         </p>
       </div>
     );
@@ -152,9 +170,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       {error ? (
         <div
           role="alert"
-          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 space-y-2"
         >
-          {error}
+          <p>{error}</p>
+          {/* Escape hatch for the unverified-email loop: resend right here
+              instead of telling the user to go check a mailbox that may
+              never have received the first email. */}
+          {unverifiedSignIn ? (
+            <ResendButton state={resendState} onClick={resendVerification} />
+          ) : null}
         </div>
       ) : null}
 
@@ -231,6 +255,39 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <Link href="/privacy" className="underline">Privacy Policy</Link>.
       </p>
     </form>
+  );
+}
+
+function ResendButton({
+  state,
+  onClick,
+}: {
+  state: "idle" | "sending" | "sent" | "failed";
+  onClick: () => void;
+}) {
+  if (state === "sent") {
+    return (
+      <p className="text-sm font-medium text-emerald-700">
+        Verification email sent — check your inbox.
+      </p>
+    );
+  }
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={state === "sending"}
+        className="inline-flex items-center gap-2 rounded-md border border-om-line bg-om-surface px-3 py-1.5 text-sm font-medium text-om-ink-mute hover:bg-om-surface-tint disabled:opacity-60"
+      >
+        {state === "sending" ? "Sending…" : "Resend verification email"}
+      </button>
+      {state === "failed" ? (
+        <p className="mt-1 text-xs text-red-700">
+          Couldn't send the email — try again in a minute.
+        </p>
+      ) : null}
+    </div>
   );
 }
 

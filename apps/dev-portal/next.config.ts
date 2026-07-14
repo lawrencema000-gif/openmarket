@@ -1,7 +1,12 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Pin file tracing to the monorepo root. Without this Next infers the
+  // HOME directory as workspace root (a stray package-lock.json lives
+  // there) and warns on every build.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   transpilePackages: ["@openmarket/ui"],
   eslint: {
     ignoreDuringBuilds: true,

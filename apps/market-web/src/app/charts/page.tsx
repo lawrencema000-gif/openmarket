@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Charts — OpenMarket",
+  title: "Charts",
   description:
     "Top trending, top new, top free, and top rated apps on OpenMarket. Formulaic — not editorial.",
 };

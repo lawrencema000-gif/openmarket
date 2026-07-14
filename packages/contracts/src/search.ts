@@ -1,7 +1,15 @@
 import { z } from "zod";
 
 export const searchQuerySchema = z.object({
-  q: z.string().min(1).max(200),
+  /**
+   * Full-text query. OPTIONAL: without it (or with an empty string) the
+   * endpoint runs in BROWSE mode — a deterministic Postgres listing (newest
+   * first) with the same filters. Browse mode is what the storefront's
+   * "Browse all apps" / category / trust-tier / anti-feature entry points
+   * hit; when q was required every one of them was a "No apps found"
+   * dead end.
+   */
+  q: z.string().max(200).optional(),
   category: z.string().optional(),
   trustTier: z.enum(["standard", "enhanced", "experimental"]).optional(),
   /**

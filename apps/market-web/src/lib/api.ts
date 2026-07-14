@@ -26,6 +26,11 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
+      // The API lives on another origin (api.openmarket.app / localhost:3001),
+      // so the session cookie is only sent when we opt in. Without this every
+      // signed-in call (account, wishlist, library) is anonymous and 401s even
+      // though Better Auth's own client shows the user as signed in.
+      credentials: "include",
       ...init,
       headers: {
         "Content-Type": "application/json",

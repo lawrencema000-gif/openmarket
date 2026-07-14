@@ -66,9 +66,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const meta = CHART_META[slug];
-  if (!meta) return { title: "Charts — OpenMarket" };
+  if (!meta) return { title: "Charts" };
   return {
-    title: `${meta.title} — OpenMarket`,
+    title: `${meta.title}`,
     description: meta.subtitle,
   };
 }
@@ -133,9 +133,8 @@ export default async function ChartDetailPage({
         <div className="rounded-xl border border-om-line bg-om-surface-tint px-6 py-10 text-center">
           <p className="text-om-ink-mute font-medium">No data yet.</p>
           <p className="text-sm text-om-ink-soft mt-1">
-            Charts repopulate hourly via the recompute job. Once the API
-            sees install + review traffic in this window, this list fills
-            in.
+            Charts update hourly. Nothing has charted in this time range
+            yet — try a longer range, or browse by category instead.
           </p>
         </div>
       ) : (

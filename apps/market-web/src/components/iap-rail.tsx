@@ -75,6 +75,7 @@ export function IapRail({ appId }: { appId: string }) {
           <ProductRow
             key={p.id}
             product={p}
+            appId={appId}
             onError={(m) => setError(m)}
           />
         ))}
@@ -85,9 +86,11 @@ export function IapRail({ appId }: { appId: string }) {
 
 function ProductRow({
   product,
+  appId,
   onError,
 }: {
   product: IapProduct;
+  appId: string;
   onError: (m: string) => void;
 }) {
   const { data: session, isPending } = useSession();
@@ -159,7 +162,9 @@ function ProductRow({
         {product.price ? (
           isPending ? null : !session ? (
             <Link
-              href={`/sign-in?next=/apps/${product.id}`}
+              // Post-sign-in destination is the APP page, not the IAP product
+              // id (which is not a route — users landed on a 404 after login).
+              href={`/sign-in?next=/apps/${appId}`}
               className="text-xs text-om-primary hover:underline"
             >
               Sign in to buy

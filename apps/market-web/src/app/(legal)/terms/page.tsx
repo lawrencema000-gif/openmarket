@@ -3,7 +3,7 @@ import Link from "next/link";
 import { DraftBanner, LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — OpenMarket",
+  title: "Terms of Service",
   description: "The agreement that governs your use of OpenMarket.",
 };
 
