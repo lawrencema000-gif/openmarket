@@ -7,6 +7,7 @@ import {
   appChartPositions,
   apps,
   appListings,
+  developers,
 } from "@openmarket/db/schema";
 import { requireAdmin } from "../middleware/admin";
 import { recordAdminAction } from "../lib/audit";
@@ -68,10 +69,12 @@ chartsRouter.get(
         shortDescription: appListings.shortDescription,
         category: appListings.category,
         iconUrl: appListings.iconUrl,
+        developerName: developers.displayName,
       })
       .from(appChartPositions)
       .innerJoin(apps, eq(apps.id, appChartPositions.appId))
       .innerJoin(appListings, eq(appListings.id, apps.currentListingId))
+      .innerJoin(developers, eq(developers.id, apps.developerId))
       .where(
         and(
           eq(appChartPositions.chartSlug, slug),

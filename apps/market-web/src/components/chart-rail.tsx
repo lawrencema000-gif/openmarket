@@ -10,6 +10,7 @@ export interface ChartRailItem {
   shortDescription: string;
   category: string;
   iconUrl: string | null;
+  developerName?: string | null;
 }
 
 /**
@@ -93,7 +94,9 @@ export function ChartRail({
                     <p className="font-semibold text-om-ink truncate group-hover:text-om-primary transition-colors">
                       {item.title}
                     </p>
-                    <p className="text-xs text-om-ink-soft truncate">{item.packageName}</p>
+                    <p className="text-xs text-om-ink-soft truncate">
+                      {item.developerName || item.packageName}
+                    </p>
                   </div>
                 </div>
                 <p className="text-sm text-om-ink-mute line-clamp-2 mt-3">

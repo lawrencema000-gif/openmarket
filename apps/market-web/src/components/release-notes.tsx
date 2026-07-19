@@ -31,6 +31,10 @@ const ALLOWED = [
 
 export function ReleaseNotes({ markdown }: { markdown: string }) {
   if (!markdown.trim()) return null;
+  // The surrounding section already provides the "What's new in <version>"
+  // heading; developers often start their notes with the same heading, which
+  // rendered the title twice back to back. Drop one leading markdown heading.
+  const body = markdown.replace(/^\s*#{1,6}\s+[^\n]*\n+/, "");
   return (
     <div className="prose prose-sm prose-gray dark:prose-invert max-w-none prose-a:text-om-primary hover:prose-a:text-om-primary prose-strong:text-om-ink prose-headings:font-semibold">
       <ReactMarkdown
@@ -52,7 +56,7 @@ export function ReleaseNotes({ markdown }: { markdown: string }) {
           ),
         }}
       >
-        {markdown}
+        {body}
       </ReactMarkdown>
     </div>
   );

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import {
   PageHeader,
   AppCard,
@@ -69,7 +69,11 @@ async function searchApps(params: Record<string, string>): Promise<SearchResult>
 
 async function getCategories(): Promise<Category[]> {
   try {
-    return await apiFetch<Category[]>("/api/categories");
+    // Featured set only. The full 40+ taxonomy (including the granular
+    // "Games: X" subcategories) overwhelmed the chip row with two
+    // overlapping category systems side by side; the complete directory
+    // lives at /categories.
+    return await apiFetch<Category[]>("/api/categories?featured=true");
   } catch {
     return [];
   }
@@ -104,7 +108,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const { q } = await searchParams;
   // Bare titles — the root layout's template appends "— OpenMarket".
   return {
-    title: q ? `Search: "${q}"` : "Browse Apps",
+    title: q ? `Search: "${q}"` : "All apps",
     description: "Search and discover Android apps on OpenMarket",
   };
 }
@@ -146,6 +150,19 @@ export default async function SearchPage({
   ]);
 
   const cats = categories.status === "fulfilled" ? categories.value : [];
+  // The chip row shows the FEATURED set; if the active category filter came
+  // from elsewhere (a category page link), append it so the active filter is
+  // always visible and removable.
+  if (category && !cats.some((c) => c.slug === category)) {
+    cats.push({
+      id: `active-${category}`,
+      slug: category,
+      name: category
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" "),
+    });
+  }
   const popular =
     popularQueries.status === "fulfilled" ? popularQueries.value : [];
   const result = searchResult.status === "fulfilled" ? searchResult.value : null;
@@ -158,8 +175,8 @@ export default async function SearchPage({
   const pageTitle = q
     ? `Results for "${q}"`
     : category
-    ? cats.find((c) => c.slug === category)?.name ?? "Browse Apps"
-    : "Browse Apps";
+    ? cats.find((c) => c.slug === category)?.name ?? "All apps"
+    : "All apps";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -266,13 +283,30 @@ export default async function SearchPage({
         </div>
       </div>
 
-      {/* API error notice */}
+      {/* API error notice — distinguish "you followed a stale/bad filter
+          link" (400) from a real outage so the copy never blames the API for
+          a bad URL. */}
       {searchResult.status === "rejected" && (
         <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
           <svg className="w-4 h-4 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
           </svg>
-          Could not load results — API may be unavailable. Please try again later.
+          {searchResult.reason instanceof ApiError &&
+          searchResult.reason.status === 400 ? (
+            <span>
+              That filter isn&apos;t valid (this can happen via an outdated
+              link).{" "}
+              <Link href="/search" className="underline font-medium">
+                Clear filters and browse all apps
+              </Link>
+              .
+            </span>
+          ) : (
+            <span>
+              Could not load results — the API may be unavailable. Please try
+              again later.
+            </span>
+          )}
         </div>
       )}
 

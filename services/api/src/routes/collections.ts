@@ -7,6 +7,7 @@ import { db } from "../lib/db";
 import {
   apps,
   appListings,
+  developers,
   editorialCollections,
   editorialCollectionItems,
 } from "@openmarket/db/schema";
@@ -53,6 +54,9 @@ type PublicItemRow = {
   shortDescription: string | null;
   iconUrl: string | null;
   category: string | null;
+  /** Cards lead with the developer name — a novice expects "who made this",
+      not a raw package identifier. */
+  developerName: string | null;
 };
 
 /**
@@ -79,10 +83,12 @@ async function fetchPublicItems(
       shortDescription: appListings.shortDescription,
       iconUrl: appListings.iconUrl,
       category: appListings.category,
+      developerName: developers.displayName,
     })
     .from(editorialCollectionItems)
     .innerJoin(apps, eq(apps.id, editorialCollectionItems.appId))
     .innerJoin(appListings, eq(appListings.id, apps.currentListingId))
+    .innerJoin(developers, eq(developers.id, apps.developerId))
     .where(
       and(
         inArray(editorialCollectionItems.collectionId, collectionIds),

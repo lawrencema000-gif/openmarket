@@ -72,10 +72,19 @@ export default function WishlistPage() {
     setEntries((es) => es.filter((e) => e.app.id !== appId));
   }
 
-  if (sessionPending) {
+  // Also gate on !session: after the session resolves signed-out we're
+  // about to redirect, but the client-side push can take seconds in a slow
+  // tab — without this the full page UI flashed first, so a signed-out user
+  // briefly "had" a library before being yanked to sign-in.
+  if (sessionPending || !session) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-3">
         <div className="h-32 animate-pulse rounded-xl bg-om-line-soft" />
+        {!sessionPending && (
+          <p className="text-sm text-om-ink-soft text-center">
+            Taking you to sign in…
+          </p>
+        )}
       </div>
     );
   }

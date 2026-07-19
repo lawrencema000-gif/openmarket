@@ -8,6 +8,7 @@ export interface CollectionRailApp {
   shortDescription: string | null;
   iconUrl: string | null;
   category?: string | null;
+  developerName?: string | null;
 }
 
 export interface CollectionRailData {
@@ -107,7 +108,12 @@ export function CollectionRail({ collection }: { collection: CollectionRailData 
                     <p className="font-semibold text-om-ink truncate group-hover:text-om-primary transition-colors">
                       {app.title}
                     </p>
-                    <p className="text-xs text-om-ink-soft truncate">{app.packageName}</p>
+                    {/* Developer name, not the raw package id — a novice
+                        expects "who made this" here. Package names live on
+                        the app detail page where they're explained. */}
+                    <p className="text-xs text-om-ink-soft truncate">
+                      {app.developerName || app.packageName}
+                    </p>
                   </div>
                 </div>
                 {app.shortDescription ? (

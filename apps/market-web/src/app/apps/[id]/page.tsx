@@ -383,7 +383,8 @@ export default async function AppDetailPage({
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    // pb clears the sticky install bar stacked above the tab bar on phones.
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-28 lg:pb-10">
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

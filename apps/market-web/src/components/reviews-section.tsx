@@ -192,13 +192,24 @@ export function ReviewsSection({ appId }: { appId: string }) {
             </button>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={() => setShowCompose((s) => !s)}
-          className="rounded-md bg-om-primary px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep"
-        >
-          {showCompose ? "Cancel" : "Write a review"}
-        </button>
+        {session ? (
+          <button
+            type="button"
+            onClick={() => setShowCompose((s) => !s)}
+            className="rounded-md bg-om-primary px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep"
+          >
+            {showCompose ? "Cancel" : "Write a review"}
+          </button>
+        ) : (
+          /* Signed out: the composer would only 401 on submit — route to
+             sign-in up front with a return path instead. */
+          <a
+            href={`/sign-in?next=/apps/${appId}`}
+            className="rounded-md bg-om-primary px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-om-primary-deep"
+          >
+            Sign in to review
+          </a>
+        )}
       </div>
 
       {showCompose ? (
@@ -486,7 +497,8 @@ function ReviewComposer({
   onError: (e: string | null) => void;
   error: string | null;
 }) {
-  const [rating, setRating] = useState(5);
+  // Start unselected (0): pre-filling 5 stars nudges inflated ratings.
+  const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);

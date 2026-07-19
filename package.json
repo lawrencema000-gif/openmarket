@@ -16,6 +16,7 @@
     "db:push": "pnpm --filter @openmarket/db push",
     "db:seed": "pnpm --filter @openmarket/db seed",
     "db:studio": "pnpm --filter @openmarket/db studio",
+    "search:reindex": "pnpm --filter @openmarket/api exec tsx src/scripts/reindex-search.ts",
     "smoke:rate-limit": "tsx scripts/smoke/rate-limit.ts",
     "smoke:sitemap": "tsx scripts/smoke/sitemap.ts",
     "smoke": "pnpm smoke:rate-limit && pnpm smoke:sitemap",

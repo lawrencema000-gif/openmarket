@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { UILocalePicker } from "./ui-locale-picker";
 
 /**
@@ -12,8 +13,9 @@ import { UILocalePicker } from "./ui-locale-picker";
  */
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Close on Escape; lock body scroll while open.
+  // Close on Escape.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -21,9 +23,18 @@ export function MobileNav() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Close on ANY navigation — the bottom tab bar sits above the scrim, so a
+  // tab tap used to navigate while the drawer stayed open over the new page.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   const links = [
     { href: "/search", label: "Browse all apps" },
-    { href: "/search?trustTier=verified", label: "Verified apps" },
+    // "verified" is not a real tier (enum: standard|enhanced|experimental) —
+    // this link 400'd and the page blamed the API. See /how-we-review#tiers.
+    { href: "/search?trustTier=enhanced", label: "Enhanced-trust apps" },
+    { href: "/collections", label: "Collections" },
     { href: "/categories", label: "Categories" },
     { href: "/transparency-report", label: "Transparency report" },
     { href: "/about", label: "About OpenMarket" },
@@ -51,15 +62,16 @@ export function MobileNav() {
 
       {open && (
         <>
-          {/* Scrim */}
+          {/* Scrim — must sit ABOVE the bottom tab bar (z-40) so an outside
+              tap closes the drawer instead of activating chrome beneath it. */}
           <div
-            className="fixed inset-0 top-16 z-30 bg-black/30"
+            className="fixed inset-0 top-16 z-[55] bg-black/30"
             onClick={() => setOpen(false)}
             aria-hidden
           />
           <nav
             aria-label="Mobile navigation"
-            className="fixed inset-x-0 top-16 z-40 bg-om-surface border-b border-om-line px-4 py-3 space-y-1 shadow-xl"
+            className="fixed inset-x-0 top-16 z-[60] bg-om-surface border-b border-om-line px-4 py-3 space-y-1 shadow-xl"
           >
             {links.map((l) => (
               <Link

@@ -50,6 +50,7 @@ interface ChartItem {
   shortDescription: string;
   category: string;
   iconUrl: string | null;
+  developerName?: string | null;
 }
 
 async function getChart(
@@ -283,7 +284,7 @@ export default async function HomePage() {
                       <p className="text-sm font-semibold text-om-ink group-hover:text-om-primary transition-colors leading-tight">
                         {cat.name}
                       </p>
-                      {cat.appCount !== undefined && cat.appCount > 0 && (
+                      {cat.appCount !== undefined && (
                         <p className="text-[11px] text-om-ink-soft mt-0.5">
                           {cat.appCount}{" "}
                           {cat.appCount === 1 ? "app" : "apps"}

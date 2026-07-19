@@ -24,7 +24,7 @@ const SOURCE_DESCRIPTION: Record<AntiFeatureSource, string> = {
   developer:
     "The developer is required to disclose this property when they publish. Honest self-attestation builds more trust than hiding the property and being discovered later. Mismatch between attestation and what we observe in the binary is grounds for delisting.",
   scanner:
-    "Derived automatically by our scan-worker from the APK contents — SDK fingerprints, dependency CVE checks, etc. We do not rely on developer disclosure for these labels because the binary is the source of truth.",
+    "Derived automatically by our scanner from the APK contents — recognizing known third-party code bundles (SDK fingerprints) and checking dependencies against publicly disclosed vulnerabilities (CVEs). We do not rely on developer disclosure for these labels because the binary is the source of truth.",
   moderator:
     "Set by an OpenMarket moderator when an editorial decision is needed (e.g., upstream went closed-source between releases). Always paired with a written reason in the audit log.",
 };

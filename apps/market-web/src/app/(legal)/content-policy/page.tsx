@@ -81,8 +81,9 @@ export default function ContentPolicyPage() {
       <h3>2. Illegal content</h3>
       <ul>
         <li>
-          Child sexual abuse material — reported to NCMEC, account permanently
-          banned, no appeal.
+          Child sexual abuse material (CSAM) — reported to NCMEC (the U.S.
+          National Center for Missing &amp; Exploited Children), account
+          permanently banned, no appeal.
         </li>
         <li>
           Material that is illegal in the developer's stated jurisdiction or
@@ -233,8 +234,9 @@ export default function ContentPolicyPage() {
 
       <h3>Investigation</h3>
       <p>
-        For Tier 1 violations (malware, illegal, CSAM, imminent harm) we act
-        fast and explain after.
+        For the most severe violations — malware (&sect;1), illegal content
+        including CSAM (&sect;2), and imminent harm (&sect;4) — we act fast
+        and explain after.
       </p>
       <p>For everything else we act slow and explain first:</p>
       <ul>

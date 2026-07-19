@@ -96,7 +96,7 @@ export function StickyInstallBar({
           </a>
         ) : (
           <button type="button" onClick={scrollToInstall} className={btnClass}>
-            {apkUrl ? "Download" : "View"}
+            {apkUrl ? "Download" : "Details"}
           </button>
         )}
       </div>

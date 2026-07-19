@@ -52,3 +52,9 @@ h1, h2, h3, h4, h5, h6, .om-display {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Anchor targets scroll clear of the sticky header (h-16 + breathing room) —
+   without this every TOC/#fragment jump hid its heading under the glass bar. */
+[id] {
+  scroll-margin-top: 5.5rem;
+}

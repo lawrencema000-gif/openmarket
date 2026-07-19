@@ -195,6 +195,7 @@ async function main() {
   console.log("\n✓ collections seed complete");
   console.log("  home:        http://localhost:3000/");
   console.log("  collections: http://localhost:3000/collections");
+  console.log("  NOTE: run `pnpm search:reindex` so text search finds the seeded apps.");
   await client.end();
 }
 

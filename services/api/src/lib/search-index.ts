@@ -34,6 +34,18 @@ interface SearchIndexJob {
   app: Record<string, unknown> & { id: string };
 }
 
+/**
+ * Build the index/remove decision + document for one app. Exported so the
+ * full-rebuild script (scripts/reindex-search.ts) can reuse the exact same
+ * document shape the incremental queue path produces — one builder, no
+ * drift between "seeded/rebuilt" docs and "live-synced" docs.
+ */
+export async function buildSearchIndexJob(
+  appId: string,
+): Promise<SearchIndexJob | null> {
+  return buildJob(appId);
+}
+
 async function buildJob(appId: string): Promise<SearchIndexJob | null> {
   const app = await db.query.apps.findFirst({ where: eq(apps.id, appId) });
   if (!app) return null;

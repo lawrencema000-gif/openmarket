@@ -289,8 +289,10 @@ export default async function TransparencyReportPage() {
       <p>
         Headline counts at the top of this page show the last 90 days, broken
         down by event type, jurisdiction, and response-time percentiles —
-        DSA-shaped so the same panel keeps working as we cross the 50M-MAU
-        threshold that triggers EU Digital Services Act obligations. Older
+        The format follows the EU Digital Services Act (DSA) reporting
+        shape, so the same panel keeps working if we ever cross the 50
+        million monthly-active-user threshold that triggers formal DSA
+        obligations. Older
         events are queryable via the per-event feed below; quarterly archives
         will be published here as they accumulate.
       </p>

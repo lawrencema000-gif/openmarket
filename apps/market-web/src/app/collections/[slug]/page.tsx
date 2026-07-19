@@ -14,6 +14,7 @@ interface CollectionApp {
   shortDescription: string | null;
   iconUrl: string | null;
   category: string | null;
+  developerName?: string | null;
   note: string | null;
 }
 
@@ -174,7 +175,9 @@ export default async function CollectionDetailPage({
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-om-ink truncate">{app.title}</p>
-                  <p className="text-xs text-om-ink-soft truncate">{app.packageName}</p>
+                  <p className="text-xs text-om-ink-soft truncate">
+                    {app.developerName || app.packageName}
+                  </p>
                   {app.shortDescription ? (
                     <p className="text-sm text-om-ink-mute mt-1 line-clamp-2">
                       {app.shortDescription}

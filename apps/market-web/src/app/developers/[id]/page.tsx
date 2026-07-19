@@ -156,9 +156,22 @@ export default async function DeveloperPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {developer.trustLevel && (
+            {/* Same polished, explained badge as the app page — a bare
+                lowercase "verified" was the trust signal rendered rawest. */}
+            {developer.trustLevel === "verified" ? (
+              <Link
+                href="/how-we-review#developers"
+                title="Identity-checked publisher with a clean track record — tap to see what verification involves"
+                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:underline"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                Verified developer
+              </Link>
+            ) : developer.trustLevel ? (
               <Badge variant="secondary">{developer.trustLevel}</Badge>
-            )}
+            ) : null}
             {developer.trustBadges && developer.trustBadges.length > 0 && developer.trustBadges.map((badge) => (
               <TrustBadge key={badge} type={badge} />
             ))}
@@ -194,7 +207,7 @@ export default async function DeveloperPage({
         )}
         {developer.trustLevel && (
           <div className="rounded-xl border border-om-line bg-om-surface p-4 shadow-sm text-center">
-            <p className="text-lg font-bold text-om-primary">{developer.trustLevel}</p>
+            <p className="text-lg font-bold text-om-primary capitalize">{developer.trustLevel}</p>
             <p className="text-sm text-om-ink-soft mt-0.5">Trust Level</p>
           </div>
         )}
